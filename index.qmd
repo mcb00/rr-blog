@@ -1,0 +1,17 @@
+---
+title: "Posts"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+page-layout: full
+title-block-banner: false
+---
+
+<!--
+![](matt_hello_world_wide.jpg "Matt raises his arms, greeting the universe with wonder and love") 
+!-->
+
