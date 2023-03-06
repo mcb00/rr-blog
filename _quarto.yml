@@ -13,7 +13,10 @@ website:
         href: https://twitter.com/mcbwrs
 format:
   html:
-    theme: flatly
+    theme:
+      light: flatly
+      dark: darkly
+
     css: styles.css
 
 
