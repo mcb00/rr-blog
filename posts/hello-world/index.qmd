@@ -1,0 +1,55 @@
+---
+toc: false
+title: Hello World! And Why I'm Inspired to Start a Blog
+date: "11/22/2020"
+description: A reflection on what inspired me to start a blog and three reasons I think it could be a good
+ idea.
+categories: 
+---
+
+![](matt_hello_world.jpg "Hello, World!")
+
+
+Well, I've been thinking about getting this blog started for months now. 
+I guess a combination of inertia, up-front investment in blogging platform selection/setup, and spending a little too much time writing and rewriting the first content post has drawn out the period from initial inspiration to making the blog a reality.
+Needless to say, I'm pretty excited to finally get things going.
+
+Before we dive headlong into the weeds of ML algorithms, statistical methods, and whatever I happen to be learning and teaching at the moment, I figured it would be good to articulate why I've felt inspired to get started blogging in the first place. 
+Hopefully this will serve the dual purpose of clarifying my intentions and introducing a vastly underappreciated concept in data science that I hope to weave through the posts to come.
+
+
+## Learning
+
+The initial inception about blogging probably originated from some comments about learning that Jeremy Howard  makes in the [Practical Deep Learning](https://course.fast.ai/) course from [fastai](https://www.fast.ai/).
+During one of the lectures, he mentions that it's a great idea to start blogging. 
+To paraphrase Jeremy:
+
+> The thing  I really love about blogging is that it helps you learn; by writing things down, you synthesize your ideas.
+
+Beautiful. That definitely rings true for me. I tend to take notes and play around with code when learning new concepts anyway. One of my key hypotheses about this blogging experiment is that making the effort to transform those notes into blog posts will help me learn more effectively. 
+
+
+## Teaching
+
+Ah, teaching. Yes, sometimes it's that thing that takes time away from your research, forcing you to sit alone in a windowless room squinting at hand-written math on a fat stack of homework assignments. But sometimes it actually involves interacting with students, endeavoring to explain a concept, and watching them light up when they get it. The latter manifestation of teaching was one of my favorite things about grad school and academia in general. 
+While I certainly still get to do some teaching as an industry data scientist, I could see myself returning to a more teaching-centric gig somewhere off in the future.
+Thus we have our second key hypothesis about the blogging experiment, that the writing will entertain my  inclination to teach.
+
+
+## Contributing
+
+Working in the field of data science today is a bit like standing in front of a massive complimentary all-you-can-learn buffet. 
+There is an abundance of free material out on the interwebs for learning pretty much anything in data science from hello world python tutorials to research papers on  cutting-edge deep learning techniques.
+I've personally benefited from many a blog post that helped me unpack a new concept or get started using a new tool.
+And let's not forget the gigantic cyber warehouse full of freely available open source software tools that volunteer developers have straight-up donated to humanity. 
+
+I realize that up to now, I've simply been consuming all of this free goodness without giving anything substantive back in return. 
+Well then, it's time to start evening the score.
+Which brings us to key hypothesis number three, that through these blog posts, I might be able to create something helpful, thereby being of service to a community that has freely given so much to me.
+
+
+## Live Long and Prosper, Blog
+
+Phew, there it is, the original source of inspiration for this blogging experiment, and three reasons I think it might be a good idea. The astute reader will have noticed that these three assertions have been formulated as hypotheses which are to be tested in the laboratory of experience. And thus, we also have our first glimpse of the [scientific method](https://en.wikipedia.org/wiki/Scientific_method), an underrated concept that is going to help us put the _science_ back in data science.
+
+With that, blog, I christen thee, _Random Realizations_. 
