@@ -1,5 +1,6 @@
 project:
   type: website
+  pre-render: "rm -rf _site/*"
 
 website:
   title: "Random Realizations"
