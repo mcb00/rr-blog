@@ -1,0 +1,9 @@
+name: /Users/mattb/Playground/rr-blog/posts/gradient-boosting-machine-from-scratch/venv
+channels:
+  - defaults
+dependencies:
+  - jupyter
+  - scikit-learn
+  - numpy
+  - matplotlib
+prefix: /Users/mattb/Playground/rr-blog/posts/gradient-boosting-machine-from-scratch/venv
