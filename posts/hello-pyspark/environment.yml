@@ -1,0 +1,12 @@
+name: /Users/mattb/Playground/rr-blog/posts/hello-pyspark/venv
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pandas
+  - python=3.10
+  - jupyter
+  - matplotlib
+  - pyspark
+  - findspark
+prefix: /Users/mattb/Playground/rr-blog/posts/hello-pyspark/venv
