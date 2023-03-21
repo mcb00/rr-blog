@@ -1,0 +1,9 @@
+name: xgboostfromscratch
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - pandas
+  - xgboost
+  - jupyter
+
