@@ -1,0 +1,16 @@
+---
+title: "Gradient Boosting"
+listing:
+  contents: posts/gradient-boosting/
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+  fields: [date, title, description, categories, image]
+page-layout: full
+title-block-banner: false
+---
+
+Ahh, gradient boosting.  In addition to having a totally kickass name, this family of machine learning algorithms is currently among the best known approaches for prediction problems on structured data. 
+This series of posts strives to give a comprehensive understanding of gradient boosting by providing intuitive mathematical explanations, from-scratch implementations of key algorithms, and examples of how to apply modern gradient boosting libraries to solve practical data science problems.

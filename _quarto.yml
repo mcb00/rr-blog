@@ -7,7 +7,10 @@ website:
   description: "A blog about data science, statistics, machine learning, and the scientific method"
   navbar:
     right:
-      - about.qmd
+      - text: About
+        href: about.qmd
+      - text: Gradient Boosting
+        href: gradient-boosting-series.qmd
       - icon: github
         href: https://github.com/mcb00
       - icon: twitter
