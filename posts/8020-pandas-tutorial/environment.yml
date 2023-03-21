@@ -1,8 +1,0 @@
-name: /Users/mattb/Playground/rr-blog/posts/8020-pandas-tutorial/venv
-channels:
-  - defaults
-dependencies:
-  - pandas
-  - jupyter
-  - numpy
-prefix: /Users/mattb/Playground/rr-blog/posts/8020-pandas-tutorial/venv
