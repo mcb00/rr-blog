@@ -8,13 +8,9 @@ listing:
   sort-ui: false
   filter-ui: false
   fields: [date, title, description, categories, image]
+  feed: true
 page-layout: full
 title-block-banner: false
 ---
 
-<!--
-![](matt_hello_world_wide.jpg "Matt raises his arms, greeting the universe with wonder and love") 
-!-->
-
-Welcome to Random Realizations, a blog written by Matt Bowers about data science and other fun things.
 
