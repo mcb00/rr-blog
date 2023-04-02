@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matt Bowers">
+<meta name="dcterms.date" content="2021-12-12">
+<meta name="description" content="Understand the core strengths and weaknesses of the decision tree, and see how ensembling makes trees shine.">
+
+<title>Random Realizations - Consider the Decision Tree</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Random Realizations</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../gradient-boosting-series.html">
+ <span class="menu-text">Gradient Boosting</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mcb00"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/mcbwrs"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div class="quarto-toggle-container">
+                  <a href="" class="quarto-color-scheme-toggle nav-link" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+              </div>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<span style="font-weight: 600;">Subscribe</span>
+
+<!-- Begin Mailchimp Signup Form -->
+<link href="http://cdn-images.mailchimp.com/embedcode/slim-10_7_dtp.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
+    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
+       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
+    #mc-embedded-subscribe-form{margin-left:-5px;}
+</style>
+<div id="mc_embed_signup">
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+    <div id="mc_embed_signup_scroll">
+
+    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+        <div class="optionalParent">
+            <div class="clear foot" style="margin-top: 10px;">
+                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                <p class="brandingLogo"></p>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<!--End mc_embed_signup-->
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#classification-and-regression-trees" id="toc-classification-and-regression-trees" class="nav-link active" data-scroll-target="#classification-and-regression-trees">Classification and Regression Trees</a></li>
+  <li><a href="#regression-tree-in-action" id="toc-regression-tree-in-action" class="nav-link" data-scroll-target="#regression-tree-in-action">Regression Tree in Action</a></li>
+  <li><a href="#why-trees-are-awesome" id="toc-why-trees-are-awesome" class="nav-link" data-scroll-target="#why-trees-are-awesome">Why trees are awesome</a>
+  <ul class="collapse">
+  <li><a href="#feature-scaling" id="toc-feature-scaling" class="nav-link" data-scroll-target="#feature-scaling">Feature Scaling</a></li>
+  <li><a href="#categoricals" id="toc-categoricals" class="nav-link" data-scroll-target="#categoricals">Categoricals</a></li>
+  <li><a href="#missing-values" id="toc-missing-values" class="nav-link" data-scroll-target="#missing-values">Missing Values</a></li>
+  <li><a href="#interactions" id="toc-interactions" class="nav-link" data-scroll-target="#interactions">Interactions</a></li>
+  <li><a href="#feature-selection" id="toc-feature-selection" class="nav-link" data-scroll-target="#feature-selection">Feature Selection</a></li>
+  <li><a href="#feature-target-relationship" id="toc-feature-target-relationship" class="nav-link" data-scroll-target="#feature-target-relationship">Feature-Target Relationship</a></li>
+  </ul></li>
+  <li><a href="#why-trees-are-not-so-awesome" id="toc-why-trees-are-not-so-awesome" class="nav-link" data-scroll-target="#why-trees-are-not-so-awesome">Why trees are not so awesome</a>
+  <ul class="collapse">
+  <li><a href="#overfitting" id="toc-overfitting" class="nav-link" data-scroll-target="#overfitting">Overfitting</a></li>
+  <li><a href="#quantization" id="toc-quantization" class="nav-link" data-scroll-target="#quantization">Quantization</a></li>
+  <li><a href="#extrapolation" id="toc-extrapolation" class="nav-link" data-scroll-target="#extrapolation">Extrapolation</a></li>
+  <li><a href="#the-dark-side-of-convenience" id="toc-the-dark-side-of-convenience" class="nav-link" data-scroll-target="#the-dark-side-of-convenience">The Dark Side of Convenience</a></li>
+  </ul></li>
+  <li><a href="#how-ensembling-makes-trees-shine" id="toc-how-ensembling-makes-trees-shine" class="nav-link" data-scroll-target="#how-ensembling-makes-trees-shine">How ensembling makes trees shine</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Consider the Decision Tree</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">gradient boosting</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Understand the core strengths and weaknesses of the decision tree, and see how ensembling makes trees shine.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matt Bowers </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 12, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p><img src="20211212_thumbnail.jpg" title="A California cypress tree abides in silence on Alameda Beach." class="img-fluid"></p>
+<p>Ah, the decision tree. It’s an underrated and often overlooked hero of modern statistical learning. Trees aren’t particularly powerful learning algorithms on their own, but when utilized as building blocks in larger ensemble models like random forest and gradient boosted trees, they can achieve state of the art performance in many practical applications. Since we’ve been focusing on gradient boosting ensembles lately, let’s take a moment to consider the humble decision tree itself. This post gives a high-level intuition for how trees work, an opinionated list of their key strengths and weaknesses, and some perspective on why ensembling makes them truly shine.</p>
+<p>Onward!</p>
+<section id="classification-and-regression-trees" class="level2">
+<h2 class="anchored" data-anchor-id="classification-and-regression-trees">Classification and Regression Trees</h2>
+<p>A Decision tree is a type of statistical model that takes features or covariates as input and yields a prediction as output. The idea of the decision tree as a statistical learning tool traces back to a monograph published in 1984 by Breiman, Freidman, Olshen, and Stone called “Classification and Regression Trees” (a.k.a. CART). As the name suggests, trees come in two main varieties: classification trees which predict discrete class labels (e.g.&nbsp;<a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">DecisionTreeClassifier</a>) and regression trees which predict numeric values (e.g.&nbsp;<a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html">DecisionTreeRegressor</a>).</p>
+<p>As I mentioned earlier, tree models are not very powerful learners on their own. You might find that an individual tree model is useful for creating a simple and highly interpretable model in specific situations, but in general, trees tend to shine most as building blocks in more complex algorithms. These composite models are called ensembles, and the most important tree ensembles are random forest and gradient boosted trees. While random forest uses either regression or classification trees depending on the type of target, gradient boosting can use regression trees to solve both classification and regression tasks.</p>
+</section>
+<section id="regression-tree-in-action" class="level2">
+<h2 class="anchored" data-anchor-id="regression-tree-in-action">Regression Tree in Action</h2>
+<p>Let’s have a closer look at regression trees by training one on the diabetes dataset from scikit learn. According to the <a href="https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset">documentation</a>:</p>
+<blockquote class="blockquote">
+<p>Ten baseline variables, age, sex, body mass index, average blood pressure, and six blood serum measurements were obtained for each of n = 442 diabetes patients, as well as the response of interest, a quantitative measure of disease progression one year after baseline.</p>
+</blockquote>
+<p>First we load the data. To make our lives easier, we’ll just use two features: average blood pressure (bp) and the first blood serum measurement (s1) to predict the target. I’ll rescale the features to make the values easier for me to read, but it won’t affect our tree–more on that later.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>color_palette <span class="op">=</span> <span class="st">"viridis"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_diabetes</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> load_diabetes(as_frame<span class="op">=</span><span class="va">True</span>, return_X_y<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> X[[<span class="st">'bp'</span>, <span class="st">'s1'</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-scrolled="true" data-execution_count="4">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
+</div>
+</div>
+<p>Let’s grow a tree to predict the target given values of blood pressure and blood serum.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeRegressor</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>tree.fit(X,y)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-scrolled="true" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
+</div>
+</div>
+<p>To make predictions using our fitted tree, we start at the root node (which is at the top), and we work our way down moving left if our feature is less than the split threshold and to the right if it’s greater than the split threshold. For example let’s predict the target for a new case with bp= 1 and s1 = 5. Since our blood pressure of 1 is less than 2.359, we move to the left child node. Here, since our serum of 5 is greater than the threshold at 0.875, we move to the right child node. This node has no further children, and thus we return its predicted value of 155.343.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tree.predict(pd.DataFrame({<span class="st">'bp'</span>: <span class="dv">1</span>, <span class="st">'s1'</span>: <span class="dv">5</span>}, index<span class="op">=</span>[<span class="dv">0</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>array([155.34313725])</code></pre>
+</div>
+</div>
+<p>Let’s overlay these splits on our feature scatterplot to see how the tree has partitioned the feature space.</p>
+<div class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
+</div>
+</div>
+<p>The tree has managed to carve out regions of feature space where the target values tend to be similar within each region, e.g.&nbsp;we have low target values in the bottom left partition and high target values in the far right region.</p>
+<p>Let’s take a look at the regression surface predicted by our tree. Since the tree predicts the exact same value for all instances in a given partition, the surface has only four distinct values.</p>
+<div class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
+</div>
+</div>
+<p>Fabulous, now that we’ve seen a tree in action, let’s talk about trees’ key strengths and weaknesses.</p>
+</section>
+<section id="why-trees-are-awesome" class="level2">
+<h2 class="anchored" data-anchor-id="why-trees-are-awesome">Why trees are awesome</h2>
+<p>Trees are awesome because they are easy to use, and trees are easy to use because they are robust, require minimal data preprocessing, and can learn complex relationships without user intervention.</p>
+<section id="feature-scaling" class="level3">
+<h3 class="anchored" data-anchor-id="feature-scaling">Feature Scaling</h3>
+<p>Trees owe their minimal data preprocessing requirements and their robustness to the fact that split finding is controlled by the sort order of the input feature values, rather than the values themselves. This means that trees are invariant to the scaling of input features, which in turn means that we don’t need to fuss around with carefully rescaling all the numeric features before fitting a tree. It also means that trees tend to work well even if features are highly skewed or contain outliers.</p>
+</section>
+<section id="categoricals" class="level3">
+<h3 class="anchored" data-anchor-id="categoricals">Categoricals</h3>
+<p>Since trees just split data based on numeric feature values, we can easily handle most categorical features by using integer encoding. For example we might encode a size feature with small = 1, medium = 2, and large = 3. This works particularly well with ordered categories, because partitioning is consistent with the category semantics. It can also work well even if the categories have no order, because with enough splits a tree can carve each category into its own partition.</p>
+</section>
+<section id="missing-values" class="level3">
+<h3 class="anchored" data-anchor-id="missing-values">Missing Values</h3>
+<p>It’s worth calling out that different implementations of the decision tree handle missing feature values in different ways. Notably, scikit-learn handles them by throwing an error and telling you not to pull such shenanigans.</p>
+<pre><code>ValueError: Input contains NaN, infinity or a value too large for dtype('float32').</code></pre>
+<p>On the other hand, XGBoost supports an elegant way to make use of missing values, which we will discuss more in a later post.</p>
+</section>
+<section id="interactions" class="level3">
+<h3 class="anchored" data-anchor-id="interactions">Interactions</h3>
+<p>Feature interactions can also be learned automatically. An interaction means that the effect of one feature on the target differs depending on the value of another feature. For example, the effect of some drug may depend on whether or not the patient exercises. After a tree splits on exercise, it can naturally learn the correct drug effects for both exercisers and non-exercisers. This intuition extends to higher-order interactions as well, as long as the tree has enough splits to parse the relationships.</p>
+</section>
+<section id="feature-selection" class="level3">
+<h3 class="anchored" data-anchor-id="feature-selection">Feature Selection</h3>
+<p>Because trees choose the best feature and threshold value at each split, they essentially perform automatic feature selection. This is great because even if we throw a lot of irrelevant features at a decision tree, it will simply tend not to use them for splits. Similarly, if two or more features are highly correlated or even redundant, the tree will simply choose one or the other when making each split; having both in the model will not cause catastrophic instability as it could in a linear model.</p>
+</section>
+<section id="feature-target-relationship" class="level3">
+<h3 class="anchored" data-anchor-id="feature-target-relationship">Feature-Target Relationship</h3>
+<p>Finally, it is possible for trees to discover complex nonlinear feature-target relationships without the need for user-specification of the relationships. This is because trees use local piecewise constant approximations without making any parametric assumptions. With enough splits, the tree can approximate arbitrary feature-target relationships.</p>
+<div class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="why-trees-are-not-so-awesome" class="level2">
+<h2 class="anchored" data-anchor-id="why-trees-are-not-so-awesome">Why trees are not so awesome</h2>
+<p>The main weakness of the decision tree is that, on its own, it tends to have poor predictive performance compared to other algorithms. The main reasons for this are the tendency to overfit and prediction quantization issues.</p>
+<section id="overfitting" class="level3">
+<h3 class="anchored" data-anchor-id="overfitting">Overfitting</h3>
+<p>If we grow a decision tree until each leaf has exactly one instance in it, we will have simply memorized the training data, and our model will not generalize well. Basically the only defense against overfitting is to reduce the number of leaf nodes in the tree, either by using hyperparameters to stop splitting earlier or by removing certain leaf nodes after growing a deep tree. The problem here is that some of the benefits of trees, like ability to approximate arbitrary target patterns and ability to learn interaction effects, depend on having enough splits for the task. We can sometimes find ourselves in a situation where we cannot learn these complex relationships without overfitting the tree.</p>
+</section>
+<section id="quantization" class="level3">
+<h3 class="anchored" data-anchor-id="quantization">Quantization</h3>
+<p>Because regression trees use piecewise constant functions to approximate the target, prediction accuracy can deteriorate near split boundaries. For example, if the target is increasing with the feature, a tree might tend to overpredict the target on the left side of split boundaries and overpredict on the right side of split boundaries.</p>
+<div class="cell" data-scrolled="true" data-execution_count="12">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
+</div>
+</div>
+</section>
+<section id="extrapolation" class="level3">
+<h3 class="anchored" data-anchor-id="extrapolation">Extrapolation</h3>
+<p>Because they are trained by partitioning the feature space in a training dataset, trees cannot intelligently extrapolate beyond the data on which they are trained. For example if we query a tree for predictions beyond the greatest feature value encountered in training, it will just return the prediction corresponding to the largest in-sample feature values.</p>
+<div class="cell" data-scrolled="true" data-execution_count="13">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
+</div>
+</div>
+</section>
+<section id="the-dark-side-of-convenience" class="level3">
+<h3 class="anchored" data-anchor-id="the-dark-side-of-convenience">The Dark Side of Convenience</h3>
+<p>Finally, there is always a price to pay for convenience. While trees can work well even with a messy dataset containing outliers, redundant features, and thoughtlessly encoded categoricals, we will rarely achieve the best performance under these conditions. Taking the time to deal with outliers, removing redundant information, purposefully choosing appropriate categorical encodings, and building an understanding of the data will often lead to much better results.</p>
+</section>
+</section>
+<section id="how-ensembling-makes-trees-shine" class="level2">
+<h2 class="anchored" data-anchor-id="how-ensembling-makes-trees-shine">How ensembling makes trees shine</h2>
+<p>We can go a long way toward addressing the issues of overfitting and prediction quantization by using trees as building blocks in larger algorithms called tree ensembles, the most popular examples being random forest and gradient boosted trees. A tree ensemble is a collection of different individual tree models whose predictions are averaged to generate an overall prediction.</p>
+<p>Ensembling helps address overfitting because even if each individual tree is overfitted, the average of their individual noisy predictions will tend to be more stable. Think of it in terms of the <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">bias variance tradeoff</a>, where bias refers to a model’s failure to capture certain patterns and variance refers to how different a model prediction would be if the model were trained on a different sample of training data. Since the ensemble is averaging over the predictions of all the individual models, training it on a different sample of training data would change the individual models predictions, but their overall average prediction will tend to remain stable. Thus, ensembling helps reduce the effects of overfitting by reducing model variance without increasing bias.</p>
+<p>Ensembling also helps address prediction quantization issues. While each individual tree’s predictions might express large jumps in the regression surface, averaging many different trees’ predictions together effectively generates a surface with more partitions and smaller jumps between them. This provides a smoother approximation of the feature-target relationship.</p>
+<div class="cell" data-scrolled="true" data-execution_count="14">
+<div class="cell-output cell-output-display">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
+</div>
+</div>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Well, there you go, that’s my take on the high-level overview of the decision tree and its main strengths and weaknesses. As we’ve seen, ensembling allows us to keep the conveniences of the decision tree while mitigating its core weakness of relatively weak predictive power. This is why tree ensembles are so popular in practical applications. We glossed over pretty much all details of how trees actually do their magic, but fear not, next time we’re going to get rowdy and build one of these things from scratch.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="mcb00/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
