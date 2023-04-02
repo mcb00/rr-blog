@@ -22,8 +22,9 @@ format:
     theme:
       light: flatly
       dark: darkly
-
     css: styles.css
+    include-in-header:
+      - subscribe-css-link.html
 
 
 
