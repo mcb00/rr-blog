@@ -183,36 +183,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -271,7 +242,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><img src="20211213_thumbnail.png" title="decision tree" class="img-fluid"></p>
+<p><img src="thumbnail.png" title="decision tree" class="img-fluid"></p>
 <p>Yesterday we had a lovely discussion about the key strengths and weaknesses of decision trees and why tree ensembles are so great. But today, gentle reader, we abandon our philosophizing and get down to the business of implementing one of these decision trees from scratch.</p>
 <p>A note before we get started. This is going to be the most involved scratch-build that we’ve done at Random Realizations so far. It is not the kind of algorithm that I could just sit down and write all at once. We need to start with a basic frame and then add functionality step by step, testing all along the way to make sure things are working properly. Since I’m writing this in a jupyter notebook, I’ll try to give you a sense for how I actually put the algorithm together interactively in pieces, eventually landing on a fully-functional final product.</p>
 <p>Shall we?</p>
@@ -300,7 +271,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> DecisionTree(max_depth<span class="op">=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><img src="20211213_binary_tree.png" title="Binary tree structure" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="binary_tree.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Binary tree structure diagram</figcaption><p></p>
+</figure>
+</div>
 <p>We can access individual nodes and check their value of <code>max_depth</code>.</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>t.max_depth, t.left.max_depth, t.left.right.max_depth</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

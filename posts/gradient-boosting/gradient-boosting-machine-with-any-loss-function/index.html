@@ -180,36 +180,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -271,7 +242,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><img src="friedman_waterfall.jpg" title="Cold water cascades over the rocks in Erwin, Tennessee." class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Cold water cascades over the rocks in Erwin, Tennessee.</figcaption><p></p>
+</figure>
+</div>
 <p>Friends, this is going to be an epic post! Today, we bring together all the ideas we’ve built up over the past few posts to nail down our understanding of the key ideas in Jerome Friedman’s seminal 2001 paper: “<a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Greedy Function Approximation: A Gradient Boosting Machine</a>.” In particular, we’ll summarize the highlights from the paper, and we’ll build an in-house python implementation of his generic gradient boosting algorithm which can train with any differentiable loss function. What’s more, we’ll go ahead and take our generic gradient boosting machine for a spin by training it with several of the most popular loss functions used in practice.</p>
 <p>Are you freaking stoked or what?</p>
 <p>Sweet. Let’s do this.</p>

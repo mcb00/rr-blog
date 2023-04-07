@@ -117,36 +117,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -215,7 +186,12 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p><img src="20220313_thumbnail.jpg" title="Tree branches on a chilly day in Johnson City, TN" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Tree branches on a chilly day in Johnson City</figcaption><p></p>
+</figure>
+</div>
 <p>Ahh, XGBoost, what an absolutely stellar implementation of gradient boosting. Once Tianqi Chen and Carlos Guestrin of the University of Washington published the <a href="https://www.kdd.org/kdd2016/papers/files/rfp0697-chenAemb.pdf">XGBoost paper</a> and shared the <a href="https://github.com/dmlc/xgboost">open source code</a> in the mid 2010’s, the algorithm quickly gained adoption in the ML community, appearing in over half of winning Kagle submissions in 2015. Nowadays it’s certainly among the most popular gradient boosting libraries, along with LightGBM and CatBoost, although the highly scientific indicator of <a href="https://www.githubcompare.com/dmlc/xgboost+microsoft/lightgbm+catboost/catboost">GitHub stars per year</a> indicates that it is in fact the most beloved gradient boosting package of all. Since it was the first of the modern popular boosting frameworks, and since <a href="https://blog.dataiku.com/the-many-flavors-of-gradient-boosting-algorithms">benchmarking</a> indicates that no other boosting algorithm outperforms it, we can comfortably focus our attention on understanding XGBoost.</p>
 <p>The XGBoost authors identify two key aspects of a machine learning system: (1) a flexible statistical model and (2) a scalable learning system to fit that model using data. XGBoost improves on both of these aspects, providing a more flexible and feature-rich statistical model and building a truly scalable system to fit it. In this post we’re going to focus on the statistical modeling innovations, outlining the key differences from the classic gradient boosting machine and divinginto the mathematical derivation of the XGBoost learning algorithm. If you’re not already familiar with <a href="../../../gradient-boosting-machine-from-scratch">gradient boosting</a>, go back and read the earlier posts in the series before jumping in here.</p>
 <p>Buckle up, dear reader. Today we understand how XGBoost works, no hand waving required.</p>
@@ -242,7 +218,12 @@ ul.task-list li input[type="checkbox"] {
 <p>Newton’s method is an iterative procedure for minimizing a function <span class="math inline">\(s(x)\)</span>. At each step we have some input <span class="math inline">\(x_t\)</span>, and our goal is to find a nudge value <span class="math inline">\(u\)</span> such that</p>
 <p><span class="math display">\[ s(x_t + u) \le s(x_t)\]</span></p>
 <p>To find a good nudge value <span class="math inline">\(u\)</span>, we generate a local quadratic approximation of the function in the neighborhood of the input <span class="math inline">\(x_t\)</span>, and then we find the input value that would bring us to the minimum of the quadratic approximation.</p>
-<p><img src="20220313_newton.png" title="Schematic of Newton's method" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="newton.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Schematic of Newton’s method</figcaption><p></p>
+</figure>
+</div>
 <p>The figure shows a single Newton step where we start at <span class="math inline">\(x_t\)</span>, find the local quadratic approximation, and then jump a distance <span class="math inline">\(u\)</span> along the <span class="math inline">\(x\)</span>-axis to land at the minimum of the quadratic. If we iterate in this way, we are likely to land close to the minimum of <span class="math inline">\(s(x)\)</span>.</p>
 <p>So how do we compute the quadratic approximation? We use the second order Taylor series expansion of <span class="math inline">\(s(x)\)</span> near the point <span class="math inline">\(x_t\)</span>.</p>
 <p><span class="math display">\[ s(x_t + u) \approx  s(x_t) + s'(x_t)u + \frac{1}{2} s''(x_t) u^2 \]</span></p>

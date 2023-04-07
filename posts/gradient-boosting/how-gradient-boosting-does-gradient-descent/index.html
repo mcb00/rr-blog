@@ -117,36 +117,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -208,7 +179,12 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p><img src="gb_gd.jpg" title="Whiteboard session at Playa Pelada" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A whiteboard session at Playa Pelada</figcaption><p></p>
+</figure>
+</div>
 <p>In the last two posts, we learned the basics of <a href="../../../gradient-boosting-machine-from-scratch">gradient boosting machines</a> and the <a href="../../../get-down-with-gradient-descent">gradient descent algorithm</a>. But we still haven’t explicitly addressed what puts the “gradient” in gradient boosting. It turns out that gradient boosting models are using a sort of gradient descent to minimize their loss function; according to <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman’s classic paper</a>, they’re doing gradient descent in “function space”. If you’re like me, and this is your first encounter with this idea, then the phrase “gradient descent in function space” is going to sound a little, ahem, mysterious. No worries, friends; we’re about to make sense of it all.</p>
 <p>Understanding the underlying mechanics of gradient boosting as a form of gradient descent will empower us to train our models with custom loss functions. This opens up many interesting possibilities including doing not only regression and classification, but also predicting quantiles, prediction intervals, and even the conditional probability distribution of the response variable.</p>
 <section id="generalized-intuition-for-gradient-boosting" class="level2">

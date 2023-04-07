@@ -180,36 +180,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -264,7 +235,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><img src="gbm_bay.jpg" title="SF from Angel Island" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">SF buzzes silently in the distance</figcaption><p></p>
+</figure>
+</div>
 <p>Ahh, gradient boosting. In addition to having a totally kickass name, this family of machine learning algorithms is currently among the best known approaches for prediction problems on structured data. Like its cousin random forest, gradient boosting is an ensemble technique that generates a single strong model by combining many simple models, usually decision trees. These tree ensemble methods perform very well on tabular data prediction problems and are therefore widely used in industrial applications and machine learning competitions.</p>
 <p>There are several noteworthy variants of gradient boosting out there in the wild including <a href="https://xgboost.readthedocs.io/en/latest/">XGBoost</a>, <a href="https://stanfordmlgroup.github.io/projects/ngboost/">NGBoost</a>, <a href="https://lightgbm.readthedocs.io/en/latest/">LightGBM</a>, and of course the classic <a href="https://en.wikipedia.org/wiki/Gradient_boosting">gradient boosting machine</a> (GBM). While XGBoost and LightGBM tend to have a marginal performance edge on the classic GBM, they are all based on a similar, very clever, idea about how to ensemble decision trees. Let’s avail ourselves of the intuition behind that clever idea, and then we’ll be able to build our very own GBM from scratch.</p>
 <section id="toy-data" class="level2">

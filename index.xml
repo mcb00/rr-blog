@@ -19,7 +19,12 @@
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/20220507_thumbnail.jpg" title="A weathered tree reaches toward the sea at Playa Mal País" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A weathered tree reaches toward the sea at Playa Mal País</figcaption><p></p>
+</figure>
+</div>
 <p>Well, dear reader, it’s that time again, time for us to do a seemingly unnecessary scratch build of a popular algorithm that most people would simply import from the library without a second thought. But readers of this blog are not most people. Of course you know that when we do scratch builds, it’s not for the hell of it, it’s for the purpose of demystification. To that end, today we are going to implement XGBoost from scratch in python, using only numpy and pandas.</p>
 <p>Specifically we’re going to implement the core statistical learning algorithm of XGBoost, including most of the key hyperparameters and their functionality. Our implementation will also support user-defined custom objective functions, meaning that it can perform regression, classification, and whatever exotic learning tasks you can dream up, as long as you can write down a twice-differentiable objective function. We’ll refrain from implementing some simple features like column subsampling which will be left to you, gentle reader, as exercises. In terms of tree methods, we’re going to implement the exact tree-splitting algorithm, leaving the sparsity-aware method (used to handle missing feature values) and the approximate method (used for scalability) as exercises or maybe topics for future posts.</p>
 <p>As always, if something is unclear, try backtracking through the previous posts on gradient boosting and decision trees to clarify your intuition. We’ve already built up all the statistical and computational background needed to make sense of this scratch build. Here are the most important prerequisite posts:</p>
@@ -371,7 +376,7 @@ xgboost score: 0.24123239765807963</code></pre>
   <category>from scratch</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/index.html</guid>
   <pubDate>Sat, 07 May 2022 05:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/20220507_thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How to Understand XGBoost</title>
@@ -381,7 +386,12 @@ xgboost score: 0.24123239765807963</code></pre>
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/20220313_thumbnail.jpg" title="Tree branches on a chilly day in Johnson City, TN" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Tree branches on a chilly day in Johnson City</figcaption><p></p>
+</figure>
+</div>
 <p>Ahh, XGBoost, what an absolutely stellar implementation of gradient boosting. Once Tianqi Chen and Carlos Guestrin of the University of Washington published the <a href="https://www.kdd.org/kdd2016/papers/files/rfp0697-chenAemb.pdf">XGBoost paper</a> and shared the <a href="https://github.com/dmlc/xgboost">open source code</a> in the mid 2010’s, the algorithm quickly gained adoption in the ML community, appearing in over half of winning Kagle submissions in 2015. Nowadays it’s certainly among the most popular gradient boosting libraries, along with LightGBM and CatBoost, although the highly scientific indicator of <a href="https://www.githubcompare.com/dmlc/xgboost+microsoft/lightgbm+catboost/catboost">GitHub stars per year</a> indicates that it is in fact the most beloved gradient boosting package of all. Since it was the first of the modern popular boosting frameworks, and since <a href="https://blog.dataiku.com/the-many-flavors-of-gradient-boosting-algorithms">benchmarking</a> indicates that no other boosting algorithm outperforms it, we can comfortably focus our attention on understanding XGBoost.</p>
 <p>The XGBoost authors identify two key aspects of a machine learning system: (1) a flexible statistical model and (2) a scalable learning system to fit that model using data. XGBoost improves on both of these aspects, providing a more flexible and feature-rich statistical model and building a truly scalable system to fit it. In this post we’re going to focus on the statistical modeling innovations, outlining the key differences from the classic gradient boosting machine and divinginto the mathematical derivation of the XGBoost learning algorithm. If you’re not already familiar with <a href="../../../gradient-boosting-machine-from-scratch">gradient boosting</a>, go back and read the earlier posts in the series before jumping in here.</p>
 <p>Buckle up, dear reader. Today we understand how XGBoost works, no hand waving required.</p>
@@ -408,7 +418,12 @@ xgboost score: 0.24123239765807963</code></pre>
 <p>Newton’s method is an iterative procedure for minimizing a function <img src="https://latex.codecogs.com/png.latex?s(x)">. At each step we have some input <img src="https://latex.codecogs.com/png.latex?x_t">, and our goal is to find a nudge value <img src="https://latex.codecogs.com/png.latex?u"> such that</p>
 <p><img src="https://latex.codecogs.com/png.latex?%20s(x_t%20+%20u)%20%5Cle%20s(x_t)"></p>
 <p>To find a good nudge value <img src="https://latex.codecogs.com/png.latex?u">, we generate a local quadratic approximation of the function in the neighborhood of the input <img src="https://latex.codecogs.com/png.latex?x_t">, and then we find the input value that would bring us to the minimum of the quadratic approximation.</p>
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/20220313_newton.png" title="Schematic of Newton's method" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/newton.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Schematic of Newton’s method</figcaption><p></p>
+</figure>
+</div>
 <p>The figure shows a single Newton step where we start at <img src="https://latex.codecogs.com/png.latex?x_t">, find the local quadratic approximation, and then jump a distance <img src="https://latex.codecogs.com/png.latex?u"> along the <img src="https://latex.codecogs.com/png.latex?x">-axis to land at the minimum of the quadratic. If we iterate in this way, we are likely to land close to the minimum of <img src="https://latex.codecogs.com/png.latex?s(x)">.</p>
 <p>So how do we compute the quadratic approximation? We use the second order Taylor series expansion of <img src="https://latex.codecogs.com/png.latex?s(x)"> near the point <img src="https://latex.codecogs.com/png.latex?x_t">.</p>
 <p><img src="https://latex.codecogs.com/png.latex?%20s(x_t%20+%20u)%20%5Capprox%20%20s(x_t)%20+%20s'(x_t)u%20+%20%5Cfrac%7B1%7D%7B2%7D%20s''(x_t)%20u%5E2%20"></p>
@@ -518,7 +533,7 @@ To do that, first we need a way to compute the objective function given a partic
   <category>gradient boosting</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/index.html</guid>
   <pubDate>Sun, 13 Mar 2022 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/20220313_thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Decision Tree From Scratch</title>
@@ -528,7 +543,7 @@ To do that, first we need a way to compute the objective function given a partic
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/20211213_thumbnail.png" title="decision tree" class="img-fluid"></p>
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/thumbnail.png" title="decision tree" class="img-fluid"></p>
 <p>Yesterday we had a lovely discussion about the key strengths and weaknesses of decision trees and why tree ensembles are so great. But today, gentle reader, we abandon our philosophizing and get down to the business of implementing one of these decision trees from scratch.</p>
 <p>A note before we get started. This is going to be the most involved scratch-build that we’ve done at Random Realizations so far. It is not the kind of algorithm that I could just sit down and write all at once. We need to start with a basic frame and then add functionality step by step, testing all along the way to make sure things are working properly. Since I’m writing this in a jupyter notebook, I’ll try to give you a sense for how I actually put the algorithm together interactively in pieces, eventually landing on a fully-functional final product.</p>
 <p>Shall we?</p>
@@ -557,7 +572,12 @@ To do that, first we need a way to compute the objective function given a partic
 <div class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">t <span class="op" style="color: #5E5E5E;">=</span> DecisionTree(max_depth<span class="op" style="color: #5E5E5E;">=</span><span class="dv" style="color: #AD0000;">2</span>)</span></code></pre></div>
 </div>
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/20211213_binary_tree.png" title="Binary tree structure" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/binary_tree.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Binary tree structure diagram</figcaption><p></p>
+</figure>
+</div>
 <p>We can access individual nodes and check their value of <code>max_depth</code>.</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">t.max_depth, t.left.max_depth, t.left.right.max_depth</span></code></pre></div>
@@ -890,7 +910,7 @@ Wall time: 625 ms</code></pre>
   <category>from scratch</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/index.html</guid>
   <pubDate>Mon, 13 Dec 2021 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/20211213_thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
 </item>
 <item>
   <title>Consider the Decision Tree</title>
@@ -900,7 +920,14 @@ Wall time: 625 ms</code></pre>
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/20211212_thumbnail.jpg" title="A California cypress tree abides in silence on Alameda Beach." class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figure class="figure">
+<img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/main.jpg" title="." class="img-fluid figure-img">
+</figure>
+<p></p><figcaption class="figure-caption">A California cypress tree abides in silence on Alameda Beach.</figcaption><p></p>
+</figure>
+</div>
 <p>Ah, the decision tree. It’s an underrated and often overlooked hero of modern statistical learning. Trees aren’t particularly powerful learning algorithms on their own, but when utilized as building blocks in larger ensemble models like random forest and gradient boosted trees, they can achieve state of the art performance in many practical applications. Since we’ve been focusing on gradient boosting ensembles lately, let’s take a moment to consider the humble decision tree itself. This post gives a high-level intuition for how trees work, an opinionated list of their key strengths and weaknesses, and some perspective on why ensembling makes them truly shine.</p>
 <p>Onward!</p>
 <section id="classification-and-regression-trees" class="level2">
@@ -1055,7 +1082,7 @@ Wall time: 625 ms</code></pre>
   <category>gradient boosting</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/index.html</guid>
   <pubDate>Sun, 12 Dec 2021 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/20211212_thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How to Implement a Gradient Boosting Machine that Works with Any Loss Function</title>
@@ -1065,7 +1092,12 @@ Wall time: 625 ms</code></pre>
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/friedman_waterfall.jpg" title="Cold water cascades over the rocks in Erwin, Tennessee." class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Cold water cascades over the rocks in Erwin, Tennessee.</figcaption><p></p>
+</figure>
+</div>
 <p>Friends, this is going to be an epic post! Today, we bring together all the ideas we’ve built up over the past few posts to nail down our understanding of the key ideas in Jerome Friedman’s seminal 2001 paper: “<a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Greedy Function Approximation: A Gradient Boosting Machine</a>.” In particular, we’ll summarize the highlights from the paper, and we’ll build an in-house python implementation of his generic gradient boosting algorithm which can train with any differentiable loss function. What’s more, we’ll go ahead and take our generic gradient boosting machine for a spin by training it with several of the most popular loss functions used in practice.</p>
 <p>Are you freaking stoked or what?</p>
 <p>Sweet. Let’s do this.</p>
@@ -1438,7 +1470,7 @@ Scikit-Learn Loss = 0.6403</code></pre>
   <category>from scratch</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/index.html</guid>
   <pubDate>Sat, 23 Oct 2021 05:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/friedman_waterfall.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Hello PySpark!</title>
@@ -1448,7 +1480,12 @@ Scikit-Learn Loss = 0.6403</code></pre>
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/hello-pyspark/guiones_wave.jpeg" title="A big day at Playa Guiones." class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/hello-pyspark/guiones_wave.jpeg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A big day at Playa Guiones</figcaption><p></p>
+</figure>
+</div>
 <p>Well, you guessed it: it’s time for us to learn PySpark!</p>
 <p>I know, I know, I can hear you screaming into your pillow. Indeed we just spent all that time converting from R and learning python and why the hell do we need yet another API for working with dataframes?</p>
 <p>That’s a totally fair question.</p>
@@ -1865,7 +1902,12 @@ only showing top 5 rows
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/gb_gd.jpg" title="Whiteboard session at Playa Pelada" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A whiteboard session at Playa Pelada</figcaption><p></p>
+</figure>
+</div>
 <p>In the last two posts, we learned the basics of <a href="../../../gradient-boosting-machine-from-scratch">gradient boosting machines</a> and the <a href="../../../get-down-with-gradient-descent">gradient descent algorithm</a>. But we still haven’t explicitly addressed what puts the “gradient” in gradient boosting. It turns out that gradient boosting models are using a sort of gradient descent to minimize their loss function; according to <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman’s classic paper</a>, they’re doing gradient descent in “function space”. If you’re like me, and this is your first encounter with this idea, then the phrase “gradient descent in function space” is going to sound a little, ahem, mysterious. No worries, friends; we’re about to make sense of it all.</p>
 <p>Understanding the underlying mechanics of gradient boosting as a form of gradient descent will empower us to train our models with custom loss functions. This opens up many interesting possibilities including doing not only regression and classification, but also predicting quantiles, prediction intervals, and even the conditional probability distribution of the response variable.</p>
 <section id="generalized-intuition-for-gradient-boosting" class="level2">
@@ -1983,7 +2025,7 @@ only showing top 5 rows
   <category>gradient boosting</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/index.html</guid>
   <pubDate>Tue, 27 Apr 2021 05:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/gb_gd.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Get Down with Gradient Descent</title>
@@ -1993,7 +2035,7 @@ only showing top 5 rows
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_get_down.png" class="img-fluid"></p>
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_get_down.png" title="dancer getting down" class="img-fluid"></p>
 <p>Ahh, gradient descent. It’s probably one of the most ubiquitous algorithms used in data science, but you’re unlikely to see it being celebrated in the limelight of the Kaggle podium. Rather than taking center stage, gradient descent operates under the hood, powering the training for a wide range of models including deep neural networks, gradient boosting trees, generalized linear models, and mixed effects models. Getting an intuition for the algorithm will reveal how model fitting actually works and help us to see the common thread connecting a wide range of seemingly unrelated models. In this post we’ll get the intuition for gradient descent with a <em>fresh</em> analogy, develop the mathematical formulation, and ground our understanding by using it to train ourselves a linear regression model.</p>
 <section id="intuition" class="level2">
 <h2 class="anchored" data-anchor-id="intuition">Intuition</h2>
@@ -2004,7 +2046,14 @@ only showing top 5 rows
 <p><strong><em>NOTE:</em></strong> Chiming in here in 2023 from a sort-of-post COVID 19 world, happily I can report that concerts and live music are back!</p>
 </blockquote>
 <p>Now suppose at this concert there’s a dance floor which has become a bit sweltering from copious amounts of “getting down”. But the temperature isn’t quite uniform; maybe there’s a cool spot from a ceiling fan somewhere.</p>
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_dance_floor.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figure class="figure">
+<img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_dance_floor.png" title="dance floor" class="img-fluid figure-img">
+</figure>
+<p></p><figcaption class="figure-caption">dance floor</figcaption><p></p>
+</figure>
+</div>
 <p>Let’s get ourselves to that cool spot using the following procedure.</p>
 <ol type="1">
 <li>From our current location, figure out which direction feels coolest.</li>
@@ -2020,14 +2069,24 @@ only showing top 5 rows
 <p><img src="https://latex.codecogs.com/png.latex?%20%5Cnabla%20f(x,y)%20=%20%5Cleft%20%5B%20%5Cfrac%7B%5Cpartial%20f(x,y)%7D%7B%5Cpartial%20x%7D,%20%5Cfrac%7B%5Cpartial%20f(x,y)%7D%7B%5Cpartial%20y%7D%20%5Cright%20%5D%20"></p>
 <p>The components of the gradient vector are the partial derivatives of our function <img src="https://latex.codecogs.com/png.latex?f(x,y)">, evaluated at the point <img src="https://latex.codecogs.com/png.latex?(x,y)">. These partial derivatives just tell us the slope of <img src="https://latex.codecogs.com/png.latex?f(x,y)"> in the <img src="https://latex.codecogs.com/png.latex?x"> and <img src="https://latex.codecogs.com/png.latex?y"> directions respectively. The intuition is that if <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cpartial%20f(x,y)%7D%7B%5Cpartial%20x%7D"> is a large positive number, then moving in the positive <img src="https://latex.codecogs.com/png.latex?x"> direction will make <img src="https://latex.codecogs.com/png.latex?f(x,y)"> increase a lot, whereas if <img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cpartial%20f(x,y)%7D%7B%5Cpartial%20x%7D"> is a large negative number, then moving in the <em>negative</em> <img src="https://latex.codecogs.com/png.latex?x"> direction will make <img src="https://latex.codecogs.com/png.latex?f(x,y)"> increase a lot.</p>
 <p>It’s not too hard to see that the direction of fastest decrease is actually just the exact opposite direction from that of fastest increase. Since we can point a vector in the opposite direction by negating its component values, our direction of fastest temperature decrease will be given by the negative gradient of the temperature field <img src="https://latex.codecogs.com/png.latex?-%5Cnabla%20f(x,y)">.</p>
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_local_change.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_local_change.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">dance floor with hot and cold sides</figcaption><p></p>
+</figure>
+</div>
 </section>
 <section id="take-a-step-in-the-right-direction" class="level3">
 <h3 class="anchored" data-anchor-id="take-a-step-in-the-right-direction">Take a step in the right direction</h3>
 <p>Now that we have our direction vector, we’re ready to take a step toward the cool part of the dance floor. To do this, we’ll just add our direction vector to our current position. The update rule would look like this.</p>
 <p><img src="https://latex.codecogs.com/png.latex?%20%5Bx_%5Ctext%7Bnext%7D,%20y_%5Ctext%7Bnext%7D%5D%20=%20%5Bx_%5Ctext%7Bprev%7D,%20y_%5Ctext%7Bprev%7D%5D%20-%20%5Cnabla%20f%20(x_%5Ctext%7Bprev%7D,%20y_%5Ctext%7Bprev%7D)%20=%20%5Bx_%5Ctext%7Bprev%7D,%20y_%5Ctext%7Bprev%7D%5D%20-%20%20%5Cleft%20%5B%20%5Cfrac%7B%5Cpartial%20f%20(x_%5Ctext%7Bprev%7D,%20y_%5Ctext%7Bprev%7D)%7D%7B%5Cpartial%20x%7D,%20%5Cfrac%7B%5Cpartial%20f%20(x_%5Ctext%7Bprev%7D,%20y_%5Ctext%7Bprev%7D)%7D%7B%5Cpartial%20y%7D%20%5Cright%20%5D%20"></p>
 <p>If we iteratively apply this update rule, we’ll end up tracing a trajectory through the <img src="https://latex.codecogs.com/png.latex?(x,y)"> space on the dance floor and we’ll eventually end up at the coolest spot!</p>
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_trajectory.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_trajectory.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">dance floor with trajectory from hot side to cool side</figcaption><p></p>
+</figure>
+</div>
 <p>Great success!</p>
 </section>
 </section>
@@ -2137,7 +2196,7 @@ for t in range(n_iterations):  # or some other convergence condition
   <category>gradient boosting</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/index.html</guid>
   <pubDate>Fri, 22 Jan 2021 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/gd_get_down.png" medium="image" type="image/png" height="108" width="144"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/thumbnail.png" medium="image" type="image/png" height="108" width="144"/>
 </item>
 <item>
   <title>How to Build a Gradient Boosting Machine from Scratch</title>
@@ -2147,7 +2206,12 @@ for t in range(n_iterations):  # or some other convergence condition
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/gbm_bay.jpg" title="SF from Angel Island" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">SF buzzes silently in the distance</figcaption><p></p>
+</figure>
+</div>
 <p>Ahh, gradient boosting. In addition to having a totally kickass name, this family of machine learning algorithms is currently among the best known approaches for prediction problems on structured data. Like its cousin random forest, gradient boosting is an ensemble technique that generates a single strong model by combining many simple models, usually decision trees. These tree ensemble methods perform very well on tabular data prediction problems and are therefore widely used in industrial applications and machine learning competitions.</p>
 <p>There are several noteworthy variants of gradient boosting out there in the wild including <a href="https://xgboost.readthedocs.io/en/latest/">XGBoost</a>, <a href="https://stanfordmlgroup.github.io/projects/ngboost/">NGBoost</a>, <a href="https://lightgbm.readthedocs.io/en/latest/">LightGBM</a>, and of course the classic <a href="https://en.wikipedia.org/wiki/Gradient_boosting">gradient boosting machine</a> (GBM). While XGBoost and LightGBM tend to have a marginal performance edge on the classic GBM, they are all based on a similar, very clever, idea about how to ensemble decision trees. Let’s avail ourselves of the intuition behind that clever idea, and then we’ll be able to build our very own GBM from scratch.</p>
 <section id="toy-data" class="level2">
@@ -2340,7 +2404,7 @@ for t in range(n_iterations):  # or some other convergence condition
   <category>from scratch</category>
   <guid>https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/index.html</guid>
   <pubDate>Tue, 08 Dec 2020 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/gbm_bay.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>The 80/20 Pandas Tutorial</title>
@@ -2737,7 +2801,12 @@ for t in range(n_iterations):  # or some other convergence condition
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/hello-world/matt_hello_world.jpg" title="Hello, World!" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mattbowers.dev/rr-blog/posts/hello-world/main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Matt raises his arms in joy at the world.!</figcaption><p></p>
+</figure>
+</div>
 <p>Well, I’ve been thinking about getting this blog started for months now. I guess a combination of inertia, up-front investment in blogging platform selection/setup, and spending a little too much time writing and rewriting the first content post has drawn out the period from initial inspiration to making the blog a reality. Needless to say, I’m pretty excited to finally get things going.</p>
 <p>Before we dive headlong into the weeds of ML algorithms, statistical methods, and whatever I happen to be learning and teaching at the moment, I figured it would be good to articulate why I’ve felt inspired to get started blogging in the first place. Hopefully this will serve the dual purpose of clarifying my intentions and introducing a vastly underappreciated concept in data science that I hope to weave through the posts to come.</p>
 <section id="learning" class="level2">
@@ -2766,9 +2835,10 @@ for t in range(n_iterations):  # or some other convergence condition
 </section>
 
  ]]></description>
+  <category>blogging</category>
   <guid>https://mattbowers.dev/rr-blog/posts/hello-world/index.html</guid>
   <pubDate>Sun, 22 Nov 2020 06:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/hello-world/matt_hello_world.jpg " medium="image"/>
+  <media:content url="https://mattbowers.dev/rr-blog/posts/hello-world/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>

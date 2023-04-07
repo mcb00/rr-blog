@@ -180,36 +180,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -270,7 +241,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><img src="gd_get_down.png" class="img-fluid"></p>
+<p><img src="gd_get_down.png" title="dancer getting down" class="img-fluid"></p>
 <p>Ahh, gradient descent. It’s probably one of the most ubiquitous algorithms used in data science, but you’re unlikely to see it being celebrated in the limelight of the Kaggle podium. Rather than taking center stage, gradient descent operates under the hood, powering the training for a wide range of models including deep neural networks, gradient boosting trees, generalized linear models, and mixed effects models. Getting an intuition for the algorithm will reveal how model fitting actually works and help us to see the common thread connecting a wide range of seemingly unrelated models. In this post we’ll get the intuition for gradient descent with a <em>fresh</em> analogy, develop the mathematical formulation, and ground our understanding by using it to train ourselves a linear regression model.</p>
 <section id="intuition" class="level2">
 <h2 class="anchored" data-anchor-id="intuition">Intuition</h2>
@@ -281,7 +252,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><strong><em>NOTE:</em></strong> Chiming in here in 2023 from a sort-of-post COVID 19 world, happily I can report that concerts and live music are back!</p>
 </blockquote>
 <p>Now suppose at this concert there’s a dance floor which has become a bit sweltering from copious amounts of “getting down”. But the temperature isn’t quite uniform; maybe there’s a cool spot from a ceiling fan somewhere.</p>
-<p><img src="gd_dance_floor.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figure class="figure">
+<img src="gd_dance_floor.png" title="dance floor" class="img-fluid figure-img">
+</figure>
+<p></p><figcaption class="figure-caption">dance floor</figcaption><p></p>
+</figure>
+</div>
 <p>Let’s get ourselves to that cool spot using the following procedure.</p>
 <ol type="1">
 <li>From our current location, figure out which direction feels coolest.</li>
@@ -297,14 +275,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><span class="math display">\[ \nabla f(x,y) = \left [ \frac{\partial f(x,y)}{\partial x}, \frac{\partial f(x,y)}{\partial y} \right ] \]</span></p>
 <p>The components of the gradient vector are the partial derivatives of our function <span class="math inline">\(f(x,y)\)</span>, evaluated at the point <span class="math inline">\((x,y)\)</span>. These partial derivatives just tell us the slope of <span class="math inline">\(f(x,y)\)</span> in the <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> directions respectively. The intuition is that if <span class="math inline">\(\frac{\partial f(x,y)}{\partial x}\)</span> is a large positive number, then moving in the positive <span class="math inline">\(x\)</span> direction will make <span class="math inline">\(f(x,y)\)</span> increase a lot, whereas if <span class="math inline">\(\frac{\partial f(x,y)}{\partial x}\)</span> is a large negative number, then moving in the <em>negative</em> <span class="math inline">\(x\)</span> direction will make <span class="math inline">\(f(x,y)\)</span> increase a lot.</p>
 <p>It’s not too hard to see that the direction of fastest decrease is actually just the exact opposite direction from that of fastest increase. Since we can point a vector in the opposite direction by negating its component values, our direction of fastest temperature decrease will be given by the negative gradient of the temperature field <span class="math inline">\(-\nabla f(x,y)\)</span>.</p>
-<p><img src="gd_local_change.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="gd_local_change.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">dance floor with hot and cold sides</figcaption><p></p>
+</figure>
+</div>
 </section>
 <section id="take-a-step-in-the-right-direction" class="level3">
 <h3 class="anchored" data-anchor-id="take-a-step-in-the-right-direction">Take a step in the right direction</h3>
 <p>Now that we have our direction vector, we’re ready to take a step toward the cool part of the dance floor. To do this, we’ll just add our direction vector to our current position. The update rule would look like this.</p>
 <p><span class="math display">\[ [x_\text{next}, y_\text{next}] = [x_\text{prev}, y_\text{prev}] - \nabla f (x_\text{prev}, y_\text{prev}) = [x_\text{prev}, y_\text{prev}] -  \left [ \frac{\partial f (x_\text{prev}, y_\text{prev})}{\partial x}, \frac{\partial f (x_\text{prev}, y_\text{prev})}{\partial y} \right ] \]</span></p>
 <p>If we iteratively apply this update rule, we’ll end up tracing a trajectory through the <span class="math inline">\((x,y)\)</span> space on the dance floor and we’ll eventually end up at the coolest spot!</p>
-<p><img src="gd_trajectory.png" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="gd_trajectory.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">dance floor with trajectory from hot side to cool side</figcaption><p></p>
+</figure>
+</div>
 <p>Great success!</p>
 </section>
 </section>

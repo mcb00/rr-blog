@@ -179,36 +179,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<span style="font-weight: 600;">Subscribe</span>
-
-<!-- Begin Mailchimp Signup Form -->
-
-<link href="../../../subscribe.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
-    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
-       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
-    #mc-embedded-subscribe-form{margin-left:-5px;}
-</style>
-
-<div id="mc_embed_signup">
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-    <div id="mc_embed_signup_scroll">
-
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-        <div class="optionalParent">
-            <div class="clear foot" style="margin-top: 10px;">
-                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
-                <p class="brandingLogo"></p>
-            </div>
-        </div>
-    </div>
-</form>
-</div>
-
-<!--End mc_embed_signup-->
+<p>subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -269,7 +240,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><img src="20220507_thumbnail.jpg" title="A weathered tree reaches toward the sea at Playa Mal País" class="img-fluid"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A weathered tree reaches toward the sea at Playa Mal País</figcaption><p></p>
+</figure>
+</div>
 <p>Well, dear reader, it’s that time again, time for us to do a seemingly unnecessary scratch build of a popular algorithm that most people would simply import from the library without a second thought. But readers of this blog are not most people. Of course you know that when we do scratch builds, it’s not for the hell of it, it’s for the purpose of demystification. To that end, today we are going to implement XGBoost from scratch in python, using only numpy and pandas.</p>
 <p>Specifically we’re going to implement the core statistical learning algorithm of XGBoost, including most of the key hyperparameters and their functionality. Our implementation will also support user-defined custom objective functions, meaning that it can perform regression, classification, and whatever exotic learning tasks you can dream up, as long as you can write down a twice-differentiable objective function. We’ll refrain from implementing some simple features like column subsampling which will be left to you, gentle reader, as exercises. In terms of tree methods, we’re going to implement the exact tree-splitting algorithm, leaving the sparsity-aware method (used to handle missing feature values) and the approximate method (used for scalability) as exercises or maybe topics for future posts.</p>
 <p>As always, if something is unclear, try backtracking through the previous posts on gradient boosting and decision trees to clarify your intuition. We’ve already built up all the statistical and computational background needed to make sense of this scratch build. Here are the most important prerequisite posts:</p>
