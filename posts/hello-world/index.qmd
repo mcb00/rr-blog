@@ -4,10 +4,12 @@ title: Hello World! And Why I'm Inspired to Start a Blog
 date: "11/22/2020"
 description: A reflection on what inspired me to start a blog and three reasons I think it could be a good
  idea.
-categories: 
+categories: blogging
+image: thumbnail.jpg
+image-alt: Matt raises his arms in joy at the world.
 ---
 
-![](matt_hello_world.jpg "Hello, World!")
+![Matt raises his arms in joy at the world.!](main.jpg "")
 
 
 Well, I've been thinking about getting this blog started for months now. 
