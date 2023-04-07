@@ -11,12 +11,18 @@ website:
     right:
       - text: About
         href: about.qmd
-      - text: Gradient Boosting
+      - text: Gradient Boosting Series
         href: gradient-boosting-series.qmd
+    tools:
       - icon: github
         href: https://github.com/mcb00
+        text: Matt on Github
       - icon: twitter
         href: https://twitter.com/mcbwrs
+        text: Matt on Twitter
+      - icon: linkedin
+        href: https://www.linkedin.com/in/matt-bowers
+        text: Matt on Linkedin
 format:
   html:
     theme:
