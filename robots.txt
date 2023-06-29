@@ -1,1 +1,1 @@
-Sitemap: https://mattbowers.dev/rr-blog/sitemap.xml
+Sitemap: https://mattbowers.dev/sitemap.xml

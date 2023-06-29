@@ -6,22 +6,22 @@
       version="2.0">
 <channel>
 <title>Random Realizations</title>
-<link>https://mattbowers.dev/rr-blog/index.html</link>
-<atom:link href="https://mattbowers.dev/rr-blog/index.xml" rel="self" type="application/rss+xml"/>
+<link>https://mattbowers.dev/index.html</link>
+<atom:link href="https://mattbowers.dev/index.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <generator>quarto-1.2.335</generator>
 <lastBuildDate>Fri, 06 May 2022 23:00:00 GMT</lastBuildDate>
 <item>
   <title>XGBoost from scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2022/xgboost-from-scratch/index.html</link>
+  <link>https://mattbowers.dev/posts/2022/xgboost-from-scratch/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2022/xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2022/xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">A weathered tree reaches toward the sea at Playa Mal País</figcaption><p></p>
 </figure>
 </div>
@@ -374,21 +374,21 @@ xgboost score: 0.24123239765807963</code></pre>
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2022/xgboost-from-scratch/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2022/xgboost-from-scratch/index.html</guid>
   <pubDate>Fri, 06 May 2022 23:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2022/xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2022/xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How to Understand XGBoost</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/index.html</link>
+  <link>https://mattbowers.dev/posts/2022/how-to-understand-xgboost/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2022/how-to-understand-xgboost/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Tree branches on a chilly day in Johnson City</figcaption><p></p>
 </figure>
 </div>
@@ -420,7 +420,7 @@ xgboost score: 0.24123239765807963</code></pre>
 <p>To find a good nudge value <img src="https://latex.codecogs.com/png.latex?u">, we generate a local quadratic approximation of the function in the neighborhood of the input <img src="https://latex.codecogs.com/png.latex?x_t">, and then we find the input value that would bring us to the minimum of the quadratic approximation.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/newton.png" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2022/how-to-understand-xgboost/newton.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Schematic of Newton’s method</figcaption><p></p>
 </figure>
 </div>
@@ -531,19 +531,19 @@ To do that, first we need a way to compute the objective function given a partic
 
  ]]></description>
   <category>gradient boosting</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2022/how-to-understand-xgboost/index.html</guid>
   <pubDate>Sun, 13 Mar 2022 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2022/how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Decision Tree From Scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/decision-tree-from-scratch/index.html</link>
   <description><![CDATA[ 
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/thumbnail.png" title="decision tree" class="img-fluid"></p>
+<p><img src="https://mattbowers.dev/posts/2021/decision-tree-from-scratch/thumbnail.png" title="decision tree" class="img-fluid"></p>
 <p>Yesterday we had a lovely discussion about the key strengths and weaknesses of decision trees and why tree ensembles are so great. But today, gentle reader, we abandon our philosophizing and get down to the business of implementing one of these decision trees from scratch.</p>
 <p>A note before we get started. This is going to be the most involved scratch-build that we’ve done at Random Realizations so far. It is not the kind of algorithm that I could just sit down and write all at once. We need to start with a basic frame and then add functionality step by step, testing all along the way to make sure things are working properly. Since I’m writing this in a jupyter notebook, I’ll try to give you a sense for how I actually put the algorithm together interactively in pieces, eventually landing on a fully-functional final product.</p>
 <p>Shall we?</p>
@@ -574,7 +574,7 @@ To do that, first we need a way to compute the objective function given a partic
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/binary_tree.png" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/decision-tree-from-scratch/binary_tree.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Binary tree structure diagram</figcaption><p></p>
 </figure>
 </div>
@@ -908,14 +908,14 @@ Wall time: 625 ms</code></pre>
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/decision-tree-from-scratch/index.html</guid>
   <pubDate>Mon, 13 Dec 2021 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
+  <media:content url="https://mattbowers.dev/posts/2021/decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
 </item>
 <item>
   <title>Consider the Decision Tree</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/consider-the-decision-tree/index.html</link>
   <description><![CDATA[ 
 
 
@@ -923,7 +923,7 @@ Wall time: 625 ms</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <figure class="figure">
-<img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/main.jpg" title="." class="img-fluid figure-img">
+<img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/main.jpg" title="." class="img-fluid figure-img">
 </figure>
 <p></p><figcaption class="figure-caption">A California cypress tree abides in silence on Alameda Beach.</figcaption><p></p>
 </figure>
@@ -958,7 +958,7 @@ Wall time: 625 ms</code></pre>
 </div>
 <div class="cell" data-scrolled="true" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
 </div>
 </div>
 <p>Let’s grow a tree to predict the target given values of blood pressure and blood serum.</p>
@@ -970,7 +970,7 @@ Wall time: 625 ms</code></pre>
 </div>
 <div class="cell" data-scrolled="true" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
 </div>
 </div>
 <p>To make predictions using our fitted tree, we start at the root node (which is at the top), and we work our way down moving left if our feature is less than the split threshold and to the right if it’s greater than the split threshold. For example let’s predict the target for a new case with bp= 1 and s1 = 5. Since our blood pressure of 1 is less than 2.359, we move to the left child node. Here, since our serum of 5 is greater than the threshold at 0.875, we move to the right child node. This node has no further children, and thus we return its predicted value of 155.343.</p>
@@ -983,14 +983,14 @@ Wall time: 625 ms</code></pre>
 <p>Let’s overlay these splits on our feature scatterplot to see how the tree has partitioned the feature space.</p>
 <div class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
 </div>
 </div>
 <p>The tree has managed to carve out regions of feature space where the target values tend to be similar within each region, e.g.&nbsp;we have low target values in the bottom left partition and high target values in the far right region.</p>
 <p>Let’s take a look at the regression surface predicted by our tree. Since the tree predicts the exact same value for all instances in a given partition, the surface has only four distinct values.</p>
 <div class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
 </div>
 </div>
 <p>Fabulous, now that we’ve seen a tree in action, let’s talk about trees’ key strengths and weaknesses.</p>
@@ -1025,7 +1025,7 @@ Wall time: 625 ms</code></pre>
 <p>Finally, it is possible for trees to discover complex nonlinear feature-target relationships without the need for user-specification of the relationships. This is because trees use local piecewise constant approximations without making any parametric assumptions. With enough splits, the tree can approximate arbitrary feature-target relationships.</p>
 <div class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
 </div>
 </div>
 </section>
@@ -1042,7 +1042,7 @@ Wall time: 625 ms</code></pre>
 <p>Because regression trees use piecewise constant functions to approximate the target, prediction accuracy can deteriorate near split boundaries. For example, if the target is increasing with the feature, a tree might tend to overpredict the target on the left side of split boundaries and overpredict on the right side of split boundaries.</p>
 <div class="cell" data-scrolled="true" data-execution_count="12">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
 </div>
 </div>
 </section>
@@ -1051,7 +1051,7 @@ Wall time: 625 ms</code></pre>
 <p>Because they are trained by partitioning the feature space in a training dataset, trees cannot intelligently extrapolate beyond the data on which they are trained. For example if we query a tree for predictions beyond the greatest feature value encountered in training, it will just return the prediction corresponding to the largest in-sample feature values.</p>
 <div class="cell" data-scrolled="true" data-execution_count="13">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
 </div>
 </div>
 </section>
@@ -1067,7 +1067,7 @@ Wall time: 625 ms</code></pre>
 <p>Ensembling also helps address prediction quantization issues. While each individual tree’s predictions might express large jumps in the regression surface, averaging many different trees’ predictions together effectively generates a surface with more partitions and smaller jumps between them. This provides a smoother approximation of the feature-target relationship.</p>
 <div class="cell" data-scrolled="true" data-execution_count="14">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
+<p><img src="https://mattbowers.dev/posts/2021/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
 </div>
 </div>
 </section>
@@ -1080,21 +1080,21 @@ Wall time: 625 ms</code></pre>
 
  ]]></description>
   <category>gradient boosting</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/consider-the-decision-tree/index.html</guid>
   <pubDate>Sun, 12 Dec 2021 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2021/consider-the-decision-tree/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How to Implement a Gradient Boosting Machine that Works with Any Loss Function</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Cold water cascades over the rocks in Erwin, Tennessee.</figcaption><p></p>
 </figure>
 </div>
@@ -1281,7 +1281,7 @@ Scikit-Learn Loss = 0.168</code></pre>
 </div>
 <div class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Scatterplot showing data and model prediction of y given x"></p>
+<p><img src="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Scatterplot showing data and model prediction of y given x"></p>
 </div>
 </div>
 </section>
@@ -1328,7 +1328,7 @@ Scikit-Learn Loss = 0.3208</code></pre>
 </div>
 <div class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatterplot of data and model prediction of median of y given x"></p>
+<p><img src="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatterplot of data and model prediction of median of y given x"></p>
 </div>
 </div>
 </section>
@@ -1387,7 +1387,7 @@ Scikit-Learn Loss = 0.1856</code></pre>
 </div>
 <div class="cell" data-scrolled="true" data-execution_count="17">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-20-output-1.png" class="img-fluid" alt="Figure showing scatterplot of data and model prediction of 0.9 quantile of y given x"></p>
+<p><img src="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-20-output-1.png" class="img-fluid" alt="Figure showing scatterplot of data and model prediction of 0.9 quantile of y given x"></p>
 </div>
 </div>
 </section>
@@ -1449,7 +1449,7 @@ Scikit-Learn Loss = 0.6403</code></pre>
 </div>
 <div class="cell" data-execution_count="22">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-26-output-1.png" class="img-fluid" alt="Figure showing data and model prediction of probability that y equals one given x"></p>
+<p><img src="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/gbm-any-loss_files/figure-html/cell-26-output-1.png" class="img-fluid" alt="Figure showing data and model prediction of probability that y equals one given x"></p>
 </div>
 </div>
 </section>
@@ -1468,21 +1468,21 @@ Scikit-Learn Loss = 0.6403</code></pre>
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html</guid>
   <pubDate>Fri, 22 Oct 2021 23:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2021/gradient-boosting-machine-with-any-loss-function/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Hello PySpark!</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/hello-pyspark/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/guiones_wave.jpeg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/hello-pyspark/guiones_wave.jpeg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">A big day at Playa Guiones</figcaption><p></p>
 </figure>
 </div>
@@ -1876,7 +1876,7 @@ only showing top 5 rows
 <span id="cb37-2">plot_pdf <span class="op" style="color: #5E5E5E;">=</span> tip_stats_by_time.toPandas()</span>
 <span id="cb37-3">plot_pdf.plot.bar(x<span class="op" style="color: #5E5E5E;">=</span><span class="st" style="color: #20794D;">'time'</span>, y<span class="op" style="color: #5E5E5E;">=</span>[<span class="st" style="color: #20794D;">'avg_tip'</span>, <span class="st" style="color: #20794D;">'med_tip'</span>])<span class="op" style="color: #5E5E5E;">;</span></span></code></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/hello-pyspark_files/figure-html/cell-21-output-1.png" class="img-fluid" alt="Figure showing a bar plot of average and median tips by time"></p>
+<p><img src="https://mattbowers.dev/posts/2021/hello-pyspark/hello-pyspark_files/figure-html/cell-21-output-1.png" class="img-fluid" alt="Figure showing a bar plot of average and median tips by time"></p>
 </div>
 </div>
 </section>
@@ -1890,21 +1890,21 @@ only showing top 5 rows
  ]]></description>
   <category>PySpark</category>
   <category>tutorial</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/hello-pyspark/index.html</guid>
   <pubDate>Mon, 21 Jun 2021 23:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/guiones_wave.jpeg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2021/hello-pyspark/guiones_wave.jpeg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How Gradient Boosting Does Gradient Descent</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/how-gradient-boosting-does-gradient-descent/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/how-gradient-boosting-does-gradient-descent/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/how-gradient-boosting-does-gradient-descent/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/how-gradient-boosting-does-gradient-descent/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">A whiteboard session at Playa Pelada</figcaption><p></p>
 </figure>
 </div>
@@ -2023,19 +2023,19 @@ only showing top 5 rows
 
  ]]></description>
   <category>gradient boosting</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/how-gradient-boosting-does-gradient-descent/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/how-gradient-boosting-does-gradient-descent/index.html</guid>
   <pubDate>Mon, 26 Apr 2021 23:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/how-gradient-boosting-does-gradient-descent/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2021/how-gradient-boosting-does-gradient-descent/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Get Down with Gradient Descent</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/index.html</link>
+  <link>https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/index.html</link>
   <description><![CDATA[ 
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/gd_get_down.png" title="dancer getting down" class="img-fluid"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/gd_get_down.png" title="dancer getting down" class="img-fluid"></p>
 <p>Ahh, gradient descent. It’s probably one of the most ubiquitous algorithms used in data science, but you’re unlikely to see it being celebrated in the limelight of the Kaggle podium. Rather than taking center stage, gradient descent operates under the hood, powering the training for a wide range of models including deep neural networks, gradient boosting trees, generalized linear models, and mixed effects models. Getting an intuition for the algorithm will reveal how model fitting actually works and help us to see the common thread connecting a wide range of seemingly unrelated models. In this post we’ll get the intuition for gradient descent with a <em>fresh</em> analogy, develop the mathematical formulation, and ground our understanding by using it to train ourselves a linear regression model.</p>
 <section id="intuition" class="level2">
 <h2 class="anchored" data-anchor-id="intuition">Intuition</h2>
@@ -2049,7 +2049,7 @@ only showing top 5 rows
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <figure class="figure">
-<img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/gd_dance_floor.png" title="dance floor" class="img-fluid figure-img">
+<img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/gd_dance_floor.png" title="dance floor" class="img-fluid figure-img">
 </figure>
 <p></p><figcaption class="figure-caption">dance floor</figcaption><p></p>
 </figure>
@@ -2071,7 +2071,7 @@ only showing top 5 rows
 <p>It’s not too hard to see that the direction of fastest decrease is actually just the exact opposite direction from that of fastest increase. Since we can point a vector in the opposite direction by negating its component values, our direction of fastest temperature decrease will be given by the negative gradient of the temperature field <img src="https://latex.codecogs.com/png.latex?-%5Cnabla%20f(x,y)">.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/gd_local_change.png" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/gd_local_change.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">dance floor with hot and cold sides</figcaption><p></p>
 </figure>
 </div>
@@ -2083,7 +2083,7 @@ only showing top 5 rows
 <p>If we iteratively apply this update rule, we’ll end up tracing a trajectory through the <img src="https://latex.codecogs.com/png.latex?(x,y)"> space on the dance floor and we’ll eventually end up at the coolest spot!</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/gd_trajectory.png" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/gd_trajectory.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">dance floor with trajectory from hot side to cool side</figcaption><p></p>
 </figure>
 </div>
@@ -2135,7 +2135,7 @@ for t in range(n_iterations):  # or some other convergence condition
 </div>
 <div class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-4-output-1.png" class="img-fluid" alt="Figure showing a scatterplot of x and y data with y increasing linearly in x"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-4-output-1.png" class="img-fluid" alt="Figure showing a scatterplot of x and y data with y increasing linearly in x"></p>
 </div>
 </div>
 </section>
@@ -2168,19 +2168,19 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>We can see the loss function decreasing throughout the 500 iterations.</p>
 <div class="cell" data-scrolled="true" data-execution_count="15">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Figure showing the loss function decreasing with each iteration"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Figure showing the loss function decreasing with each iteration"></p>
 </div>
 </div>
 <p>And we can visualize the loss function as a contour plot over <img src="https://latex.codecogs.com/png.latex?(%5Calpha,%5Cbeta)"> space. The blue points show the trajectory our gradient descent followed as it shimmied from the initial position to the coolest spot in <img src="https://latex.codecogs.com/png.latex?(%5Calpha,%20%5Cbeta)"> space where the loss function is nice and small.</p>
 <div class="cell" data-scrolled="true" data-execution_count="16">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Figure showing contour plot of the loss function and a trace moving toward the minimum"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Figure showing contour plot of the loss function and a trace moving toward the minimum"></p>
 </div>
 </div>
 <p>Our gradient descent settles in a spot pretty close to <img src="https://latex.codecogs.com/png.latex?(-10,%202)"> in <img src="https://latex.codecogs.com/png.latex?(%5Calpha,%5Cbeta)"> space, which gives us the final fitted model below.</p>
 <div class="cell" data-scrolled="true" data-execution_count="18">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Figure showing the original x and y data along with our fitted line"></p>
+<p><img src="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/get-down_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Figure showing the original x and y data along with our fitted line"></p>
 </div>
 </div>
 </section>
@@ -2194,21 +2194,21 @@ for t in range(n_iterations):  # or some other convergence condition
 
  ]]></description>
   <category>gradient boosting</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/index.html</guid>
   <pubDate>Fri, 22 Jan 2021 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/thumbnail.png" medium="image" type="image/png" height="108" width="144"/>
+  <media:content url="https://mattbowers.dev/posts/2021/get-down-with-gradient-descent/thumbnail.png" medium="image" type="image/png" height="108" width="144"/>
 </item>
 <item>
   <title>How to Build a Gradient Boosting Machine from Scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/index.html</link>
+  <link>https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">SF buzzes silently in the distance</figcaption><p></p>
 </figure>
 </div>
@@ -2219,7 +2219,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>We begin our boosting adventure with a deceptively simple toy dataset having one feature <img src="https://latex.codecogs.com/png.latex?x"> and target <img src="https://latex.codecogs.com/png.latex?y">.</p>
 <div class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-4-output-1.png" class="img-fluid" alt="Figure showing a scatterplot of x and y toy data. y increases linearly in x then becomes constant in x."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-4-output-1.png" class="img-fluid" alt="Figure showing a scatterplot of x and y toy data. y increases linearly in x then becomes constant in x."></p>
 </div>
 </div>
 <p>Notice that <img src="https://latex.codecogs.com/png.latex?y"> increases with <img src="https://latex.codecogs.com/png.latex?x"> for a while, then flattens out. This is a pattern that happens all the time in real data, and it’s one that linear models epically fail to capture. Let’s build a gradient boosting machine to model it.</p>
@@ -2231,13 +2231,13 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>That would look like this.</p>
 <div class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-6-output-1.png" class="img-fluid" alt="Figure showing the toy data with a flat model prediction."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-6-output-1.png" class="img-fluid" alt="Figure showing the toy data with a flat model prediction."></p>
 </div>
 </div>
 <p><img src="https://latex.codecogs.com/png.latex?F_0(x)"> by itself is not a great model, so its residuals <img src="https://latex.codecogs.com/png.latex?y%20-%20F_0(x)"> are still pretty big and they still exhibit meaningful structure that we should try to capture with our model.</p>
 <div class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Figure showing residuals from the initial flat model."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Figure showing residuals from the initial flat model."></p>
 </div>
 </div>
 <p>Well what if I had another crappy model <img src="https://latex.codecogs.com/png.latex?h_1(x)"> that could predict the residuals <img src="https://latex.codecogs.com/png.latex?y%20-%20F_0(x)">?</p>
@@ -2260,7 +2260,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>It’s worth noting that the crappiness of this new model is essential; in fact in this boosting context, it’s usually called a <em>weak learner</em>. To get a model that’s only slightly better than nothing, let’s use a very simple <a href="https://en.wikipedia.org/wiki/Decision_tree_learning">decision tree</a> with a single split, a.k.a. a stump. This model basically divides our feature <img src="https://latex.codecogs.com/png.latex?x"> into two regions and predicts the mean value of <img src="https://latex.codecogs.com/png.latex?y"> for all of the <img src="https://latex.codecogs.com/png.latex?x">’s in each region. It might look like this.</p>
 <div class="cell" data-scrolled="true" data-execution_count="8">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Figure showing a fit to the residuals."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Figure showing a fit to the residuals."></p>
 </div>
 </div>
 <p>We could make a composite model by adding the predictions of the base model <img src="https://latex.codecogs.com/png.latex?F_0(x)"> to the predictions of the supplemental model <img src="https://latex.codecogs.com/png.latex?h_1(x)"> (which will pick up some of the slack left by <img src="https://latex.codecogs.com/png.latex?F_0(x)">). We’d get a new model <img src="https://latex.codecogs.com/png.latex?F_1(x)">:</p>
@@ -2268,7 +2268,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>which is better at predicting <img src="https://latex.codecogs.com/png.latex?y"> than the original model <img src="https://latex.codecogs.com/png.latex?F_0(x)"> alone.</p>
 <div class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Figure showing a composite model with one step."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Figure showing a composite model with one step."></p>
 </div>
 </div>
 <p>Why stop there? Our composite model <img src="https://latex.codecogs.com/png.latex?F_1(x)"> might still be kind of crappy, and so its residuals <img src="https://latex.codecogs.com/png.latex?y%20-%20F_1(x)"> might still be pretty big and structurey. Let’s add another model <img src="https://latex.codecogs.com/png.latex?h_2(x)"> to predict those residuals.</p>
@@ -2292,7 +2292,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p><img src="https://latex.codecogs.com/png.latex?F_2(x)%20=%20F_1(x)%20+%20h_2(x)."></p>
 <div class="cell" data-scrolled="true" data-execution_count="10">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Figure with two panels. On the left a residual plot with model fit to the residuals. On the right the toy data with updated composite model fit."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Figure with two panels. On the left a residual plot with model fit to the residuals. On the right the toy data with updated composite model fit."></p>
 </div>
 </div>
 <p>If we keep doing this, at each stage we’ll train a new model <img src="https://latex.codecogs.com/png.latex?h_m(x)"> on the previous composite model’s residuals <img src="https://latex.codecogs.com/png.latex?y-F_%7Bm-1%7D(x)">, and we’ll get a new composite model</p>
@@ -2302,7 +2302,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>Here’s how our model would evolve up to <img src="https://latex.codecogs.com/png.latex?M=6">.</p>
 <div class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-11-output-1.png" class="img-fluid" alt="Figure with two columns and several rows of panels. The left column contains residual plots. The right column contains updated composite models. Each subsequent row shows the results of another boosting round where the composite model becomes more accurate after each round."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-11-output-1.png" class="img-fluid" alt="Figure with two columns and several rows of panels. The left column contains residual plots. The right column contains updated composite models. Each subsequent row shows the results of another boosting round where the composite model becomes more accurate after each round."></p>
 </div>
 </div>
 <p>Voila! That, friends, is boosting!</p>
@@ -2350,7 +2350,7 @@ for t in range(n_iterations):  # or some other convergence condition
 <p>Next we iteratively add <code>n_trees</code> weak learners to our composite model. At each iteration, we create a new decision tree and train it on <code>x</code> to predict the current residuals <code>y - Fm</code>. We update <code>Fm</code> with the newly trained learner’s predictions scaled by the learning rate, and we append the new weak learner <img src="https://latex.codecogs.com/png.latex?h_m(x)"> in the <code>trees</code> list. We generate final predictions <code>y_hat</code> on the training data by summing up the predictions from each weak learner, scaling by the learning rate, and adding to the base model (a.k.a. the mean of <code>y</code>).</p>
 <div class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing the toy data with a composite model after several boosting rounds. The model fits the scatter data well."></p>
+<p><img src="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/gradient-boosting-machine-from-scratch_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing the toy data with a composite model after several boosting rounds. The model fits the scatter data well."></p>
 </div>
 </div>
 <p>Nice! Our GBM fits that nonlinear data pretty well.</p>
@@ -2402,19 +2402,19 @@ for t in range(n_iterations):  # or some other convergence condition
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/index.html</guid>
   <pubDate>Tue, 08 Dec 2020 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2020/gradient-boosting-machine-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>The 80/20 Pandas Tutorial</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2020/8020-pandas-tutorial/index.html</link>
+  <link>https://mattbowers.dev/posts/2020/8020-pandas-tutorial/index.html</link>
   <description><![CDATA[ 
 
 
 
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/8020-pandas-tutorial/80_20_pandas.png" title="8020 pandas" class="img-fluid"></p>
+<p><img src="https://mattbowers.dev/posts/2020/8020-pandas-tutorial/80_20_pandas.png" title="8020 pandas" class="img-fluid"></p>
 <p>Ahh, pandas. In addition to being everyone’s favorite mostly vegetarian bear from south central China, it’s also <em>the</em> python library for working with tabular data, a.k.a. dataframes. When you dive into pandas, you’ll quickly find out that there is a lot going on; indeed there are <a href="https://pandas.pydata.org/docs/reference/frame.html">hundreds</a> of methods for operating on dataframes. But luckily for us, as with many areas of life, there is a <a href="https://en.wikipedia.org/wiki/Pareto_principle">Pareto Principle</a>, or 80/20 rule, that will help us focus on the small set of methods that collectively solve the majority of our data transformation needs.</p>
 <p>If you’re like me, then pandas is not your first data-handling tool; maybe you’ve been using SQL or R with <code>data.table</code> or <code>dplyr</code>. If so, that’s great because you already have a sense for the key operations we need when working with tabular data. In their book, <a href="https://r4ds.had.co.nz/">R for Data Science</a>, Garrett Grolemund and Hadley Wickham describe five essential operations for manipulating dataframes. I’ve found that these cover the majority of my data transformation tasks to prepare data for analysis, visualization, and modeling.</p>
 <ol type="1">
@@ -2789,21 +2789,21 @@ for t in range(n_iterations):  # or some other convergence condition
  ]]></description>
   <category>pandas</category>
   <category>tutorial</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2020/8020-pandas-tutorial/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2020/8020-pandas-tutorial/index.html</guid>
   <pubDate>Wed, 25 Nov 2020 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2020/8020-pandas-tutorial/80_20_pandas.png" medium="image" type="image/png" height="73" width="144"/>
+  <media:content url="https://mattbowers.dev/posts/2020/8020-pandas-tutorial/80_20_pandas.png" medium="image" type="image/png" height="73" width="144"/>
 </item>
 <item>
   <title>Hello World! And Why I’m Inspired to Start a Blog</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://mattbowers.dev/rr-blog/posts/2020/hello-world/index.html</link>
+  <link>https://mattbowers.dev/posts/2020/hello-world/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://mattbowers.dev/rr-blog/posts/2020/hello-world/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://mattbowers.dev/posts/2020/hello-world/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Matt raises his arms in joy at the world.!</figcaption><p></p>
 </figure>
 </div>
@@ -2836,9 +2836,9 @@ for t in range(n_iterations):  # or some other convergence condition
 
  ]]></description>
   <category>blogging</category>
-  <guid>https://mattbowers.dev/rr-blog/posts/2020/hello-world/index.html</guid>
+  <guid>https://mattbowers.dev/posts/2020/hello-world/index.html</guid>
   <pubDate>Sun, 22 Nov 2020 00:00:00 GMT</pubDate>
-  <media:content url="https://mattbowers.dev/rr-blog/posts/2020/hello-world/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://mattbowers.dev/posts/2020/hello-world/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>
