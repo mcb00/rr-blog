@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/8020-pandas-tutorial/index.html</loc>
-    <lastmod>2023-04-07T06:04:52.276Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2022/how-to-understand-xgboost/index.html</loc>
+    <lastmod>2023-06-29T12:14:03.716Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/hello-pyspark/index.html</loc>
-    <lastmod>2023-04-07T06:04:52.734Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2022/xgboost-from-scratch/index.html</loc>
+    <lastmod>2023-06-29T12:14:04.128Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/get-down-with-gradient-descent/index.html</loc>
-    <lastmod>2023-04-07T06:04:53.108Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/hello-pyspark/index.html</loc>
+    <lastmod>2023-06-29T12:14:04.859Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-to-understand-xgboost/index.html</loc>
-    <lastmod>2023-04-07T06:04:53.499Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/get-down-with-gradient-descent/index.html</loc>
+    <lastmod>2023-06-29T12:14:05.215Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-with-any-loss-function/index.html</loc>
-    <lastmod>2023-04-07T06:04:53.896Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html</loc>
+    <lastmod>2023-06-29T12:14:05.617Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/xgboost-from-scratch/index.html</loc>
-    <lastmod>2023-04-07T06:04:54.282Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/consider-the-decision-tree/index.html</loc>
+    <lastmod>2023-06-29T12:14:05.980Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/consider-the-decision-tree/index.html</loc>
-    <lastmod>2023-04-07T06:04:54.651Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/decision-tree-from-scratch/index.html</loc>
+    <lastmod>2023-06-29T12:14:06.392Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/decision-tree-from-scratch/index.html</loc>
-    <lastmod>2023-04-07T06:04:55.071Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2021/how-gradient-boosting-does-gradient-descent/index.html</loc>
+    <lastmod>2023-06-29T12:14:06.780Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/how-gradient-boosting-does-gradient-descent/index.html</loc>
-    <lastmod>2023-04-07T06:04:55.464Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2020/8020-pandas-tutorial/index.html</loc>
+    <lastmod>2023-06-29T12:14:07.166Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/gradient-boosting/gradient-boosting-machine-from-scratch/index.html</loc>
-    <lastmod>2023-04-07T06:04:55.836Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2020/hello-world/index.html</loc>
+    <lastmod>2023-06-29T12:14:07.444Z</lastmod>
   </url>
   <url>
-    <loc>https://mattbowers.dev/rr-blog/posts/hello-world/index.html</loc>
-    <lastmod>2023-04-07T06:04:56.407Z</lastmod>
+    <loc>https://mattbowers.dev/rr-blog/posts/2020/gradient-boosting-machine-from-scratch/index.html</loc>
+    <lastmod>2023-06-29T12:14:07.802Z</lastmod>
   </url>
   <url>
     <loc>https://mattbowers.dev/rr-blog/index.html</loc>
-    <lastmod>2023-04-07T06:04:56.772Z</lastmod>
+    <lastmod>2023-06-29T12:14:08.160Z</lastmod>
   </url>
   <url>
     <loc>https://mattbowers.dev/rr-blog/about.html</loc>
-    <lastmod>2023-04-07T06:04:57.030Z</lastmod>
+    <lastmod>2023-06-29T12:14:08.416Z</lastmod>
   </url>
   <url>
     <loc>https://mattbowers.dev/rr-blog/gradient-boosting-series.html</loc>
-    <lastmod>2023-04-07T06:04:57.352Z</lastmod>
+    <lastmod>2023-06-29T12:14:08.742Z</lastmod>
   </url>
 </urlset>
