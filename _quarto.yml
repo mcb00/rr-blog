@@ -4,7 +4,7 @@ project:
 
 website:
   title: "Random Realizations"
-  site-url:  https://mattbowers.dev/
+  site-url:  https://blog.mattbowers.dev/
   description: "A blog about data science, statistics, machine learning, and the scientific method"
   margin-header: subscribe.html
   navbar:
