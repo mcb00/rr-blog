@@ -14,14 +14,14 @@
 <item>
   <title>XGBoost from scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://blog.mattbowers.dev/posts/2022/xgboost-from-scratch/index.html</link>
+  <link>https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://blog.mattbowers.dev/posts/2022/xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">A weathered tree reaches toward the sea at Playa Mal País</figcaption><p></p>
 </figure>
 </div>
@@ -29,9 +29,9 @@
 <p>Specifically we’re going to implement the core statistical learning algorithm of XGBoost, including most of the key hyperparameters and their functionality. Our implementation will also support user-defined custom objective functions, meaning that it can perform regression, classification, and whatever exotic learning tasks you can dream up, as long as you can write down a twice-differentiable objective function. We’ll refrain from implementing some simple features like column subsampling which will be left to you, gentle reader, as exercises. In terms of tree methods, we’re going to implement the exact tree-splitting algorithm, leaving the sparsity-aware method (used to handle missing feature values) and the approximate method (used for scalability) as exercises or maybe topics for future posts.</p>
 <p>As always, if something is unclear, try backtracking through the previous posts on gradient boosting and decision trees to clarify your intuition. We’ve already built up all the statistical and computational background needed to make sense of this scratch build. Here are the most important prerequisite posts:</p>
 <ol type="1">
-<li><a href="../../../gradient-boosting-machine-from-scratch">Gradient Boosting Machine from Scratch</a></li>
-<li><a href="../../../decision-tree-from-scratch">Decision Tree From Scratch</a></li>
-<li><a href="../../../how-to-understand-xgboost">How to Understand XGBoost</a></li>
+<li><a href="../../gradient-boosting-machine-from-scratch">Gradient Boosting Machine from Scratch</a></li>
+<li><a href="../../decision-tree-from-scratch">Decision Tree From Scratch</a></li>
+<li><a href="../../how-to-understand-xgboost">How to Understand XGBoost</a></li>
 </ol>
 <p>Great, let’s do this.</p>
 <section id="the-xgboost-model-class" class="level2">
@@ -374,30 +374,30 @@ xgboost score: 0.24123239765807963</code></pre>
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://blog.mattbowers.dev/posts/2022/xgboost-from-scratch/index.html</guid>
+  <guid>https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/index.html</guid>
   <pubDate>Fri, 06 May 2022 23:00:00 GMT</pubDate>
-  <media:content url="https://blog.mattbowers.dev/posts/2022/xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>How to Understand XGBoost</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://blog.mattbowers.dev/posts/2022/how-to-understand-xgboost/index.html</link>
+  <link>https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://blog.mattbowers.dev/posts/2022/how-to-understand-xgboost/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/main.jpg" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Tree branches on a chilly day in Johnson City</figcaption><p></p>
 </figure>
 </div>
 <p>Ahh, XGBoost, what an absolutely stellar implementation of gradient boosting. Once Tianqi Chen and Carlos Guestrin of the University of Washington published the <a href="https://www.kdd.org/kdd2016/papers/files/rfp0697-chenAemb.pdf">XGBoost paper</a> and shared the <a href="https://github.com/dmlc/xgboost">open source code</a> in the mid 2010’s, the algorithm quickly gained adoption in the ML community, appearing in over half of winning Kagle submissions in 2015. Nowadays it’s certainly among the most popular gradient boosting libraries, along with LightGBM and CatBoost, although the highly scientific indicator of <a href="https://www.githubcompare.com/dmlc/xgboost+microsoft/lightgbm+catboost/catboost">GitHub stars per year</a> indicates that it is in fact the most beloved gradient boosting package of all. Since it was the first of the modern popular boosting frameworks, and since <a href="https://blog.dataiku.com/the-many-flavors-of-gradient-boosting-algorithms">benchmarking</a> indicates that no other boosting algorithm outperforms it, we can comfortably focus our attention on understanding XGBoost.</p>
-<p>The XGBoost authors identify two key aspects of a machine learning system: (1) a flexible statistical model and (2) a scalable learning system to fit that model using data. XGBoost improves on both of these aspects, providing a more flexible and feature-rich statistical model and building a truly scalable system to fit it. In this post we’re going to focus on the statistical modeling innovations, outlining the key differences from the classic gradient boosting machine and divinginto the mathematical derivation of the XGBoost learning algorithm. If you’re not already familiar with <a href="../../../gradient-boosting-machine-from-scratch">gradient boosting</a>, go back and read the earlier posts in the series before jumping in here.</p>
+<p>The XGBoost authors identify two key aspects of a machine learning system: (1) a flexible statistical model and (2) a scalable learning system to fit that model using data. XGBoost improves on both of these aspects, providing a more flexible and feature-rich statistical model and building a truly scalable system to fit it. In this post we’re going to focus on the statistical modeling innovations, outlining the key differences from the classic gradient boosting machine and divinginto the mathematical derivation of the XGBoost learning algorithm. If you’re not already familiar with <a href="../../gradient-boosting-machine-from-scratch">gradient boosting</a>, go back and read the earlier posts in the series before jumping in here.</p>
 <p>Buckle up, dear reader. Today we understand how XGBoost works, no hand waving required.</p>
 <section id="xgboost-is-a-gradient-boosting-machine" class="level2">
 <h2 class="anchored" data-anchor-id="xgboost-is-a-gradient-boosting-machine">XGBoost is a Gradient Boosting Machine</h2>
-<p>At a high level, XGBoost is an iteratively constructed composite model, just like the classic gradient boosting machine we discussed back in the <a href="../../../gradient-boosting-machine-from-scratch">GBM post</a> . The final model takes the form</p>
+<p>At a high level, XGBoost is an iteratively constructed composite model, just like the classic gradient boosting machine we discussed back in the <a href="../../gradient-boosting-machine-from-scratch">GBM post</a> . The final model takes the form</p>
 <p><img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_i%20=%20F(%5Cmathbf%7Bx%7D_i)%20=%20b%20+%20%5Ceta%20%5Csum_%7Bk=1%7D%5EK%20f_k(%5Cmathbf%7Bx%7D_i)%20"></p>
 <p>where <img src="https://latex.codecogs.com/png.latex?b"> is the base prediction, <img src="https://latex.codecogs.com/png.latex?%5Ceta"> is the learning rate hyperparameter that helps control overfitting by reducing the contributions of each booster, and each of the <img src="https://latex.codecogs.com/png.latex?K"> boosters <img src="https://latex.codecogs.com/png.latex?f_k"> is a decision tree. To help us connect the dots between theory and code, whenever we encounter new hyperparameters, I’ll point out their names from the <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">XGBoost Parameter Documentation</a>. So, <img src="https://latex.codecogs.com/png.latex?b"> can be set by <code>base_score</code>, and <img src="https://latex.codecogs.com/png.latex?%5Ceta"> is set by either <code>eta</code> or <code>learning_rate</code>.</p>
 <p>XGBoost introduces two key statistical learning improvements over the classic gradient boosting model. First, it reimagines the gradient descent algorithm used for training, and second it uses a custom-built decision tree with extra functionality as its booster. We’ll dive into each of these key innovations in the following sections.</p>
@@ -406,7 +406,7 @@ xgboost score: 0.24123239765807963</code></pre>
 <h2 class="anchored" data-anchor-id="descent-algorithm-innovations">Descent Algorithm Innovations</h2>
 <section id="regularized-objective-function" class="level3">
 <h3 class="anchored" data-anchor-id="regularized-objective-function">Regularized Objective Function</h3>
-<p>In the post on <a href="../../../gradient-boosting-machine-with-any-loss-function">GBM with any loss function</a>, we looked at loss functions of the form <img src="https://latex.codecogs.com/png.latex?%5Csum_i%20l(y_i,%5Chat%7By%7D_i)"> which compute some distance between targets <img src="https://latex.codecogs.com/png.latex?y_i"> and predictions <img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_i"> and sum them up over the training dataset. XGBoost introduces regularization into the objective function so that the objective takes the form</p>
+<p>In the post on <a href="../../gradient-boosting-machine-with-any-loss-function">GBM with any loss function</a>, we looked at loss functions of the form <img src="https://latex.codecogs.com/png.latex?%5Csum_i%20l(y_i,%5Chat%7By%7D_i)"> which compute some distance between targets <img src="https://latex.codecogs.com/png.latex?y_i"> and predictions <img src="https://latex.codecogs.com/png.latex?%5Chat%7By%7D_i"> and sum them up over the training dataset. XGBoost introduces regularization into the objective function so that the objective takes the form</p>
 <p><img src="https://latex.codecogs.com/png.latex?%20L%20=%20%5Csum_i%20l(y_i,%5Chat%7By%7D_i)%20+%20%5Csum_k%20%5COmega(f_k)%20"></p>
 <p>where <img src="https://latex.codecogs.com/png.latex?l"> is some twice-differentiable loss function. <img src="https://latex.codecogs.com/png.latex?%5COmega"> is a regularization that penalizes the complexity of each tree booster, taking the form</p>
 <p><img src="https://latex.codecogs.com/png.latex?%20%5COmega(f)%20=%20%5Cgamma%20T%20+%20%5Cfrac%7B1%7D%7B2%7D%20%5Clambda%20%7C%7Cw%7C%7C%5E2%20"></p>
@@ -420,7 +420,7 @@ xgboost score: 0.24123239765807963</code></pre>
 <p>To find a good nudge value <img src="https://latex.codecogs.com/png.latex?u">, we generate a local quadratic approximation of the function in the neighborhood of the input <img src="https://latex.codecogs.com/png.latex?x_t">, and then we find the input value that would bring us to the minimum of the quadratic approximation.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://blog.mattbowers.dev/posts/2022/how-to-understand-xgboost/newton.png" class="img-fluid figure-img"></p>
+<p><img src="https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/newton.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Schematic of Newton’s method</figcaption><p></p>
 </figure>
 </div>
@@ -502,14 +502,14 @@ To do that, first we need a way to compute the objective function given a partic
 <p>Even though we’re focused on statistical learning, I figured I’d comment on why XGBoost is highly scalable. Basically it boils down to efficient, parallelizable, and distributable methods for growing trees. You’ll notice there is a <code>tree_method</code> parameter which allows you to choose between the greedy exact algorithm (like the one we discussed in the decision tree from scratch post) and the approximate algorithm, which offers various scalability-related functionality, notably including the ability to consider only a small number of candidate split points instead of trying all possible splits. The algorithm also uses clever tricks like pre-sorting data for split finding and caching frequently needed values.</p>
 <section id="why-xgboost-is-so-successful" class="level3">
 <h3 class="anchored" data-anchor-id="why-xgboost-is-so-successful">Why XGBoost is so Successful</h3>
-<p>As I mentioned in the intro, XGBoost is simply a very good implementation of the gradient boosting tree model. Therefore it inherits all the benefits of <a href="../../../consider-the-decision-tree">decision trees and tree ensembles</a>, while making even further improvements over the classic gradient boosting machine. These improvements boil down to</p>
+<p>As I mentioned in the intro, XGBoost is simply a very good implementation of the gradient boosting tree model. Therefore it inherits all the benefits of <a href="../../consider-the-decision-tree">decision trees and tree ensembles</a>, while making even further improvements over the classic gradient boosting machine. These improvements boil down to</p>
 <ol type="1">
 <li>more ways to control overfitting</li>
 <li>elegant handling of custom objectives</li>
 <li>scalability</li>
 </ol>
 <p>First, XGBoost introduces two new tree regularization hyperparameters <img src="https://latex.codecogs.com/png.latex?%5Cgamma"> and <img src="https://latex.codecogs.com/png.latex?%5Clambda"> which are baked directly into its objective function. Combining these with the additional column and row sampling functionality provides a variety of ways to reduce overfitting.</p>
-<p>Second, the XGBoost formulation provides a much more elegant way to train models on custom objective functions. Recall that for <a href="../../../gradient-boosting-machine-with-any-loss-function">custom objectives</a>, the classic GBM finds tree structure by fitting a squared error decision tree to the gradients of the loss function and then sets each leaf’s predicted value by running a numerical optimization routine to find the optimal predicted value.</p>
+<p>Second, the XGBoost formulation provides a much more elegant way to train models on custom objective functions. Recall that for <a href="../../gradient-boosting-machine-with-any-loss-function">custom objectives</a>, the classic GBM finds tree structure by fitting a squared error decision tree to the gradients of the loss function and then sets each leaf’s predicted value by running a numerical optimization routine to find the optimal predicted value.</p>
 <p>The XGBoost formulation improves on this two-stage approach by unifying the generation of tree structure and predicted values. Both the split scoring metric and the predicted values are directly computable from the instance gradient and hessian values, which are connected directly back to the overall training objective. This also removes the need for additional numerical optimizations, which contributes to speed, stability, and scalability.</p>
 <p>Finally, speaking of scalability, XGBoost emerged at a time when industrial dataset size was exploding. Many use cases require scalable ML systems, and all use cases benefit from faster training and higher model development velocity.</p>
 </section>
@@ -531,19 +531,19 @@ To do that, first we need a way to compute the objective function given a partic
 
  ]]></description>
   <category>gradient boosting</category>
-  <guid>https://blog.mattbowers.dev/posts/2022/how-to-understand-xgboost/index.html</guid>
+  <guid>https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/index.html</guid>
   <pubDate>Sun, 13 Mar 2022 00:00:00 GMT</pubDate>
-  <media:content url="https://blog.mattbowers.dev/posts/2022/how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>Decision Tree From Scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://blog.mattbowers.dev/posts/2021/decision-tree-from-scratch/index.html</link>
+  <link>https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/index.html</link>
   <description><![CDATA[ 
 
 
 
-<p><img src="https://blog.mattbowers.dev/posts/2021/decision-tree-from-scratch/thumbnail.png" title="decision tree" class="img-fluid"></p>
+<p><img src="https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/thumbnail.png" title="decision tree" class="img-fluid"></p>
 <p>Yesterday we had a lovely discussion about the key strengths and weaknesses of decision trees and why tree ensembles are so great. But today, gentle reader, we abandon our philosophizing and get down to the business of implementing one of these decision trees from scratch.</p>
 <p>A note before we get started. This is going to be the most involved scratch-build that we’ve done at Random Realizations so far. It is not the kind of algorithm that I could just sit down and write all at once. We need to start with a basic frame and then add functionality step by step, testing all along the way to make sure things are working properly. Since I’m writing this in a jupyter notebook, I’ll try to give you a sense for how I actually put the algorithm together interactively in pieces, eventually landing on a fully-functional final product.</p>
 <p>Shall we?</p>
@@ -574,7 +574,7 @@ To do that, first we need a way to compute the objective function given a partic
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://blog.mattbowers.dev/posts/2021/decision-tree-from-scratch/binary_tree.png" class="img-fluid figure-img"></p>
+<p><img src="https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/binary_tree.png" class="img-fluid figure-img"></p>
 <p></p><figcaption class="figure-caption">Binary tree structure diagram</figcaption><p></p>
 </figure>
 </div>
@@ -908,9 +908,9 @@ Wall time: 625 ms</code></pre>
  ]]></description>
   <category>gradient boosting</category>
   <category>from scratch</category>
-  <guid>https://blog.mattbowers.dev/posts/2021/decision-tree-from-scratch/index.html</guid>
+  <guid>https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/index.html</guid>
   <pubDate>Mon, 13 Dec 2021 00:00:00 GMT</pubDate>
-  <media:content url="https://blog.mattbowers.dev/posts/2021/decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
+  <media:content url="https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
 </item>
 </channel>
 </rss>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matt Bowers">
+<meta name="dcterms.date" content="2021-04-27">
+<meta name="description" content="Understand how gradient boosting does gradient descent in function space to minimize any differentiable loss function in the service of creating a good model.">
+
+<title>Random Realizations - How Gradient Boosting Does Gradient Descent</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Random Realizations</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../gradient-boosting-series.html">
+ <span class="menu-text">Gradient Boosting Series</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mcb00"><i class="bi bi-github" role="img" aria-label="Matt on Github">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/mcbwrs"><i class="bi bi-twitter" role="img" aria-label="Matt on Twitter">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/matt-bowers"><i class="bi bi-linkedin" role="img" aria-label="Matt on Linkedin">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<span style="font-weight: 600;">Subscribe</span>
+
+<!-- Begin Mailchimp Signup Form -->
+
+<link href="../../subscribe.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
+    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
+       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
+    #mc-embedded-subscribe-form{margin-left:-5px;}
+</style>
+
+<div id="mc_embed_signup">
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+    <div id="mc_embed_signup_scroll">
+
+    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+        <div class="optionalParent">
+            <div class="clear foot" style="margin-top: 10px;">
+                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                <p class="brandingLogo"></p>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<!--End mc_embed_signup-->
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#generalized-intuition-for-gradient-boosting" id="toc-generalized-intuition-for-gradient-boosting" class="nav-link active" data-scroll-target="#generalized-intuition-for-gradient-boosting">Generalized intuition for gradient boosting</a>
+  <ul class="collapse">
+  <li><a href="#the-loss-function" id="toc-the-loss-function" class="nav-link" data-scroll-target="#the-loss-function">The loss function</a></li>
+  <li><a href="#which-way-to-nudge-a-prediction-to-get-a-better-model" id="toc-which-way-to-nudge-a-prediction-to-get-a-better-model" class="nav-link" data-scroll-target="#which-way-to-nudge-a-prediction-to-get-a-better-model">Which way to nudge a prediction to get a better model</a></li>
+  <li><a href="#nudging-predictions-in-the-right-direction" id="toc-nudging-predictions-in-the-right-direction" class="nav-link" data-scroll-target="#nudging-predictions-in-the-right-direction">Nudging predictions in the right direction</a></li>
+  </ul></li>
+  <li><a href="#a-generalized-gradient-boosting-algorithm" id="toc-a-generalized-gradient-boosting-algorithm" class="nav-link" data-scroll-target="#a-generalized-gradient-boosting-algorithm">A generalized gradient boosting algorithm</a></li>
+  <li><a href="#wait-in-what-sense-is-this-doing-gradient-descent" id="toc-wait-in-what-sense-is-this-doing-gradient-descent" class="nav-link" data-scroll-target="#wait-in-what-sense-is-this-doing-gradient-descent">Wait, in what sense is this doing gradient descent?</a></li>
+  <li><a href="#gradient-boosting-versus-parameter-gradient-descent" id="toc-gradient-boosting-versus-parameter-gradient-descent" class="nav-link" data-scroll-target="#gradient-boosting-versus-parameter-gradient-descent">Gradient boosting versus parameter gradient descent</a></li>
+  <li><a href="#gradient-boosting-is-gradient-descent-in-function-space-a.k.a.-prediction-space" id="toc-gradient-boosting-is-gradient-descent-in-function-space-a.k.a.-prediction-space" class="nav-link" data-scroll-target="#gradient-boosting-is-gradient-descent-in-function-space-a.k.a.-prediction-space">Gradient boosting is gradient descent in function space, a.k.a. prediction space</a></li>
+  <li><a href="#so-why-did-we-fit-the-crappy-models-to-the-residuals-in-our-regression-gbm" id="toc-so-why-did-we-fit-the-crappy-models-to-the-residuals-in-our-regression-gbm" class="nav-link" data-scroll-target="#so-why-did-we-fit-the-crappy-models-to-the-residuals-in-our-regression-gbm">So why did we fit the crappy models to the residuals in our regression GBM?</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">How Gradient Boosting Does Gradient Descent</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">gradient boosting</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Understand how gradient boosting does gradient descent in function space to minimize any differentiable loss function in the service of creating a good model.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matt Bowers </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 27, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="main.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A whiteboard session at Playa Pelada</figcaption><p></p>
+</figure>
+</div>
+<p>In the last two posts, we learned the basics of <a href="../../gradient-boosting-machine-from-scratch">gradient boosting machines</a> and the <a href="../../get-down-with-gradient-descent">gradient descent algorithm</a>. But we still haven’t explicitly addressed what puts the “gradient” in gradient boosting. It turns out that gradient boosting models are using a sort of gradient descent to minimize their loss function; according to <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman’s classic paper</a>, they’re doing gradient descent in “function space”. If you’re like me, and this is your first encounter with this idea, then the phrase “gradient descent in function space” is going to sound a little, ahem, mysterious. No worries, friends; we’re about to make sense of it all.</p>
+<p>Understanding the underlying mechanics of gradient boosting as a form of gradient descent will empower us to train our models with custom loss functions. This opens up many interesting possibilities including doing not only regression and classification, but also predicting quantiles, prediction intervals, and even the conditional probability distribution of the response variable.</p>
+<section id="generalized-intuition-for-gradient-boosting" class="level2">
+<h2 class="anchored" data-anchor-id="generalized-intuition-for-gradient-boosting">Generalized intuition for gradient boosting</h2>
+<p>In my earlier post on [building a gradient boosting model from scratch](/gradient-boosting-machine-from-scratch, we established the intuition for how gradient boosting works in a regression problem. In this post we’re going to generalize the ideas we encountered in the regression context, so check out the earlier post if you’re not already familiar with gradient boosting for regression. In the following sections we’ll build up the intuition for gradient boosting in general terms, and then we’ll be able to state the gradient boosting algorithm in a form that can fit models to customized loss functions.</p>
+<section id="the-loss-function" class="level3">
+<h3 class="anchored" data-anchor-id="the-loss-function">The loss function</h3>
+<p>You recall that we measure how well a model fits data by using a <em>loss function</em> that yields small values when a model fits well. “Training” essentially means finding the model that minimizes our loss function. A loss function takes the correct target values and the predicted target values, and it returns a scalar loss score. For example, in the last post on gradient descent we used a mean squared error (MSE) loss</p>
+<p><span class="math display">\[L(\mathbf{y}, \hat{\mathbf{y}}) =  \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 \]</span></p>
+<p>where we express the correct targets and predicted values as the vector arguments <span class="math inline">\(\mathbf{y}=[y_1,y_2,\dots,y_n]\)</span> and <span class="math inline">\(\hat{\mathbf{y}}=[\hat{y}_1,\hat{y}_2,\dots,\hat{y}_n]\)</span> respectively.</p>
+</section>
+<section id="which-way-to-nudge-a-prediction-to-get-a-better-model" class="level3">
+<h3 class="anchored" data-anchor-id="which-way-to-nudge-a-prediction-to-get-a-better-model">Which way to nudge a prediction to get a better model</h3>
+<p>Now, let’s say we have a model <span class="math inline">\(F(\mathbf{X})=\mathbf{\hat{y}}\)</span> that we want to improve. One approach is that we could figure out whether each prediction <span class="math inline">\(\hat{y}_i\)</span> needed to be higher or lower to get a better loss score. We could then nudge each prediction in the right direction, thereby decreasing our model’s loss score.</p>
+<p>To figure out whether we should increase or decrease a particular prediction <span class="math inline">\(\hat{y}_i\)</span> (and by how much), we can compute the partial derivative of the loss function with respect to that prediction. Recall the partial derivative just tells us the rate of change in a function when we change one of its arguments. Since we want to make the loss <span class="math inline">\(L(\mathbf{y},\mathbf{\hat{y}})\)</span> decrease, we can use the negative partial derivative of the loss function with respect to a given prediction to help us choose the right nudge for that prediction.</p>
+<p><span class="math display">\[ \text{nudge for } \hat{y}_i = -\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_i}\]</span></p>
+<p>Sometimes it can get a little intense when there are partial derivatives flying around, but it doesn’t have to be that way. Remember that in practice <span class="math inline">\(-\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_i}\)</span> is just an expression that evaluates to a number like 2.7 or -0.5, and here it’s telling us how to nudge <span class="math inline">\(\hat{y}_i\)</span> to decrease our loss score.</p>
+<p>The intuition is that if <span class="math inline">\(\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_i}\)</span> is negative, then increasing the prediction <span class="math inline">\(\hat{y}_i\)</span> will make the loss decrease. We then notice that the negative of the partial derivative tells us whether to increase or decrease <span class="math inline">\(\hat{y}_i\)</span>. For example, if <span class="math inline">\(-\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_i}\)</span> is positive, then <em>increasing</em> the prediction <span class="math inline">\(\hat{y}_i\)</span> will make the loss decrease; whereas if <span class="math inline">\(-\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_i}\)</span> is negative, then <em>decreasing</em> the prediction <span class="math inline">\(\hat{y}_i\)</span> will make the loss decrease.</p>
+<p>Since we’ll want to find the right nudge for each of the <span class="math inline">\(\hat{y}_i\)</span>’s, we can use the negative gradient of the loss function <span class="math inline">\(L(\mathbf{y},\mathbf{\hat{y}})\)</span> with respect to the vector argument <span class="math inline">\(\hat{\mathbf{y}}\)</span> to get the vector of all the partial derivatives. Let’s call this vector of desired nudge values <span class="math inline">\(\mathbf{r}\)</span>.</p>
+<p><span class="math display">\[\mathbf{r} = -\nabla_{\hat{\mathbf{y}}} L(\mathbf{y}, \hat{\mathbf{y}}) = \left [ -\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_1}, -\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_2}, \cdots, -\frac{\partial L(\mathbf{y},\mathbf{\hat{y}})}{\partial \hat{y}_n}\right ]\]</span></p>
+</section>
+<section id="nudging-predictions-in-the-right-direction" class="level3">
+<h3 class="anchored" data-anchor-id="nudging-predictions-in-the-right-direction">Nudging predictions in the right direction</h3>
+<p>Great, now that we know we should nudge each prediction in the direction of the negative partial derivative of the loss with respect to that prediction, we need to figure out how to do the actual nudging. Remember that we already have an initial model <span class="math inline">\(F(\mathbf{X})=\mathbf{\hat{y}}\)</span>.</p>
+<p>At this point we might be tempted to simply add the vector of nudge values to our predictions to get better predictions.</p>
+<p><span class="math display">\[\text{we might be tempted to try } \mathbf{\hat{y}}_{\text{new}} = \mathbf{\hat{y}} + \mathbf{r}\]</span></p>
+<p>Sure, based on our reasoning in the previous section, plugging the vector of nudged predictions into the loss function would yield a lower loss score.</p>
+<p><span class="math display">\[ L(\mathbf{y},\mathbf{\hat{y}} + \mathbf{r}) \le L(\mathbf{y},\mathbf{\hat{y}})\]</span></p>
+<p>The problem is that this will only work for in-sample data, because we only know the nudge values for the cases which are present in the training dataset. In order for our model to generalize to unseen test data, we need a way to get the nudge values for new observations of the independent variables. So how can we do that?</p>
+<p>Well what if we fit another model <span class="math inline">\(h(\mathbf{X})\)</span> that used our same features <span class="math inline">\(\mathbf{X}\)</span> to predict our desired nudge values <span class="math inline">\(\mathbf{r}\)</span>, and then we added that new model to our original model <span class="math inline">\(F(\mathbf{X})\)</span>. For a given prediction the nudge model <span class="math inline">\(h(\mathbf{X})\)</span> would essentially return an approximation of the desired nudge, so adding it would push the prediction in the right direction to decrease the loss function. Furthermore, the nudge model can return predictions of the nudges for out-of-sample cases which are not present in the training dataset. Since both the initial model <span class="math inline">\(F(\mathbf{X})\)</span> and the nudge model <span class="math inline">\(h(\mathbf{X})\)</span> are functions of our features <span class="math inline">\(\mathbf{X}\)</span>, we can add the two functions to get an updated model that can generalize beyond the training data.</p>
+<p><span class="math display">\[F_{\text{new}} (\mathbf{X}) = F(\mathbf{X}) + h(\mathbf{X})\]</span></p>
+</section>
+</section>
+<section id="a-generalized-gradient-boosting-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="a-generalized-gradient-boosting-algorithm">A generalized gradient boosting algorithm</h2>
+<p>Ok, let’s put these pieces of intuition together to create a more general gradient boosting algorithm recipe.</p>
+<p>We begin with training data <span class="math inline">\((\mathbf{y}, \mathbf{X})\)</span> where <span class="math inline">\(\mathbf{y}\)</span> is a length-<span class="math inline">\(n\)</span> vector of target values, and <span class="math inline">\(\mathbf{X}\)</span> is an <span class="math inline">\(n \times p\)</span> matrix with <span class="math inline">\(n\)</span> observations of <span class="math inline">\(p\)</span> features. We also have a differentiable loss function <span class="math inline">\(L(\mathbf{y}, \mathbf{\hat{y}})\)</span>, a “learning rate” hyperparameter <span class="math inline">\(\eta\)</span>, and a fixed number of model iterations <span class="math inline">\(M\)</span>.</p>
+<p>We create an initial model <span class="math inline">\(F_0(\mathbf{X})\)</span> that predicts a constant value. We choose the constant value that would give the best loss score.</p>
+<p><span class="math display">\[F_0(\mathbf{X}) = \underset{c}{\operatorname{argmin}} L(\mathbf{y}, c)\]</span></p>
+<p>Then we iteratively update the initial model with <span class="math inline">\(M\)</span> nudge models.</p>
+<p>For <span class="math inline">\(m\)</span> in 0 to <span class="math inline">\(M-1\)</span>:</p>
+<ul>
+<li>Compute current composite model predictions <span class="math inline">\(\mathbf{\hat{y}}_{m} = F_{m}(\mathbf{X})\)</span>.</li>
+<li>Compute the desired nudge values given by the negative gradient of the loss function with respect to each prediction <span class="math inline">\(\mathbf{r}_m = - \nabla_{\mathbf{\hat{y}}_m} L (\mathbf{y}, \mathbf{\hat{y}}_m)\)</span>.</li>
+<li>Fit a weak model (e.g.&nbsp;shallow decision tree) <span class="math inline">\(h_{m}(\mathbf{X})\)</span> that predicts the nudge values <span class="math inline">\(\mathbf{r}_{m}\)</span> using features <span class="math inline">\(\mathbf{X}\)</span>.</li>
+<li>Update the composite model.</li>
+</ul>
+<p><span class="math display">\[F_{m+1}(\mathbf{X}) = F_{m}(\mathbf{X}) + \eta h_{m}(\mathbf{X})\]</span></p>
+<p>After <span class="math inline">\(M\)</span> iterations, we are left with the final composite model <span class="math inline">\(F_M(\mathbf{X})\)</span>.</p>
+</section>
+<section id="wait-in-what-sense-is-this-doing-gradient-descent" class="level2">
+<h2 class="anchored" data-anchor-id="wait-in-what-sense-is-this-doing-gradient-descent">Wait, in what sense is this doing gradient descent?</h2>
+<p>In my <a href="../../get-down-with-gradient-descent">previous post</a>, we learned how to use gradient descent to iteratively update model parameters to find a model that minimizes the loss function. We could write the update rule as</p>
+<p><span class="math display">\[ \mathbf{\theta}_{t+1} = \mathbf{\theta}_{t} + \eta ( - \nabla_{\mathbf{\theta}} L(\mathbf{y}, \mathbf{\hat{y}}_{\mathbf{\theta}_{t}}) ) \]</span></p>
+<p>where the predictions <span class="math inline">\(\mathbf{\hat{y}}\)</span> depend on the model parameters <span class="math inline">\(\mathbf{\theta}\)</span>, and we’re trying to find the value of the parameter vector <span class="math inline">\(\mathbf{\theta}\)</span> that minimizes the loss function <span class="math inline">\(L(\mathbf{y}, \mathbf{\hat{y}}_{\mathbf{\theta}_{t}})\)</span>, so we nudge the vector <span class="math inline">\(\mathbf{\theta}_t\)</span> by the negative gradient of <span class="math inline">\(L(\mathbf{y}, \mathbf{\hat{y}}_{\mathbf{\theta}_{t}})\)</span> with respect to <span class="math inline">\(\mathbf{\theta}_t\)</span>. Compare that with the boosting model update rule we obtained in the previous section.</p>
+<p><span class="math display">\[F_{m+1}(\mathbf{X}) = F_{m}(\mathbf{X}) + \eta h_{m}(\mathbf{X})\]</span></p>
+<p>where <span class="math inline">\(h_{m}(\mathbf{X}) \approx - \nabla_{\mathbf{\hat{y}}_m} L (\mathbf{y}, \mathbf{\hat{y}}_m)\)</span>.</p>
+<p>If we replace <span class="math inline">\(F(\mathbf{X})\)</span> with its prediction vector <span class="math inline">\(\mathbf{\hat{y}}\)</span>, and we replace the nudge model <span class="math inline">\(h(\mathbf{X})\)</span> with the negative gradient of the loss function (which it approximates), the likeness to the parameter gradient descent update rule becomes more obvious.</p>
+<p><span class="math display">\[\mathbf{\hat{y}}_{m+1} \approx \mathbf{\hat{y}}_m + \eta (- \nabla_{\mathbf{\hat{y}}_m} L (\mathbf{y}, \mathbf{\hat{y}}_m))\]</span></p>
+<p>Indeed, gradient boosting is performing gradient descent to obtain a good model by minimizing a loss function. But there are a couple of key differences between gradient boosting and the parameter gradient descent that we discussed in the previous post.</p>
+</section>
+<section id="gradient-boosting-versus-parameter-gradient-descent" class="level2">
+<h2 class="anchored" data-anchor-id="gradient-boosting-versus-parameter-gradient-descent">Gradient boosting versus parameter gradient descent</h2>
+<p>The generic gradient boosting algorithm outlined above implies two key differences from parameter gradient descent.</p>
+<ol type="1">
+<li>Instead of nudging parameters, we nudge each individual prediction, thus instead of taking the gradient of loss with respect to the parameters, we take the gradient with respect to the predictions.</li>
+<li>Instead of directly adding the negative gradient to our current parameter values, we create a functional approximation of the negative gradient and add that to our model. Our functional approximation is just a crappy model that tries to use the model features to predict the negative gradient of the loss with respect to our current model predictions.</li>
+</ol>
+<p>The true genius of the gradient boosting algorithm is in chasing the negative gradient of the loss with crappy models, rather than using it to directly update our predictions. If we just directly added the negative gradient of the loss to our predictions, and plugged them into the loss function we could get a lower loss score, but our updated model would be useless since it couldn’t make predictions on new out-of-sample data. Instead we train a crappy model to predict the negative gradient of the loss with respect to the current model predictions, thus we can iteratively update our composite model by adding these crappy models to it.</p>
+</section>
+<section id="gradient-boosting-is-gradient-descent-in-function-space-a.k.a.-prediction-space" class="level2">
+<h2 class="anchored" data-anchor-id="gradient-boosting-is-gradient-descent-in-function-space-a.k.a.-prediction-space">Gradient boosting is gradient descent in function space, a.k.a. prediction space</h2>
+<p>Let’s address the statement in <a href="https://statweb.stanford.edu/~jhf/ftp/trebst.pdf">Friedman’s classic paper</a> that gradient boosting is doing gradient descent in function space. Again we’ll use parameter gradient descent as a basis for comparison.</p>
+<p>In parameter gradient descent, we have a vector of parameter values which, when plugged into the loss function, return some loss score. At each step of gradient descent, we compute the negative gradient of the loss function with respect to each parameter; that tells us which way to nudge each parameter value to achieve a lower loss score. We then add this vector of parameter nudge values to our previous parameter vector to get the new parameter vector. We could view this sequence of successive parameter vectors as a trajectory passing through <em>parameter space</em>, the space spanned by all possible parameter values. Therefore parameter gradient descent operates in parameter space.</p>
+<p>In contrast, when we do gradient boosting, at each step we have a model, a.k.a. a function, that maps feature values to predictions. Given our training dataset, this model yields predictions which can be plugged into our loss function to get a loss score. At each boosting iteration, we compute the negative gradient of the loss with respect to each of the predictions; that tells us which way to nudge each prediction to achieve a lower loss score. We then create a function (a crappy model) that takes feature values and returns an approximation of the corresponding prediction’s nudge value. We then add this crappy model (a function) to our current composite model (also a function) to get the new composite model (you guessed it; also a function). And so by analogy with parameter vectors in parameter space, we can view this sequence of successive model functions as a trajectory passing through <em>function space</em>, the space spanned by all possible functions that map feature values to predictions. Therefore, gradient boosting does gradient descent in function space.</p>
+<p>If this talk about function space still feels a little abstract, you could just use the same substitution trick we used above and swap the model <span class="math inline">\(F(\mathbf{X})\)</span> for its predictions <span class="math inline">\(\mathbf{\hat{y}}\)</span> which is just a vector of numbers. The target values for our nudge models are given by the negative gradient of the loss with respect to this prediction vector. From here, we can see that each time we add a new nudge model to our composite model, we get a new prediction vector. We can view this sequence of successive prediction vectors as a trajectory passing through <em>prediction space</em>, the space spanned by all possible prediction vector values. Therefore we can also say that gradient boosting does gradient descent in prediction space.</p>
+</section>
+<section id="so-why-did-we-fit-the-crappy-models-to-the-residuals-in-our-regression-gbm" class="level2">
+<h2 class="anchored" data-anchor-id="so-why-did-we-fit-the-crappy-models-to-the-residuals-in-our-regression-gbm">So why did we fit the crappy models to the residuals in our regression GBM?</h2>
+<p>In my first post on [gradient boosting machines](/gradient-boosting-machine-from-scratch, in the interest of simplicity I left one key aspect of the problem unaddressed, that is, what loss function were we using to train that GBM? It turns out that because of the way we built our GBM, without knowing it we were actually using a mean squared error (MSE) loss function.</p>
+<p><span class="math display">\[L(\mathbf{y}, \hat{\mathbf{y}}) =  \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 \]</span></p>
+<p>If the GBM was using gradient descent to find a <span class="math inline">\(\hat{\mathbf{y}}\)</span> vector that minimized this loss function, then at each iteration it would have to nudge the current <span class="math inline">\(\hat{\mathbf{y}}\)</span> by the negative gradient of the loss function with respect to <span class="math inline">\(\hat{\mathbf{y}}\)</span>, i.e.&nbsp;<span class="math inline">\(-\nabla_{\hat{\mathbf{y}}} L(\mathbf{y}, \hat{\mathbf{y}})\)</span>. Since our loss function takes a length <span class="math inline">\(n\)</span> vector of predictions <span class="math inline">\(\hat{\mathbf{y}}\)</span> as input, the gradient will be a length-<span class="math inline">\(n\)</span> vector of partial derivatives with respect to each of the predictions <span class="math inline">\(\hat{y}_i\)</span>. Let’s start by taking the negative partial derivative with respect to a particular prediction <span class="math inline">\(\hat{y}_j\)</span>.</p>
+<p><span class="math display">\[
+\begin{array}{rcl}
+-\frac{\partial}{\partial \hat{y}_j} L(\mathbf{y}, \mathbf{\hat{y}})
+    &amp; = &amp; -\frac{\partial}{\partial \hat{y}_j} \left ( \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 \right ) \\
+    &amp; = &amp; -\frac{\partial}{\partial \hat{y}_j} \left ( \frac{1}{n} (y_j - \hat{y}_j)^2 \right ) \\
+    &amp; = &amp; -\frac{1}{n} (2)(y_j - \hat{y}_j) \frac{\partial}{\partial \hat{y}_j} (y_j - \hat{y}_j) \\
+    &amp; = &amp; \frac{2}{n} (y_j - \hat{y}_j) \\
+\end{array}
+\]</span></p>
+<p>It turns out that the negative partial derivative of the MSE loss function with respect to a particular prediction <span class="math inline">\(\hat{y}_i\)</span> is proportional to the residual <span class="math inline">\(y_i - \hat{y}_i\)</span>! This is a pretty intuitive result, because if we nudge a prediction by it’s residual, we’ll end up with the correct target value.</p>
+<p>We can go ahead and write the nudge vector as</p>
+<p><span class="math display">\[\mathbf{r} = -\nabla_{\hat{\mathbf{y}}} L(\mathbf{y}, \hat{\mathbf{y}}) = \frac{2}{n}(\mathbf{y} - \hat{\mathbf{y}})\]</span></p>
+<p>which is proportional to the residual vector <span class="math inline">\(\mathbf{y} - \hat{\mathbf{y}}\)</span>. This means that when we use the mean squared error loss function, our nudge values are given by the current model residuals, and therefore each new crappy model targets the previous model’s residuals.</p>
+<p>And this result brings us full circle, back to our original intuition from the first GBM post about chasing residuals with crappy models. Now we see that intuitive idea is just a special case of the more general and, dare I say, even more beautiful idea of chasing the negative gradient of the loss function with crappy models.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
+<p>We covered a lot of conceptual ground in this post, so let’s recap the key ideas.</p>
+<ol type="1">
+<li>Gradient boosting can use gradient descent to minimize any differentiable loss function in service of creating a good final model.</li>
+<li>There are two key differences between gradient boosting and parameter gradient descent:
+<ul>
+<li>In gradient boosting, we nudge prediction values rather than parameter values, so to find the desired nudge values, we take the negative gradient of the loss function with respect to the predictions.</li>
+<li>In gradient boosting, we nudge our predictions by adding a crappy model that approximates the nudge values, rather than adding the nudge values directly to the predictions.</li>
+</ul></li>
+<li>Gradient boosting does gradient descent in function space. But since the model predictions are just numeric vectors, and since we take the gradient of the loss function with respect to the prediction vector, it’s also valid and probably easier to think of gradient boosting as gradient descent in prediction space.</li>
+<li>We saw that iteratively fitting crappy models to the previous model residuals, as we did in the regression GBM from scratch post, is just a special case of fitting crappy models to the negative gradient of the loss function (in this case the mean squared error loss).</li>
+</ol>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Phew, there it is, how gradient boosting models do gradient descent in function space. Understanding how the general form of gradient boosting works opens up the possibility for us to use any differentiable loss function for model training. That is pretty exciting because it means that we can get a lot of mileage out of this one class of learning algorithms. Stay tuned for more on some of the awesome things we can do with these ideas in future posts!</p>
+<p>There are a couple of resources I found to be super helpful while researching the content in this post. Definitely check them out if you want to read more about gradient boosting and gradient descent.</p>
+<p><a href="https://explained.ai/gradient-boosting/">How to explain gradient boosting</a> by Terence Parr and Jeremy Howard</p>
+<p><a href="http://nicolas-hug.com/blog/gradient_boosting_descent">Understanding Gradient Boosting as Gradient Descent</a> by Nicolas Hug</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

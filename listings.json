@@ -2,30 +2,30 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/2022/xgboost-from-scratch/index.html",
-      "/posts/2022/how-to-understand-xgboost/index.html",
-      "/posts/2021/decision-tree-from-scratch/index.html",
-      "/posts/2021/consider-the-decision-tree/index.html",
-      "/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html",
-      "/posts/2021/hello-pyspark/index.html",
-      "/posts/2021/how-gradient-boosting-does-gradient-descent/index.html",
-      "/posts/2021/get-down-with-gradient-descent/index.html",
-      "/posts/2020/gradient-boosting-machine-from-scratch/index.html",
-      "/posts/2020/8020-pandas-tutorial/index.html",
-      "/posts/2020/hello-world/index.html"
+      "/posts/2022-05-07-xgboost-from-scratch/index.html",
+      "/posts/2022-03-13-how-to-understand-xgboost/index.html",
+      "/posts/2021-12-13-decision-tree-from-scratch/index.html",
+      "/posts/2021-12-12-consider-the-decision-tree/index.html",
+      "/posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html",
+      "/posts/2021-06-22-hello-pyspark/index.html",
+      "/posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html",
+      "/posts/2021-01-22-get-down-with-gradient-descent/index.html",
+      "/posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html",
+      "/posts/2020-11-25-8020-pandas-tutorial/index.html",
+      "/posts/2020-11-22-hello-world/index.html"
     ]
   },
   {
     "listing": "/gradient-boosting-series.html",
     "items": [
-      "/posts/2020/gradient-boosting-machine-from-scratch/index.html",
-      "/posts/2021/get-down-with-gradient-descent/index.html",
-      "/posts/2021/how-gradient-boosting-does-gradient-descent/index.html",
-      "/posts/2021/gradient-boosting-machine-with-any-loss-function/index.html",
-      "/posts/2021/consider-the-decision-tree/index.html",
-      "/posts/2021/decision-tree-from-scratch/index.html",
-      "/posts/2022/how-to-understand-xgboost/index.html",
-      "/posts/2022/xgboost-from-scratch/index.html"
+      "/posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html",
+      "/posts/2021-01-22-get-down-with-gradient-descent/index.html",
+      "/posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html",
+      "/posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html",
+      "/posts/2021-12-12-consider-the-decision-tree/index.html",
+      "/posts/2021-12-13-decision-tree-from-scratch/index.html",
+      "/posts/2022-03-13-how-to-understand-xgboost/index.html",
+      "/posts/2022-05-07-xgboost-from-scratch/index.html"
     ]
   }
 ]

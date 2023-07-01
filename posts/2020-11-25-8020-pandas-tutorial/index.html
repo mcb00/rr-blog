@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matt Bowers">
+<meta name="dcterms.date" content="2020-11-25">
+<meta name="description" content="An opinionated pandas tutorial on my preferred methods to accomplish the most essential data transformation tasks in a way that will make veteran R and tidyverse users smile.">
+
+<title>Random Realizations - The 80/20 Pandas Tutorial</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Random Realizations</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../gradient-boosting-series.html">
+ <span class="menu-text">Gradient Boosting Series</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mcb00"><i class="bi bi-github" role="img" aria-label="Matt on Github">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/mcbwrs"><i class="bi bi-twitter" role="img" aria-label="Matt on Twitter">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/matt-bowers"><i class="bi bi-linkedin" role="img" aria-label="Matt on Linkedin">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<span style="font-weight: 600;">Subscribe</span>
+
+<!-- Begin Mailchimp Signup Form -->
+
+<link href="../../subscribe.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+    #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif;  width:170px;}
+    /* Add your own Mailchimp form style overrides in your site stylesheet or in this style block.
+       We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */
+    #mc-embedded-subscribe-form{margin-left:-5px;}
+</style>
+
+<div id="mc_embed_signup">
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+    <div id="mc_embed_signup_scroll">
+
+    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required="">
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+        <div class="optionalParent">
+            <div class="clear foot" style="margin-top: 10px;">
+                <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                <p class="brandingLogo"></p>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<!--End mc_embed_signup-->
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#imports-and-data" id="toc-imports-and-data" class="nav-link active" data-scroll-target="#imports-and-data">Imports and Data</a></li>
+  <li><a href="#select-rows-based-on-their-values-with-query" id="toc-select-rows-based-on-their-values-with-query" class="nav-link" data-scroll-target="#select-rows-based-on-their-values-with-query">Select rows based on their values with <code>query()</code></a></li>
+  <li><a href="#select-columns-by-name-with-filter" id="toc-select-columns-by-name-with-filter" class="nav-link" data-scroll-target="#select-columns-by-name-with-filter">Select columns by name with <code>filter()</code></a></li>
+  <li><a href="#sort-rows-with-sort_values" id="toc-sort-rows-with-sort_values" class="nav-link" data-scroll-target="#sort-rows-with-sort_values">Sort rows with <code>sort_values()</code></a></li>
+  <li><a href="#add-new-columns-with-assign" id="toc-add-new-columns-with-assign" class="nav-link" data-scroll-target="#add-new-columns-with-assign">Add new columns with <code>assign()</code></a></li>
+  <li><a href="#chain-transformations-together-with-the-dot-chain" id="toc-chain-transformations-together-with-the-dot-chain" class="nav-link" data-scroll-target="#chain-transformations-together-with-the-dot-chain">Chain transformations together with the dot chain</a></li>
+  <li><a href="#collapsing-rows-into-grouped-summaries-with-groupby" id="toc-collapsing-rows-into-grouped-summaries-with-groupby" class="nav-link" data-scroll-target="#collapsing-rows-into-grouped-summaries-with-groupby">Collapsing rows into grouped summaries with <code>groupby()</code></a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">The 80/20 Pandas Tutorial</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">pandas</div>
+    <div class="quarto-category">tutorial</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    An opinionated pandas tutorial on my preferred methods to accomplish the most essential data transformation tasks in a way that will make veteran R and tidyverse users smile.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matt Bowers </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 25, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p><img src="80_20_pandas.png" title="8020 pandas" class="img-fluid"></p>
+<p>Ahh, pandas. In addition to being everyone’s favorite mostly vegetarian bear from south central China, it’s also <em>the</em> python library for working with tabular data, a.k.a. dataframes. When you dive into pandas, you’ll quickly find out that there is a lot going on; indeed there are <a href="https://pandas.pydata.org/docs/reference/frame.html">hundreds</a> of methods for operating on dataframes. But luckily for us, as with many areas of life, there is a <a href="https://en.wikipedia.org/wiki/Pareto_principle">Pareto Principle</a>, or 80/20 rule, that will help us focus on the small set of methods that collectively solve the majority of our data transformation needs.</p>
+<p>If you’re like me, then pandas is not your first data-handling tool; maybe you’ve been using SQL or R with <code>data.table</code> or <code>dplyr</code>. If so, that’s great because you already have a sense for the key operations we need when working with tabular data. In their book, <a href="https://r4ds.had.co.nz/">R for Data Science</a>, Garrett Grolemund and Hadley Wickham describe five essential operations for manipulating dataframes. I’ve found that these cover the majority of my data transformation tasks to prepare data for analysis, visualization, and modeling.</p>
+<ol type="1">
+<li>filtering rows based on data values</li>
+<li>sorting rows based on data values</li>
+<li>selecting columns by name</li>
+<li>adding new columns based on the existing columns</li>
+<li>creating grouped summaries of the dataset</li>
+</ol>
+<p>I would add that we also need a way to build up more complex transformations by chaining these fundamental operations together sequentially.</p>
+<p>Before we dive in, here’s the TLDR on the pandas methods that I prefer for accomplishing these tasks, along with their equivalents from SQL and <code>dplyr</code> in R.</p>
+<table class="table">
+<colgroup>
+<col style="width: 49%">
+<col style="width: 21%">
+<col style="width: 3%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>description</th>
+<th>pandas</th>
+<th>SQL</th>
+<th>dplyr</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filter rows based on data values</td>
+<td><code>query()</code></td>
+<td><code>WHERE</code></td>
+<td><code>filter()</code></td>
+</tr>
+<tr class="even">
+<td>sort rows based on data values</td>
+<td><code>sort_values()</code></td>
+<td><code>ORDER BY</code></td>
+<td><code>arrange()</code></td>
+</tr>
+<tr class="odd">
+<td>select columns by name</td>
+<td><code>filter()</code></td>
+<td><code>SELECT</code></td>
+<td><code>select()</code></td>
+</tr>
+<tr class="even">
+<td>add new columns based on the existing columns</td>
+<td><code>assign()</code></td>
+<td><code>AS</code></td>
+<td><code>mutate()</code></td>
+</tr>
+<tr class="odd">
+<td>create grouped summaries of the dataset</td>
+<td><code>groupby()</code> <br> <code>apply()</code></td>
+<td><code>GROUP BY</code></td>
+<td><code>group_by()</code> <br> <code>summarise()</code></td>
+</tr>
+<tr class="even">
+<td>chain operations together</td>
+<td><code>.</code></td>
+<td></td>
+<td><code>%&gt;%</code></td>
+</tr>
+</tbody>
+</table>
+<section id="imports-and-data" class="level2">
+<h2 class="anchored" data-anchor-id="imports-and-data">Imports and Data</h2>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We’ll use the <a href="https://github.com/hadley/nycflights13">nycflights13</a> dataset which contains data on the 336,776 flights that departed from New York City in 2013.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">'https://www.openintro.org/book/statdata/nycflights.csv'</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>storage_options <span class="op">=</span> {<span class="st">'User-Agent'</span>: <span class="st">'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0'</span>}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>flights <span class="op">=</span> pd.read_csv(url, storage_options<span class="op">=</span>storage_options)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="select-rows-based-on-their-values-with-query" class="level2">
+<h2 class="anchored" data-anchor-id="select-rows-based-on-their-values-with-query">Select rows based on their values with <code>query()</code></h2>
+<p><code>query()</code> lets you retain a subset of rows based on the values of the data; it’s like <code>dplyr::filter()</code> in R or <code>WHERE</code> in SQL. Its argument is a string specifying the condition to be met for rows to be included in the result. You specify the condition as an expression involving the column names and comparison operators like <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>==</code> (equal), and <code>~=</code> (not equal). You can specify compound expressions using <code>and</code> and <code>or</code>, and you can even check if the column value matches any items in a list.</p>
+<div class="cell" data-scrolled="true" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compare one column to a value</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'month == 6'</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># compare two column values</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'arr_delay &gt; dep_delay'</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># using arithmetic</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'arr_delay &gt; 0.5 * air_time'</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># using "and"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'month == 6 and day == 1'</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># using "or"</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'origin == "JFK" or dest == "JFK"'</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># column value matching any item in a list</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'carrier in ["AA", "UA"]'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You may have noticed that it seems to be much more popular to filter pandas data frames using boolean indexing. Indeed when I ask my favorite search engine how to filter a pandas dataframe on its values, I find <a href="https://cmdlinetips.com/2018/02/how-to-subset-pandas-dataframe-based-on-values-of-a-column/">this tutorial</a>, <a href="https://medium.com/swlh/3-ways-to-filter-pandas-dataframe-by-column-values-dfb6609b31de">this blog post</a>, <a href="https://stackoverflow.com/questions/17071871/how-to-select-rows-from-a-dataframe-based-on-column-values">various</a> <a href="https://stackoverflow.com/questions/11869910/pandas-filter-rows-of-dataframe-with-operator-chaining">questions</a> on Stack Overflow, and even <a href="https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/03_subset_data.html">the pandas documentation</a>, all espousing boolean indexing. Here’s what it looks like.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># canonical boolean indexing</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>flights[(flights[<span class="st">'carrier'</span>] <span class="op">==</span> <span class="st">"AA"</span>) <span class="op">&amp;</span> (flights[<span class="st">'origin'</span>] <span class="op">==</span> <span class="st">"JFK"</span>)]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the equivalent use of query()</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'carrier == "AA" and origin == "JFK"'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There are a few reasons I prefer <code>query()</code> over boolean indexing.</p>
+<ol type="1">
+<li><code>query()</code> does not require me to type the dataframe name again, whereas boolean indexing requires me to type it every time I wish to refer to a column.</li>
+<li><code>query()</code> makes the code easier to read and understand, especially when expressions get complex.</li>
+<li><code>query()</code> is <a href="https://jakevdp.github.io/PythonDataScienceHandbook/03.12-performance-eval-and-query.html">more computationally efficient</a> than boolean indexing.</li>
+<li><code>query()</code> can safely be used in dot chains, which we’ll see very soon.</li>
+</ol>
+</section>
+<section id="select-columns-by-name-with-filter" class="level2">
+<h2 class="anchored" data-anchor-id="select-columns-by-name-with-filter">Select columns by name with <code>filter()</code></h2>
+<p><code>filter()</code> lets you pick out a specific set of columns by name; it’s analogous to <code>dplyr::select()</code> in R or <code>SELECT</code> in SQL. You can either provide exactly the column names you want, or you can grab all columns whose names contain a given substring or which match a given regular expression. This isn’t a big deal when your dataframe has only a few columns, but is particularly useful when you have a dataframe with tens or hundreds of columns.</p>
+<div class="cell" data-scrolled="true" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select a list of columns</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>([<span class="st">'origin'</span>, <span class="st">'dest'</span>])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns containing a particular substring</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>(like<span class="op">=</span><span class="st">'time'</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns matching a regular expression</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>(regex<span class="op">=</span><span class="st">'e$'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sort-rows-with-sort_values" class="level2">
+<h2 class="anchored" data-anchor-id="sort-rows-with-sort_values">Sort rows with <code>sort_values()</code></h2>
+<p><code>sort_values()</code> changes the order of the rows based on the data values; it’s like<code>dplyr::arrange()</code> in R or <code>ORDER BY</code> in SQL. You can specify one or more columns on which to sort, where their order denotes the sorting priority. You can also specify whether to sort in ascending or descending order.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>flights.sort_values(<span class="st">'air_time'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column in descending order</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>flights.sort_values(<span class="st">'air_time'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by carrier, then within carrier, sort by descending distance</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>flights.sort_values([<span class="st">'carrier'</span>, <span class="st">'distance'</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="add-new-columns-with-assign" class="level2">
+<h2 class="anchored" data-anchor-id="add-new-columns-with-assign">Add new columns with <code>assign()</code></h2>
+<p><code>assign()</code> adds new columns which can be functions of the existing columns; it’s like <code>dplyr::mutate()</code> from R.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add a new column based on other columns</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>flights.assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># another new column based on existing columns</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>flights.assign(gain <span class="op">=</span> <span class="kw">lambda</span> x: x.dep_delay <span class="op">-</span> x.arr_delay)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If you’re like me, this way of using <code>assign()</code> might seem a little strange at first. Let’s break it down. In the call to <code>assign()</code> the keyword argument <code>speed</code> tells pandas the name of our new column. The business to the right of the <code>=</code> is a inline lambda function that takes the dataframe we passed to <code>assign()</code> and returns the column we want to add.</p>
+<p>I like using <code>x</code> as the lambda argument because its easy to type and it evokes tabular data (think <a href="https://en.wikipedia.org/wiki/Design_matrix">design matrix</a>), which reminds me that it refers to the entire dataframe. We can then access the other columns in our dataframe using the dot like <code>x.other_column</code>.</p>
+<p>It’s true that you can skip the whole lambda business and refer to the dataframe to which you are assigning directly inside the assign. That might look like this.</p>
+<pre><code>flights.assign(speed = flights.distance / flights.air_time)</code></pre>
+<p>I prefer using a lambda for the following reasons.</p>
+<ol type="1">
+<li>If you gave your dataframe a good name, using the lambda will save you from typing the name every time you want to refer to a column.</li>
+<li>The lambda makes your code more portable. Since you refer to the dataframe as a generic <code>x</code>, you can reuse this same assignment code on a dataframe with a different name.</li>
+<li>Most importantly, the lambda will allow you to harness the power of dot chaining.</li>
+</ol>
+</section>
+<section id="chain-transformations-together-with-the-dot-chain" class="level2">
+<h2 class="anchored" data-anchor-id="chain-transformations-together-with-the-dot-chain">Chain transformations together with the dot chain</h2>
+<p>One of the awesome things about pandas is that the <code>object.method()</code> paradigm lets us easily build up complex dataframe transformations from a sequence of method calls. In R, this is effectively accomplished by the pipe <code>%&gt;%</code> operator. For example, suppose we want to look at high-speed flights from JFK to Honolulu, which would require us to query for JFK to Honolulu flights, assign a speed column, and maybe sort on that new speed column.</p>
+<p>We can say:</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># neatly chain method calls together</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'origin == "JFK"'</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'dest == "HNL"'</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    .sort_values(by<span class="op">=</span><span class="st">'speed'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We compose the dot chain by wrapping the entire expression in parentheses and indenting each line within. The first line is the name of the dataframe on which we are operating. Each subsequent line has a single method call.</p>
+<p>There are a few great things about writing the code this way: 1. Readability. It’s easy to scan down the left margin of the code to see what’s happening. The first line gives us our noun (the dataframe) and each subsequent line starts with a verb. You could read this as “take <code>flights</code> then query the rows where origin is JFK, then query for rows where destination is HNL, then assign a new column called speed, then sort the dataframe by speed, then query only for the rows where speed is greater than 8.0. 1. Flexibility - It’s easy to comment out individual lines and re-run the cell. It’s also easy to reorder operations, since only one thing happens on each line. 1. Neatness - We have not polluted our workspace with any intermediate variables, nor have we wasted any mental energy thinking of names for any temporary variables.</p>
+<p>By default, dot chains do not modify the original dataframe; they just output a temporary result that we can inspect directly in the output. If you want to store the result, or pass it along to another function (e.g.&nbsp;for plotting), you can simply assign the entire dot chain to a variable.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sotre the output of the dot chain in a new dataframe</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>flights_high_speed <span class="op">=</span> (</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="collapsing-rows-into-grouped-summaries-with-groupby" class="level2">
+<h2 class="anchored" data-anchor-id="collapsing-rows-into-grouped-summaries-with-groupby">Collapsing rows into grouped summaries with <code>groupby()</code></h2>
+<p><code>groupby()</code> combined with <code>apply()</code> gives us flexibility and control over our grouped summaries; it’s like <code>dplyr::group_by()</code> and <code>dplyr::summarise()</code> in R. This is the primary pattern I use for SQL-style groupby operations in pandas. Specifically it unlocks the following essential functionality you’re used to having in SQL. 1. specify the names of the aggregation columns we create 1. specify which aggregation function to use on which columns 1. compose more complex aggregations such as the proportion of rows meeting some condition 1. aggregate over arbitrary functions of multiple columns</p>
+<p>Let’s check out the departure delay stats for each carrier.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grouped summary with groupby and apply</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'n_flights'</span>: <span class="bu">len</span>(d),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'med_delay'</span>: d.dep_delay.median(),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_delay'</span>: d.dep_delay.mean(),</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    }))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    .head()</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>n_flights</th>
+      <th>med_delay</th>
+      <th>avg_delay</th>
+    </tr>
+    <tr>
+      <th>carrier</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>9E</th>
+      <td>1696.0</td>
+      <td>-1.0</td>
+      <td>17.285967</td>
+    </tr>
+    <tr>
+      <th>AA</th>
+      <td>3188.0</td>
+      <td>-2.0</td>
+      <td>9.142409</td>
+    </tr>
+    <tr>
+      <th>AS</th>
+      <td>66.0</td>
+      <td>-4.5</td>
+      <td>5.181818</td>
+    </tr>
+    <tr>
+      <th>B6</th>
+      <td>5376.0</td>
+      <td>-1.0</td>
+      <td>13.137091</td>
+    </tr>
+    <tr>
+      <th>DL</th>
+      <td>4751.0</td>
+      <td>-2.0</td>
+      <td>8.529573</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>While you might be used to <code>apply()</code> acting over the rows or columns of a dataframe, here we’re calling apply on a grouped dataframe object, so it’s acting over the <em>groups</em>. According to the <a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.groupby.html">pandas documentation</a>:</p>
+<blockquote class="blockquote">
+<p>The function passed to apply must take a dataframe as its first argument and return a dataframe, a series or a scalar. apply will then take care of combining the results back together into a single dataframe or series. apply is therefore a highly flexible grouping method.</p>
+</blockquote>
+<p>We need to supply <code>apply()</code> with a function that takes each chunk of the grouped dataframe and returns (in our case) a series object with one element for each new aggregation column. Notice that I use a lambda to specify the function we pass to <code>apply())</code>, and that I name its argument <code>d</code>, which reminds me that it’s a dataframe. My lambda returns a pandas series whose index entries specify the new aggregation column names, and whose values constitute the results of the aggregations for each group. Pandas will then stitch everything back together into a lovely dataframe.</p>
+<p>Notice how nice the code looks when we use this pattern. Each aggregation is specified on its own line, which makes it easy to see what aggregation columns we’re creating and allows us to comment, uncomment, and reorder the aggregations without breaking anything.</p>
+<p>Here are some more complex aggregations to illustrate some useful patterns.</p>
+<div class="cell" data-scrolled="true" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># more complex grouped summary</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_gain'</span>: np.mean(d.dep_delay <span class="op">-</span> d.arr_delay), </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_delay_gt_30'</span>: np.mean(d.dep_delay <span class="op">&gt;</span> <span class="dv">30</span>), </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_late_dep_early_arr'</span>: np.mean((d.dep_delay <span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">&amp;</span> (d.arr_delay <span class="op">&lt;</span> <span class="dv">0</span>)), </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_arr_given_dep_delay_gt_0'</span>: d.query(<span class="st">'dep_delay &gt; 0'</span>).arr_delay.mean(),</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">'cor_arr_delay_dep_delay'</span>: np.corrcoef(d.dep_delay, d.arr_delay)[<span class="dv">0</span>,<span class="dv">1</span>],</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    }))</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    .head()</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>avg_gain</th>
+      <th>pct_delay_gt_30</th>
+      <th>pct_late_dep_early_arr</th>
+      <th>avg_arr_given_dep_delay_gt_0</th>
+      <th>cor_arr_delay_dep_delay</th>
+    </tr>
+    <tr>
+      <th>carrier</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>9E</th>
+      <td>9.247642</td>
+      <td>0.196934</td>
+      <td>0.110259</td>
+      <td>39.086111</td>
+      <td>0.932485</td>
+    </tr>
+    <tr>
+      <th>AA</th>
+      <td>7.743726</td>
+      <td>0.113237</td>
+      <td>0.105395</td>
+      <td>30.087165</td>
+      <td>0.891013</td>
+    </tr>
+    <tr>
+      <th>AS</th>
+      <td>16.515152</td>
+      <td>0.106061</td>
+      <td>0.121212</td>
+      <td>28.058824</td>
+      <td>0.864565</td>
+    </tr>
+    <tr>
+      <th>B6</th>
+      <td>3.411458</td>
+      <td>0.160528</td>
+      <td>0.084449</td>
+      <td>37.306866</td>
+      <td>0.914180</td>
+    </tr>
+    <tr>
+      <th>DL</th>
+      <td>7.622816</td>
+      <td>0.097874</td>
+      <td>0.100821</td>
+      <td>30.078029</td>
+      <td>0.899327</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Here’s what’s happening.</p>
+<ul>
+<li><code>np.mean(d.dep_delay - d.arr_delay)</code> aggregates over the difference of two columns.</li>
+<li><code>np.mean(d.dep_delay &gt; 30)</code> computes the proportion of rows where the delay is greater than 30 minutes. Generating a boolean series based on some condition and then using <code>mean()</code> to find the proportion comes up all the time.</li>
+<li><code>np.mean((d.dep_delay &gt; 0) &amp; (d.arr_delay &lt; 0))</code> shows that we can compute proportions where conditions on multiple columns are met.</li>
+<li><code>d.query('dep_delay &gt; 0').arr_delay.mean()</code> computes the average arrival delay on flights where the departure was delayed. Here we first filter each grouped dataframe down to the subset of rows where departure delay is greater than zero using <code>query()</code>, and then we take the mean of the remaining arrival delays.</li>
+<li><code>np.corrcoef(d.dep_delay, d.arr_delay)[0,1]</code> computes the correlation coefficient between departure and arrival delays. Remember we can use pretty much any reduction operation to collapse values down to a scalar.</li>
+</ul>
+<p>You might have noticed that the canonical pandas approach for grouped summaries is to use <code>agg()</code>. That works well if you need to apply the same aggregation function on each column in the dataframe, e.g.&nbsp;taking the mean of every column. But because of the kind of data I work with these days, it’s much more common for me to use customized aggregations like those above, so the <code>groupby()</code> <code>apply()</code> idiom works best for me.</p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>There you have it, how to pull off the five most essential data transformation tasks using pandas in a style reminiscent of my beloved <code>dplyr</code>. Remember that part of the beauty of pandas is that since there are so many ways to do most tasks, you can develop your own style based on the kind of data you work with, what you like about other tools, how you see others using the tools, and of course your own taste and preferences.</p>
+<p>If you found this post helpful or if you have your own preferred style for accomplishing any of these key transformations with pandas, do let me know about it in the comments.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="mcb00/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
