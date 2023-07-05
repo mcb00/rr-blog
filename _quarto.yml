@@ -1,6 +1,9 @@
 project:
   type: website
-  pre-render: "rm -rf _site/*"
+  pre-render: 
+    - "rm -rf _site/*"
+  post-render:
+    - "python add-canonicals.py"
 
 website:
   title: "Random Realizations"
