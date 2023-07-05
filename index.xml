@@ -10,7 +10,7 @@
 <atom:link href="https://blog.mattbowers.dev/index.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <generator>quarto-1.2.335</generator>
-<lastBuildDate>Fri, 06 May 2022 23:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 06 May 2022 22:00:00 GMT</lastBuildDate>
 <item>
   <title>XGBoost from scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -375,7 +375,7 @@ xgboost score: 0.24123239765807963</code></pre>
   <category>gradient boosting</category>
   <category>from scratch</category>
   <guid>https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/index.html</guid>
-  <pubDate>Fri, 06 May 2022 23:00:00 GMT</pubDate>
+  <pubDate>Fri, 06 May 2022 22:00:00 GMT</pubDate>
   <media:content url="https://blog.mattbowers.dev/posts/2022-05-07-xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
@@ -532,7 +532,7 @@ To do that, first we need a way to compute the objective function given a partic
  ]]></description>
   <category>gradient boosting</category>
   <guid>https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/index.html</guid>
-  <pubDate>Sun, 13 Mar 2022 00:00:00 GMT</pubDate>
+  <pubDate>Sat, 12 Mar 2022 23:00:00 GMT</pubDate>
   <media:content url="https://blog.mattbowers.dev/posts/2022-03-13-how-to-understand-xgboost/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
@@ -909,7 +909,7 @@ Wall time: 625 ms</code></pre>
   <category>gradient boosting</category>
   <category>from scratch</category>
   <guid>https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/index.html</guid>
-  <pubDate>Mon, 13 Dec 2021 00:00:00 GMT</pubDate>
+  <pubDate>Sun, 12 Dec 2021 23:00:00 GMT</pubDate>
   <media:content url="https://blog.mattbowers.dev/posts/2021-12-13-decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
 </item>
 </channel>
