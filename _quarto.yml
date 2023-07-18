@@ -9,8 +9,11 @@ website:
   title: "Random Realizations"
   site-url:  https://blog.mattbowers.dev/
   description: "A blog about data science, statistics, machine learning, and the scientific method"
+  favicon: "favicon.png"
   margin-header: subscribe.html
   navbar:
+    background: dark
+    logo: logo.png
     right:
       - text: About
         href: about.qmd
@@ -28,8 +31,8 @@ website:
         text: Matt on Linkedin
 format:
   html:
-    theme:
-      light: flatly
+    theme: yeti # zephyr
+      # light: flatly
       # dark: darkly
     css: styles.css
 
