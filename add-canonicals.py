@@ -8,9 +8,9 @@ from urllib.parse import urlparse
 import warnings
 
 site_dir = '_site'
-sitemap_file = 'sitemap.xml'
+sitemap_file = '_site/sitemap.xml'
 
-document = parse(site_dir + '/' + sitemap_file)
+document = parse(sitemap_file)
 locs = document.getElementsByTagName('loc')
 urls = [l.firstChild.nodeValue for l in locs]
 
@@ -37,3 +37,11 @@ for url in urls:
         # Write the file out again
         with open(path, 'w') as file:
           file.write(filedata)
+
+# Remove index.html from urls in the sitemap
+print('Stripping index.html from urls in the sitemap')
+with open(sitemap_file, 'r') as file :
+  filedata = file.read()
+filedata = filedata.replace('index.html', '')
+with open(sitemap_file, 'w') as file:
+  file.write(filedata)
