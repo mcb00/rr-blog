@@ -17,7 +17,11 @@ urls = [l.firstChild.nodeValue for l in locs]
 for url in urls:
     
     path = site_dir + urlparse(url).path
-    cannonical_tag = f'<link rel="canonical" href="{url}" />'
+    # strip index.html from canonical url
+    if url[-10:] == 'index.html':
+       url = url[:-10]
+       print(f'{url}')
+    canonical_tag = f'<link rel="canonical" href="{url}" />'
 
     # Read in the file
     with open(path, 'r') as file :
@@ -28,7 +32,7 @@ for url in urls:
     else:
         print(f'{path} adding canonical tag.')
         # Replace the target string
-        filedata = filedata.replace('</head>', cannonical_tag +'\n</head>')
+        filedata = filedata.replace('</head>', canonical_tag +'\n</head>')
 
         # Write the file out again
         with open(path, 'w') as file:
