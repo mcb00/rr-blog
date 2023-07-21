@@ -3,7 +3,7 @@ project:
   pre-render: 
     - "rm -rf _site/*"
   post-render:
-    - "python add-canonicals.py"
+    - "python post-render.py"
 
 website:
   title: "Random Realizations"
