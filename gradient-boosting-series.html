@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.335">
+<meta name="generator" content="quarto-1.3.433">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -17,7 +17,7 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
 </style>
@@ -30,6 +30,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./favicon.png" rel="icon" type="image/png">
 <script src="site_libs/quarto-listing/list.min.js"></script>
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
@@ -57,7 +58,8 @@ ul.task-list li input[type="checkbox"] {
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 <script>
@@ -90,6 +92,7 @@ ul.task-list li input[type="checkbox"] {
   })
   </script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="styles.css">
@@ -103,40 +106,33 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./logo.png" alt="" class="navbar-logo">
+    </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Random Realizations</span>
     </a>
   </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html">
+    <a class="nav-link" href="./about.html" rel="" target="">
  <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./gradient-boosting-series.html" aria-current="page">
+    <a class="nav-link active" href="./gradient-boosting-series.html" rel="" target="" aria-current="page">
  <span class="menu-text">Gradient Boosting Series</span></a>
   </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/mcb00"><i class="bi bi-github" role="img" aria-label="Matt on Github">
-</i> 
- <span class="menu-text"></span></a>
-  </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/mcbwrs"><i class="bi bi-twitter" role="img" aria-label="Matt on Twitter">
-</i> 
- <span class="menu-text"></span></a>
-  </li>  
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://www.linkedin.com/in/matt-bowers"><i class="bi bi-linkedin" role="img" aria-label="Matt on Linkedin">
-</i> 
- <span class="menu-text"></span></a>
-  </li>  
 </ul>
-              <div id="quarto-search" class="" title="Search"></div>
+            <div class="quarto-navbar-tools tools-wide">
+    <a href="https://github.com/mcb00" rel="" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/mcbwrs" rel="" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" rel="" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
           </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
@@ -207,12 +203,12 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="gradient boosting,from scratch" data-listing-date-sort="1607382000000" data-listing-file-modified-sort="1688236111529" data-listing-reading-time-sort="5.93">
+<div class="quarto-post image-right" data-index="0" data-categories="gradient boosting,from scratch" data-listing-date-sort="1607382000000" data-listing-file-modified-sort="1689966221309" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6">
 <div class="thumbnail">
-<p><a href="./posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html"> <img src="./posts/2020-12-08-gradient-boosting-machine-from-scratch/thumbnail.jpg" class="thumnail-image" alt="SF buzzes silently in the distance"> </a></p>
+<p><a href="./posts/gradient-boosting-machine-from-scratch/index.html"> <img src="./posts/gradient-boosting-machine-from-scratch/thumbnail.jpg" class="thumbnail-image" alt="SF buzzes silently in the distance"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html">
+<a href="./posts/gradient-boosting-machine-from-scratch/index.html">
 <h3 class="no-anchor listing-title">
 How to Build a Gradient Boosting Machine from Scratch
 </h3>
@@ -228,26 +224,26 @@ gradient boosting
 from scratch
 </div>
 </div>
-<a href="./posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html">
+<a href="./posts/gradient-boosting-machine-from-scratch/index.html">
 <div class="listing-description">
 <p>Understand the intuition behind the gradient boosting machine (GBM) and learn how to implement it from scratch.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2020-12-08-gradient-boosting-machine-from-scratch/index.html">
+<a href="./posts/gradient-boosting-machine-from-scratch/index.html">
 <div class="listing-date">
 Dec 8, 2020
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="gradient boosting" data-listing-date-sort="1611270000000" data-listing-file-modified-sort="1688236111534" data-listing-reading-time-sort="8.3">
+<div class="quarto-post image-right" data-index="1" data-categories="gradient boosting" data-listing-date-sort="1611270000000" data-listing-file-modified-sort="1689966221305" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9">
 <div class="thumbnail">
-<p><a href="./posts/2021-01-22-get-down-with-gradient-descent/index.html"> <img src="./posts/2021-01-22-get-down-with-gradient-descent/thumbnail.png" class="thumnail-image" alt="dancer getting down"> </a></p>
+<p><a href="./posts/get-down-with-gradient-descent/index.html"> <img src="./posts/get-down-with-gradient-descent/thumbnail.png" class="thumbnail-image" alt="dancer getting down"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-01-22-get-down-with-gradient-descent/index.html">
+<a href="./posts/get-down-with-gradient-descent/index.html">
 <h3 class="no-anchor listing-title">
 Get Down with Gradient Descent
 </h3>
@@ -260,26 +256,26 @@ Get Down with Gradient Descent
 gradient boosting
 </div>
 </div>
-<a href="./posts/2021-01-22-get-down-with-gradient-descent/index.html">
+<a href="./posts/get-down-with-gradient-descent/index.html">
 <div class="listing-description">
 <p>Get down with the intuition for gradient descent via a fresh analogy, develop the mathematical formulation of the algorithm, and implement it from scratch to train a linear regression model.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-01-22-get-down-with-gradient-descent/index.html">
+<a href="./posts/get-down-with-gradient-descent/index.html">
 <div class="listing-date">
 Jan 22, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="gradient boosting" data-listing-date-sort="1619474400000" data-listing-file-modified-sort="1688236111536" data-listing-reading-time-sort="14.175">
+<div class="quarto-post image-right" data-index="2" data-categories="gradient boosting" data-listing-date-sort="1619474400000" data-listing-file-modified-sort="1689966221321" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="15">
 <div class="thumbnail">
-<p><a href="./posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html"> <img src="./posts/2021-04-27-how-gradient-boosting-does-gradient-descent/thumbnail.jpg" class="thumnail-image" alt="A whiteboard session at Playa Pelada"> </a></p>
+<p><a href="./posts/how-gradient-boosting-does-gradient-descent/index.html"> <img src="./posts/how-gradient-boosting-does-gradient-descent/thumbnail.jpg" class="thumbnail-image" alt="A whiteboard session at Playa Pelada"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html">
+<a href="./posts/how-gradient-boosting-does-gradient-descent/index.html">
 <h3 class="no-anchor listing-title">
 How Gradient Boosting Does Gradient Descent
 </h3>
@@ -292,26 +288,26 @@ How Gradient Boosting Does Gradient Descent
 gradient boosting
 </div>
 </div>
-<a href="./posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html">
+<a href="./posts/how-gradient-boosting-does-gradient-descent/index.html">
 <div class="listing-description">
 <p>Understand how gradient boosting does gradient descent in function space to minimize any differentiable loss function in the service of creating a good model.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-04-27-how-gradient-boosting-does-gradient-descent/index.html">
+<a href="./posts/how-gradient-boosting-does-gradient-descent/index.html">
 <div class="listing-date">
 Apr 27, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="gradient boosting,from scratch" data-listing-date-sort="1634940000000" data-listing-file-modified-sort="1688236111538" data-listing-reading-time-sort="6.715">
+<div class="quarto-post image-right" data-index="3" data-categories="gradient boosting,from scratch" data-listing-date-sort="1634940000000" data-listing-file-modified-sort="1689966221312" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7">
 <div class="thumbnail">
-<p><a href="./posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html"> <img src="./posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/thumbnail.jpg" class="thumnail-image" alt="Cold water cascades over the rocks in Erwin, Tennessee."> </a></p>
+<p><a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html"> <img src="./posts/gradient-boosting-machine-with-any-loss-function/thumbnail.jpg" class="thumbnail-image" alt="Cold water cascades over the rocks in Erwin, Tennessee."> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html">
+<a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html">
 <h3 class="no-anchor listing-title">
 How to Implement a Gradient Boosting Machine that Works with Any Loss Function
 </h3>
@@ -327,26 +323,26 @@ gradient boosting
 from scratch
 </div>
 </div>
-<a href="./posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html">
+<a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html">
 <div class="listing-description">
 <p>Summarize Friedman’s seminal GBM paper and implement the generic gradient boosting algorithm to train models with any differentiable loss function.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-10-23-gradient-boosting-machine-with-any-loss-function/index.html">
+<a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html">
 <div class="listing-date">
 Oct 23, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="gradient boosting" data-listing-date-sort="1639263600000" data-listing-file-modified-sort="1688236111543" data-listing-reading-time-sort="8.965">
+<div class="quarto-post image-right" data-index="4" data-categories="gradient boosting" data-listing-date-sort="1639263600000" data-listing-file-modified-sort="1689966221285" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9">
 <div class="thumbnail">
-<p><a href="./posts/2021-12-12-consider-the-decision-tree/index.html"> <img src="./posts/2021-12-12-consider-the-decision-tree/thumbnail.jpg" class="thumnail-image" alt="A California cypress tree abides in silence on Alameda Beach"> </a></p>
+<p><a href="./posts/consider-the-decision-tree/index.html"> <img src="./posts/consider-the-decision-tree/thumbnail.jpg" class="thumbnail-image" alt="A California cypress tree abides in silence on Alameda Beach"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-12-12-consider-the-decision-tree/index.html">
+<a href="./posts/consider-the-decision-tree/index.html">
 <h3 class="no-anchor listing-title">
 Consider the Decision Tree
 </h3>
@@ -359,26 +355,26 @@ Consider the Decision Tree
 gradient boosting
 </div>
 </div>
-<a href="./posts/2021-12-12-consider-the-decision-tree/index.html">
+<a href="./posts/consider-the-decision-tree/index.html">
 <div class="listing-description">
 <p>Understand the core strengths and weaknesses of the decision tree, and see how ensembling makes trees shine.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-12-12-consider-the-decision-tree/index.html">
+<a href="./posts/consider-the-decision-tree/index.html">
 <div class="listing-date">
 Dec 12, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="gradient boosting,from scratch" data-listing-date-sort="1639350000000" data-listing-file-modified-sort="1688236111546" data-listing-reading-time-sort="10.72">
+<div class="quarto-post image-right" data-index="5" data-categories="gradient boosting,from scratch" data-listing-date-sort="1639350000000" data-listing-file-modified-sort="1689966221290" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11">
 <div class="thumbnail">
-<p><a href="./posts/2021-12-13-decision-tree-from-scratch/index.html"> <img src="./posts/2021-12-13-decision-tree-from-scratch/thumbnail.png" class="thumnail-image" alt="binary tree diagram"> </a></p>
+<p><a href="./posts/decision-tree-from-scratch/index.html"> <img src="./posts/decision-tree-from-scratch/thumbnail.png" class="thumbnail-image" alt="binary tree diagram"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-12-13-decision-tree-from-scratch/index.html">
+<a href="./posts/decision-tree-from-scratch/index.html">
 <h3 class="no-anchor listing-title">
 Decision Tree From Scratch
 </h3>
@@ -394,26 +390,26 @@ gradient boosting
 from scratch
 </div>
 </div>
-<a href="./posts/2021-12-13-decision-tree-from-scratch/index.html">
+<a href="./posts/decision-tree-from-scratch/index.html">
 <div class="listing-description">
 <p>A detailed walkthrough of my from-scratch decision tree implementation in python.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-12-13-decision-tree-from-scratch/index.html">
+<a href="./posts/decision-tree-from-scratch/index.html">
 <div class="listing-date">
 Dec 13, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="6" data-categories="gradient boosting" data-listing-date-sort="1647126000000" data-listing-file-modified-sort="1688236111546" data-listing-reading-time-sort="13.83">
+<div class="quarto-post image-right" data-index="6" data-categories="gradient boosting" data-listing-date-sort="1647126000000" data-listing-file-modified-sort="1689966221323" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="14">
 <div class="thumbnail">
-<p><a href="./posts/2022-03-13-how-to-understand-xgboost/index.html"> <img src="./posts/2022-03-13-how-to-understand-xgboost/thumbnail.jpg" class="thumnail-image" alt="Tree branches on a chilly day in Johnson City"> </a></p>
+<p><a href="./posts/how-to-understand-xgboost/index.html"> <img src="./posts/how-to-understand-xgboost/thumbnail.jpg" class="thumbnail-image" alt="Tree branches on a chilly day in Johnson City"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2022-03-13-how-to-understand-xgboost/index.html">
+<a href="./posts/how-to-understand-xgboost/index.html">
 <h3 class="no-anchor listing-title">
 How to Understand XGBoost
 </h3>
@@ -426,26 +422,26 @@ How to Understand XGBoost
 gradient boosting
 </div>
 </div>
-<a href="./posts/2022-03-13-how-to-understand-xgboost/index.html">
+<a href="./posts/how-to-understand-xgboost/index.html">
 <div class="listing-description">
 <p>In-depth intuition and mathematical derivation of the XGBoost algorithm</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2022-03-13-how-to-understand-xgboost/index.html">
+<a href="./posts/how-to-understand-xgboost/index.html">
 <div class="listing-date">
 Mar 13, 2022
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="7" data-categories="gradient boosting,from scratch" data-listing-date-sort="1651874400000" data-listing-file-modified-sort="1688236111550" data-listing-reading-time-sort="5.89">
+<div class="quarto-post image-right" data-index="7" data-categories="gradient boosting,from scratch" data-listing-date-sort="1651874400000" data-listing-file-modified-sort="1689966221330" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6">
 <div class="thumbnail">
-<p><a href="./posts/2022-05-07-xgboost-from-scratch/index.html"> <img src="./posts/2022-05-07-xgboost-from-scratch/thumbnail.jpg" class="thumnail-image" alt="A weathered tree reaches toward the sea at Playa Mal País"> </a></p>
+<p><a href="./posts/xgboost-from-scratch/index.html"> <img src="./posts/xgboost-from-scratch/thumbnail.jpg" class="thumbnail-image" alt="A weathered tree reaches toward the sea at Playa Mal País"> </a></p>
 </div>
 <div class="body">
-<a href="./posts/2022-05-07-xgboost-from-scratch/index.html">
+<a href="./posts/xgboost-from-scratch/index.html">
 <h3 class="no-anchor listing-title">
 XGBoost from scratch
 </h3>
@@ -461,14 +457,14 @@ gradient boosting
 from scratch
 </div>
 </div>
-<a href="./posts/2022-05-07-xgboost-from-scratch/index.html">
+<a href="./posts/xgboost-from-scratch/index.html">
 <div class="listing-description">
 <p>A walkthrough of my from-scratch python implementation of XGBoost.</p>
 </div>
 </a>
 </div>
 <div class="metadata">
-<a href="./posts/2022-05-07-xgboost-from-scratch/index.html">
+<a href="./posts/xgboost-from-scratch/index.html">
 <div class="listing-date">
 May 7, 2022
 </div>
@@ -507,9 +503,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -574,6 +584,92 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       return note.innerHTML;
     });
   }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
   const findCites = (el) => {
     const parentEl = el.parentElement;
     if (parentEl) {
@@ -612,6 +708,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
+</script>
+<script src="https://utteranc.es/client.js" repo="mcb00/blog" issue-term="title" theme="github-light" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
 
