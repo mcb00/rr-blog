@@ -2,58 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://blog.mattbowers.dev/gradient-boosting-series.html</loc>
-    <lastmod>2023-07-31T23:05:45.012Z</lastmod>
+    <lastmod>2023-07-31T23:53:38.189Z</lastmod>
   </url>
   <url>
     <loc>https://blog.mattbowers.dev/</loc>
-    <lastmod>2023-07-31T23:05:44.292Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2023-07-31T23:05:43.254Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/consider-the-decision-tree/</loc>
-    <lastmod>2023-07-31T23:05:42.141Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/xgboost-from-scratch/</loc>
-    <lastmod>2023-07-31T23:05:41.376Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2023-07-31T23:05:39.707Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2023-07-31T23:05:38.646Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/hello-pyspark/</loc>
-    <lastmod>2023-07-31T23:05:39.252Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/how-to-understand-xgboost/</loc>
-    <lastmod>2023-07-31T23:05:40.218Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/gradient-boosting-machine-with-any-loss-function/</loc>
-    <lastmod>2023-07-31T23:05:40.947Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/hello-world/</loc>
-    <lastmod>2023-07-31T23:05:41.694Z</lastmod>
-  </url>
-  <url>
-    <loc>https://blog.mattbowers.dev/posts/decision-tree-from-scratch/</loc>
-    <lastmod>2023-07-31T23:05:42.666Z</lastmod>
+    <lastmod>2023-07-31T23:53:37.501Z</lastmod>
   </url>
   <url>
     <loc>https://blog.mattbowers.dev/posts/gradient-boosting-machine-from-scratch/</loc>
-    <lastmod>2023-07-31T23:05:43.670Z</lastmod>
+    <lastmod>2023-07-31T23:53:36.344Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/decision-tree-from-scratch/</loc>
+    <lastmod>2023-07-31T23:53:35.353Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/hello-world/</loc>
+    <lastmod>2023-07-31T23:53:34.354Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/gradient-boosting-machine-with-any-loss-function/</loc>
+    <lastmod>2023-07-31T23:53:33.610Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/get-down-with-gradient-descent/</loc>
+    <lastmod>2023-07-31T23:53:32.864Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/8020-pandas-tutorial/</loc>
+    <lastmod>2023-07-31T23:53:31.792Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/hello-pyspark/</loc>
+    <lastmod>2023-07-31T23:53:32.411Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/xgboost-from-scratch/</loc>
+    <lastmod>2023-07-31T23:53:34.042Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/consider-the-decision-tree/</loc>
+    <lastmod>2023-07-31T23:53:34.812Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/how-gradient-boosting-does-gradient-descent/</loc>
+    <lastmod>2023-07-31T23:53:35.908Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.mattbowers.dev/posts/xgboost-explained/</loc>
+    <lastmod>2023-07-31T23:53:36.862Z</lastmod>
   </url>
   <url>
     <loc>https://blog.mattbowers.dev/about.html</loc>
-    <lastmod>2023-07-31T23:05:44.504Z</lastmod>
+    <lastmod>2023-07-31T23:53:37.718Z</lastmod>
   </url>
 </urlset>

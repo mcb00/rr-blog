@@ -8,7 +8,6 @@
       "/posts/gradient-boosting-machine-with-any-loss-function/index.html",
       "/posts/consider-the-decision-tree/index.html",
       "/posts/decision-tree-from-scratch/index.html",
-      "/posts/how-to-understand-xgboost/index.html",
       "/posts/xgboost-from-scratch/index.html"
     ]
   },
@@ -16,7 +15,7 @@
     "listing": "/index.html",
     "items": [
       "/posts/xgboost-from-scratch/index.html",
-      "/posts/how-to-understand-xgboost/index.html",
+      "/posts/xgboost-explained/index.html",
       "/posts/decision-tree-from-scratch/index.html",
       "/posts/consider-the-decision-tree/index.html",
       "/posts/gradient-boosting-machine-with-any-loss-function/index.html",
