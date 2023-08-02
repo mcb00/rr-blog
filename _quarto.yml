@@ -3,7 +3,7 @@ project:
   pre-render: 
     - "rm -rf _site/*"
   post-render:
-    - "python add-canonicals.py"
+    - "python post-render.py"
 
 website:
   title: "Random Realizations"
@@ -11,6 +11,10 @@ website:
   description: "A blog about data science, statistics, machine learning, and the scientific method"
   favicon: "favicon.png"
   margin-header: subscribe.html
+  # comments:
+  #   utterances:
+  #     repo: mcb00/blog
+  #     issue-term: title
   navbar:
     background: dark
     logo: logo.png
