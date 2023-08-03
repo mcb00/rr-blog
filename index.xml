@@ -14,14 +14,14 @@
 <item>
   <title>Random Realizations Resurrected</title>
   <dc:creator>Matt Bowers</dc:creator>
-  <link>https://blog.mattbowers.dev/posts/drafts/random-realizations-resurrected/index.html</link>
+  <link>https://blog.mattbowers.dev/posts/random-realizations-resurrected/index.html</link>
   <description><![CDATA[ 
 
 
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://blog.mattbowers.dev/posts/drafts/random-realizations-resurrected/main.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://blog.mattbowers.dev/posts/random-realizations-resurrected/main.jpg" class="img-fluid figure-img"></p>
 <figcaption class="figure-caption">Christ the Redeemer towers into a vast blue Brazilian sky.!</figcaption>
 </figure>
 </div>
@@ -39,9 +39,9 @@
 
  ]]></description>
   <category>blogging</category>
-  <guid>https://blog.mattbowers.dev/posts/drafts/random-realizations-resurrected/index.html</guid>
+  <guid>https://blog.mattbowers.dev/posts/random-realizations-resurrected/index.html</guid>
   <pubDate>Tue, 01 Aug 2023 22:00:00 GMT</pubDate>
-  <media:content url="https://blog.mattbowers.dev/posts/drafts/random-realizations-resurrected/thumbnail.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://blog.mattbowers.dev/posts/random-realizations-resurrected/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>XGBoost from Scratch</title>
