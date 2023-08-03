@@ -14,3 +14,4 @@ setFile -d '12/12/2021' ../posts/consider-the-decision-tree
 setFile -d '12/13/2021' ../posts/decision-tree-from-scratch
 setFile -d '03/13/2022' ../posts/how-to-understand-xgboost
 setFile -d '05/07/2022' ../posts/xgboost-from-scratch
+setFile -d '08/02/2023' ../posts/random-realizations-resurrected
