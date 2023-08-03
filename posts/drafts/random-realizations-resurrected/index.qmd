@@ -1,0 +1,35 @@
+---
+title: Random Realizations Resurrected
+date: 2023-08-02
+description: The world's favorite data science blog is back.
+categories: blogging
+image: thumbnail.jpg
+image-alt: Christ the Redeemer towers into an empty blue sky
+toc: false
+draft: false
+comments:
+  utterances:
+    repo: mcb00/blog
+    issue-term: title
+---
+
+![Christ the Redeemer towers into a vast blue Brazilian sky.!](main.jpg "")
+
+
+Well it's been over a year since I posted anything here. You see, a lot has been going on here at the Random Realizations Remote Global Headquarters that has distracted from producing the high-quality data science content that you're used to. Mostly I went on hiatus from work and started traveling, which turns out to be it's own full time job. I had aspirations of writing more after leaving work, but of course, after leaving, I couldn't be bothered to sit down at my laptop and type stuff about data science to yall. After all, life is bigger than that.
+
+When I finally felt like opening up my laptop, I was confronted with an email from the maintainers of [fastpages](https://github.com/fastai/fastpages), the open source content management system (CMS) I originally used to create this blog, notifying me that the project was being deprecated and that I would need to migrate my content to some other platform. 
+
+Boo. 
+
+That didn't sound like much fun, so I spent another few months ignoring the blog. But eventually, dear reader, I decided it was time to roll up my sleeves and get this blog thriving once again.
+
+Ok so fastpages was going to be deprecated, and I needed to find a new CMS. My requirements were pretty simple: I wanted to write the blog posts with jupyter notebook, and I wanted to host the site on my own domain. Helpfully, the former maintainers of fastpages recommended an alternative CMS called [Quarto](https://quarto.org/) which I had never heard of. Apparently I had been living under a rock because Quarto appears to be all the rage.  Quarto's website says it's an open-source scientific and technical publishing system. I think it's fair to think of it as a way to render plain text or source code from languages like python, R, and julia into a variety of different published formats like websites, books, or journal articles. It was developed by the good folks over at RStudio, and the project has a pretty active following over on [github](https://github.com/quarto-dev), so I think it's less likely to suddenly disappear like fastpages.
+
+So anyway, I've been migrating my content over into this new quarto universe. 
+
+You mayofficially consider this blog resurrected from the dead, because this is the first new post published after the migration. The site has a bit of a new look and feel, so I hope you like it. Do let me know in the comments if you find anything amiss with the new website. Otherwise we'll just assume it's fabulous.
+
+I'm working on a post about how to create a blog with quarto using jupyter and python, so you can too!
+
+See you in more posts real soon! Love, Matt.
