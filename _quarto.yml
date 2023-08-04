@@ -4,6 +4,8 @@ project:
     - "rm -rf _site/*"
   post-render:
     - "python post-render.py"
+  resources:
+    - CNAME
 
 website:
   title: "Random Realizations"
