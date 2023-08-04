@@ -34,9 +34,6 @@
 <p>You mayofficially consider this blog resurrected from the dead, because this is the first new post published after the migration. The site has a bit of a new look and feel, so I hope you like it. Do let me know in the comments if you find anything amiss with the new website. Otherwise we’ll just assume it’s fabulous.</p>
 <p>I’m working on a post about how to create a blog with quarto using jupyter and python, so you can too!</p>
 <p>See you in more posts real soon! Love, Matt.</p>
-
-
-
  ]]></description>
   <category>blogging</category>
   <guid>https://blog.mattbowers.dev/posts/random-realizations-resurrected/index.html</guid>
@@ -1985,8 +1982,6 @@ xgboost score: 0.24123239765807963</code></pre>
 <li>Implement column subsampling. XGBoost itself provides column subsampling by tree, by level, and by node. Try implementing by tree first, then try adding by level or by node as well. These should be pretty straightforward to do.</li>
 <li>Implement sparsity aware split finding for missing feature values (Algorithm 2 in the <a href="https://arxiv.org/abs/1603.02754">XGBoost paper</a>). This will be a little more involved, since you’ll need to refactor and modify several parts of the tree booster class.</li>
 </ol>
-
-
 </section>
 
  ]]></description>
@@ -2143,8 +2138,6 @@ To do that, first we need a way to compute the objective function given a partic
 <section id="exercise" class="level2">
 <h2 class="anchored" data-anchor-id="exercise">Exercise</h2>
 <p>Proove that the XGBoost Newton Descent generalizes the classic GBM gradient descent. Hint: show that XGBoost with a squared error objective and no regularization reduces to the classic GBM.</p>
-
-
 </section>
 
  ]]></description>
