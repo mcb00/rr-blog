@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://blog.mattbowers.dev/gradient-boosting-series.html</loc>
-    <lastmod>2023-08-04T15:26:43.811Z</lastmod>
+    <loc>https://randomrealizations.com/gradient-boosting-series.html</loc>
+    <lastmod>2023-08-21T20:42:18.050Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/</loc>
-    <lastmod>2023-08-04T15:26:43.134Z</lastmod>
+    <loc>https://randomrealizations.com/</loc>
+    <lastmod>2023-08-21T20:42:17.380Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/gradient-boosting-machine-from-scratch/</loc>
-    <lastmod>2023-08-04T15:26:41.974Z</lastmod>
+    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/</loc>
+    <lastmod>2023-08-21T20:42:16.204Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2023-08-04T15:26:41.299Z</lastmod>
+    <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
+    <lastmod>2023-08-21T20:42:15.527Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/consider-the-decision-tree/</loc>
-    <lastmod>2023-08-04T15:26:40.220Z</lastmod>
+    <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
+    <lastmod>2023-08-21T20:42:14.433Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/xgboost-from-scratch/</loc>
-    <lastmod>2023-08-04T15:26:39.464Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
+    <lastmod>2023-08-21T20:42:13.663Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/hello-pyspark/</loc>
-    <lastmod>2023-08-04T15:26:37.811Z</lastmod>
+    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
+    <lastmod>2023-08-21T20:42:12.058Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2023-08-04T15:26:37.194Z</lastmod>
+    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
+    <lastmod>2023-08-21T20:42:11.450Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2023-08-04T15:26:38.265Z</lastmod>
+    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
+    <lastmod>2023-08-21T20:42:12.513Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/gradient-boosting-machine-with-any-loss-function/</loc>
-    <lastmod>2023-08-04T15:26:39.022Z</lastmod>
+    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
+    <lastmod>2023-08-21T20:42:13.235Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/hello-world/</loc>
-    <lastmod>2023-08-04T15:26:39.751Z</lastmod>
+    <loc>https://randomrealizations.com/posts/hello-world/</loc>
+    <lastmod>2023-08-21T20:42:13.950Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/decision-tree-from-scratch/</loc>
-    <lastmod>2023-08-04T15:26:40.746Z</lastmod>
+    <loc>https://randomrealizations.com/posts/decision-tree-from-scratch/</loc>
+    <lastmod>2023-08-21T20:42:14.960Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/random-realizations-resurrected/</loc>
-    <lastmod>2023-08-04T15:26:41.562Z</lastmod>
+    <loc>https://randomrealizations.com/posts/random-realizations-resurrected/</loc>
+    <lastmod>2023-08-21T20:42:15.791Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/posts/xgboost-explained/</loc>
-    <lastmod>2023-08-04T15:26:42.482Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-explained/</loc>
+    <lastmod>2023-08-21T20:42:16.713Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.mattbowers.dev/about.html</loc>
-    <lastmod>2023-08-04T15:26:43.345Z</lastmod>
+    <loc>https://randomrealizations.com/about.html</loc>
+    <lastmod>2023-08-21T20:42:17.594Z</lastmod>
   </url>
 </urlset>
