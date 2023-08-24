@@ -6,6 +6,8 @@ project:
     - "python post-render.py"
   resources:
     - CNAME
+  preview:
+    port: 7777
 
 website:
   title: "Random Realizations"
