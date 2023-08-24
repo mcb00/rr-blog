@@ -17,6 +17,6 @@ page-layout: article
 
 output-file: index.html
 
-# format:
-#   html:
-#     include-after-body: ../footer.html
+format:
+  html:
+    include-after-body: ../footer.html
