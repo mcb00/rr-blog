@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Random Realizations</title>
+<link>https://randomrealizations.com/archive.html#category=python</link>
+<atom:link href="https://randomrealizations.com/archive-python.xml" rel="self" type="application/rss+xml"/>
+<description>A blog about data science, statistics, machine learning, and the scientific method</description>
+<generator>quarto-1.3.433</generator>
+<lastBuildDate>Tue, 24 Nov 2020 21:00:00 GMT</lastBuildDate>
+<item>
+  <title>The 80/20 Pandas Tutorial</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/8020-pandas-tutorial/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p><img src="https://randomrealizations.com/posts/8020-pandas-tutorial/80_20_pandas.png" title="8020 pandas" class="img-fluid"></p>
+<p>Ahh, pandas. In addition to being everyone’s favorite mostly vegetarian bear from south central China, it’s also <em>the</em> python library for working with tabular data, a.k.a. dataframes. When you dive into pandas, you’ll quickly find out that there is a lot going on; indeed there are <a href="https://pandas.pydata.org/docs/reference/frame.html">hundreds</a> of methods for operating on dataframes. But luckily for us, as with many areas of life, there is a <a href="https://en.wikipedia.org/wiki/Pareto_principle">Pareto Principle</a>, or 80/20 rule, that will help us focus on the small set of methods that collectively solve the majority of our data transformation needs.</p>
+<p>If you’re like me, then pandas is not your first data-handling tool; maybe you’ve been using SQL or R with <code>data.table</code> or <code>dplyr</code>. If so, that’s great because you already have a sense for the key operations we need when working with tabular data. In their book, <a href="https://r4ds.had.co.nz/">R for Data Science</a>, Garrett Grolemund and Hadley Wickham describe five essential operations for manipulating dataframes. I’ve found that these cover the majority of my data transformation tasks to prepare data for analysis, visualization, and modeling.</p>
+<ol type="1">
+<li>filtering rows based on data values</li>
+<li>sorting rows based on data values</li>
+<li>selecting columns by name</li>
+<li>adding new columns based on the existing columns</li>
+<li>creating grouped summaries of the dataset</li>
+</ol>
+<p>I would add that we also need a way to build up more complex transformations by chaining these fundamental operations together sequentially.</p>
+<p>Before we dive in, here’s the TLDR on the pandas methods that I prefer for accomplishing these tasks, along with their equivalents from SQL and <code>dplyr</code> in R.</p>
+<table class="table">
+<colgroup>
+<col style="width: 49%">
+<col style="width: 21%">
+<col style="width: 3%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>description</th>
+<th>pandas</th>
+<th>SQL</th>
+<th>dplyr</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filter rows based on data values</td>
+<td><code>query()</code></td>
+<td><code>WHERE</code></td>
+<td><code>filter()</code></td>
+</tr>
+<tr class="even">
+<td>sort rows based on data values</td>
+<td><code>sort_values()</code></td>
+<td><code>ORDER BY</code></td>
+<td><code>arrange()</code></td>
+</tr>
+<tr class="odd">
+<td>select columns by name</td>
+<td><code>filter()</code></td>
+<td><code>SELECT</code></td>
+<td><code>select()</code></td>
+</tr>
+<tr class="even">
+<td>add new columns based on the existing columns</td>
+<td><code>assign()</code></td>
+<td><code>AS</code></td>
+<td><code>mutate()</code></td>
+</tr>
+<tr class="odd">
+<td>create grouped summaries of the dataset</td>
+<td><code>groupby()</code> <br> <code>apply()</code></td>
+<td><code>GROUP BY</code></td>
+<td><code>group_by()</code> <br> <code>summarise()</code></td>
+</tr>
+<tr class="even">
+<td>chain operations together</td>
+<td><code>.</code></td>
+<td></td>
+<td><code>%&gt;%</code></td>
+</tr>
+</tbody>
+</table>
+<section id="imports-and-data" class="level2">
+<h2 class="anchored" data-anchor-id="imports-and-data">Imports and Data</h2>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span></code></pre></div>
+</div>
+<p>We’ll use the <a href="https://github.com/hadley/nycflights13">nycflights13</a> dataset which contains data on the 336,776 flights that departed from New York City in 2013.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1">url <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'https://www.openintro.org/book/statdata/nycflights.csv'</span></span>
+<span id="cb2-2">storage_options <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'User-Agent'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0'</span>}</span>
+<span id="cb2-3">flights <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.read_csv(url, storage_options<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>storage_options)</span></code></pre></div>
+</div>
+</section>
+<section id="select-rows-based-on-their-values-with-query" class="level2">
+<h2 class="anchored" data-anchor-id="select-rows-based-on-their-values-with-query">Select rows based on their values with <code>query()</code></h2>
+<p><code>query()</code> lets you retain a subset of rows based on the values of the data; it’s like <code>dplyr::filter()</code> in R or <code>WHERE</code> in SQL. Its argument is a string specifying the condition to be met for rows to be included in the result. You specify the condition as an expression involving the column names and comparison operators like <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>==</code> (equal), and <code>~=</code> (not equal). You can specify compound expressions using <code>and</code> and <code>or</code>, and you can even check if the column value matches any items in a list.</p>
+<div class="cell" data-scrolled="true" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># compare one column to a value</span></span>
+<span id="cb3-2">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'month == 6'</span>)</span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># compare two column values</span></span>
+<span id="cb3-5">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'arr_delay &gt; dep_delay'</span>)</span>
+<span id="cb3-6"></span>
+<span id="cb3-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># using arithmetic</span></span>
+<span id="cb3-8">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'arr_delay &gt; 0.5 * air_time'</span>)</span>
+<span id="cb3-9"></span>
+<span id="cb3-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># using "and"</span></span>
+<span id="cb3-11">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'month == 6 and day == 1'</span>)</span>
+<span id="cb3-12"></span>
+<span id="cb3-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># using "or"</span></span>
+<span id="cb3-14">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'origin == "JFK" or dest == "JFK"'</span>)</span>
+<span id="cb3-15"></span>
+<span id="cb3-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># column value matching any item in a list</span></span>
+<span id="cb3-17">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier in ["AA", "UA"]'</span>)</span></code></pre></div>
+</div>
+<p>You may have noticed that it seems to be much more popular to filter pandas data frames using boolean indexing. Indeed when I ask my favorite search engine how to filter a pandas dataframe on its values, I find <a href="https://cmdlinetips.com/2018/02/how-to-subset-pandas-dataframe-based-on-values-of-a-column/">this tutorial</a>, <a href="https://medium.com/swlh/3-ways-to-filter-pandas-dataframe-by-column-values-dfb6609b31de">this blog post</a>, <a href="https://stackoverflow.com/questions/17071871/how-to-select-rows-from-a-dataframe-based-on-column-values">various</a> <a href="https://stackoverflow.com/questions/11869910/pandas-filter-rows-of-dataframe-with-operator-chaining">questions</a> on Stack Overflow, and even <a href="https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/03_subset_data.html">the pandas documentation</a>, all espousing boolean indexing. Here’s what it looks like.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># canonical boolean indexing</span></span>
+<span id="cb4-2">flights[(flights[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier'</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"AA"</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&amp;</span> (flights[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'origin'</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"JFK"</span>)]</span>
+<span id="cb4-3"></span>
+<span id="cb4-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># the equivalent use of query()</span></span>
+<span id="cb4-5">flights.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier == "AA" and origin == "JFK"'</span>)</span></code></pre></div>
+</div>
+<p>There are a few reasons I prefer <code>query()</code> over boolean indexing.</p>
+<ol type="1">
+<li><code>query()</code> does not require me to type the dataframe name again, whereas boolean indexing requires me to type it every time I wish to refer to a column.</li>
+<li><code>query()</code> makes the code easier to read and understand, especially when expressions get complex.</li>
+<li><code>query()</code> is <a href="https://jakevdp.github.io/PythonDataScienceHandbook/03.12-performance-eval-and-query.html">more computationally efficient</a> than boolean indexing.</li>
+<li><code>query()</code> can safely be used in dot chains, which we’ll see very soon.</li>
+</ol>
+</section>
+<section id="select-columns-by-name-with-filter" class="level2">
+<h2 class="anchored" data-anchor-id="select-columns-by-name-with-filter">Select columns by name with <code>filter()</code></h2>
+<p><code>filter()</code> lets you pick out a specific set of columns by name; it’s analogous to <code>dplyr::select()</code> in R or <code>SELECT</code> in SQL. You can either provide exactly the column names you want, or you can grab all columns whose names contain a given substring or which match a given regular expression. This isn’t a big deal when your dataframe has only a few columns, but is particularly useful when you have a dataframe with tens or hundreds of columns.</p>
+<div class="cell" data-scrolled="true" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># select a list of columns</span></span>
+<span id="cb5-2">flights.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">filter</span>([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'origin'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'dest'</span>])</span>
+<span id="cb5-3"></span>
+<span id="cb5-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># select columns containing a particular substring</span></span>
+<span id="cb5-5">flights.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">filter</span>(like<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'time'</span>)</span>
+<span id="cb5-6"></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># select columns matching a regular expression</span></span>
+<span id="cb5-8">flights.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">filter</span>(regex<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'e$'</span>)</span></code></pre></div>
+</div>
+</section>
+<section id="sort-rows-with-sort_values" class="level2">
+<h2 class="anchored" data-anchor-id="sort-rows-with-sort_values">Sort rows with <code>sort_values()</code></h2>
+<p><code>sort_values()</code> changes the order of the rows based on the data values; it’s like<code>dplyr::arrange()</code> in R or <code>ORDER BY</code> in SQL. You can specify one or more columns on which to sort, where their order denotes the sorting priority. You can also specify whether to sort in ascending or descending order.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># sort by a single column</span></span>
+<span id="cb6-2">flights.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'air_time'</span>)</span>
+<span id="cb6-3"></span>
+<span id="cb6-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># sort by a single column in descending order</span></span>
+<span id="cb6-5">flights.sort_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'air_time'</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb6-6"></span>
+<span id="cb6-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># sort by carrier, then within carrier, sort by descending distance</span></span>
+<span id="cb6-8">flights.sort_values([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'distance'</span>], ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>, <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>])</span></code></pre></div>
+</div>
+</section>
+<section id="add-new-columns-with-assign" class="level2">
+<h2 class="anchored" data-anchor-id="add-new-columns-with-assign">Add new columns with <code>assign()</code></h2>
+<p><code>assign()</code> adds new columns which can be functions of the existing columns; it’s like <code>dplyr::mutate()</code> from R.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># add a new column based on other columns</span></span>
+<span id="cb7-2">flights.assign(speed <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: x.distance <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> x.air_time)</span>
+<span id="cb7-3"></span>
+<span id="cb7-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># another new column based on existing columns</span></span>
+<span id="cb7-5">flights.assign(gain <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: x.dep_delay <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> x.arr_delay)</span></code></pre></div>
+</div>
+<p>If you’re like me, this way of using <code>assign()</code> might seem a little strange at first. Let’s break it down. In the call to <code>assign()</code> the keyword argument <code>speed</code> tells pandas the name of our new column. The business to the right of the <code>=</code> is a inline lambda function that takes the dataframe we passed to <code>assign()</code> and returns the column we want to add.</p>
+<p>I like using <code>x</code> as the lambda argument because its easy to type and it evokes tabular data (think <a href="https://en.wikipedia.org/wiki/Design_matrix">design matrix</a>), which reminds me that it refers to the entire dataframe. We can then access the other columns in our dataframe using the dot like <code>x.other_column</code>.</p>
+<p>It’s true that you can skip the whole lambda business and refer to the dataframe to which you are assigning directly inside the assign. That might look like this.</p>
+<pre><code>flights.assign(speed = flights.distance / flights.air_time)</code></pre>
+<p>I prefer using a lambda for the following reasons.</p>
+<ol type="1">
+<li>If you gave your dataframe a good name, using the lambda will save you from typing the name every time you want to refer to a column.</li>
+<li>The lambda makes your code more portable. Since you refer to the dataframe as a generic <code>x</code>, you can reuse this same assignment code on a dataframe with a different name.</li>
+<li>Most importantly, the lambda will allow you to harness the power of dot chaining.</li>
+</ol>
+</section>
+<section id="chain-transformations-together-with-the-dot-chain" class="level2">
+<h2 class="anchored" data-anchor-id="chain-transformations-together-with-the-dot-chain">Chain transformations together with the dot chain</h2>
+<p>One of the awesome things about pandas is that the <code>object.method()</code> paradigm lets us easily build up complex dataframe transformations from a sequence of method calls. In R, this is effectively accomplished by the pipe <code>%&gt;%</code> operator. For example, suppose we want to look at high-speed flights from JFK to Honolulu, which would require us to query for JFK to Honolulu flights, assign a speed column, and maybe sort on that new speed column.</p>
+<p>We can say:</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># neatly chain method calls together</span></span>
+<span id="cb9-2">(</span>
+<span id="cb9-3">    flights</span>
+<span id="cb9-4">    .query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'origin == "JFK"'</span>)</span>
+<span id="cb9-5">    .query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'dest == "HNL"'</span>)</span>
+<span id="cb9-6">    .assign(speed <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: x.distance <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> x.air_time)</span>
+<span id="cb9-7">    .sort_values(by<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'speed'</span>, ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb9-8">    .query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'speed &gt; 8.0'</span>)</span>
+<span id="cb9-9">)</span></code></pre></div>
+</div>
+<p>We compose the dot chain by wrapping the entire expression in parentheses and indenting each line within. The first line is the name of the dataframe on which we are operating. Each subsequent line has a single method call.</p>
+<p>There are a few great things about writing the code this way: 1. Readability. It’s easy to scan down the left margin of the code to see what’s happening. The first line gives us our noun (the dataframe) and each subsequent line starts with a verb. You could read this as “take <code>flights</code> then query the rows where origin is JFK, then query for rows where destination is HNL, then assign a new column called speed, then sort the dataframe by speed, then query only for the rows where speed is greater than 8.0. 1. Flexibility - It’s easy to comment out individual lines and re-run the cell. It’s also easy to reorder operations, since only one thing happens on each line. 1. Neatness - We have not polluted our workspace with any intermediate variables, nor have we wasted any mental energy thinking of names for any temporary variables.</p>
+<p>By default, dot chains do not modify the original dataframe; they just output a temporary result that we can inspect directly in the output. If you want to store the result, or pass it along to another function (e.g.&nbsp;for plotting), you can simply assign the entire dot chain to a variable.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># sotre the output of the dot chain in a new dataframe</span></span>
+<span id="cb10-2">flights_high_speed <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (</span>
+<span id="cb10-3">    flights</span>
+<span id="cb10-4">    .assign(speed <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> x: x.distance <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> x.air_time)</span>
+<span id="cb10-5">    .query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'speed &gt; 8.0'</span>)</span>
+<span id="cb10-6">)</span></code></pre></div>
+</div>
+</section>
+<section id="collapsing-rows-into-grouped-summaries-with-groupby" class="level2">
+<h2 class="anchored" data-anchor-id="collapsing-rows-into-grouped-summaries-with-groupby">Collapsing rows into grouped summaries with <code>groupby()</code></h2>
+<p><code>groupby()</code> combined with <code>apply()</code> gives us flexibility and control over our grouped summaries; it’s like <code>dplyr::group_by()</code> and <code>dplyr::summarise()</code> in R. This is the primary pattern I use for SQL-style groupby operations in pandas. Specifically it unlocks the following essential functionality you’re used to having in SQL. 1. specify the names of the aggregation columns we create 1. specify which aggregation function to use on which columns 1. compose more complex aggregations such as the proportion of rows meeting some condition 1. aggregate over arbitrary functions of multiple columns</p>
+<p>Let’s check out the departure delay stats for each carrier.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># grouped summary with groupby and apply</span></span>
+<span id="cb11-2">(</span>
+<span id="cb11-3">    flights</span>
+<span id="cb11-4">    .groupby([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier'</span>])</span>
+<span id="cb11-5">    .<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> d: pd.Series({</span>
+<span id="cb11-6">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'n_flights'</span>: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(d),</span>
+<span id="cb11-7">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'med_delay'</span>: d.dep_delay.median(),</span>
+<span id="cb11-8">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'avg_delay'</span>: d.dep_delay.mean(),</span>
+<span id="cb11-9">    }))</span>
+<span id="cb11-10">    .head()</span>
+<span id="cb11-11">)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">n_flights</th>
+<th data-quarto-table-cell-role="th">med_delay</th>
+<th data-quarto-table-cell-role="th">avg_delay</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">carrier</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9E</td>
+<td>1696.0</td>
+<td>-1.0</td>
+<td>17.285967</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">AA</td>
+<td>3188.0</td>
+<td>-2.0</td>
+<td>9.142409</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">AS</td>
+<td>66.0</td>
+<td>-4.5</td>
+<td>5.181818</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">B6</td>
+<td>5376.0</td>
+<td>-1.0</td>
+<td>13.137091</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">DL</td>
+<td>4751.0</td>
+<td>-2.0</td>
+<td>8.529573</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>While you might be used to <code>apply()</code> acting over the rows or columns of a dataframe, here we’re calling apply on a grouped dataframe object, so it’s acting over the <em>groups</em>. According to the <a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.groupby.html">pandas documentation</a>:</p>
+<blockquote class="blockquote">
+<p>The function passed to apply must take a dataframe as its first argument and return a dataframe, a series or a scalar. apply will then take care of combining the results back together into a single dataframe or series. apply is therefore a highly flexible grouping method.</p>
+</blockquote>
+<p>We need to supply <code>apply()</code> with a function that takes each chunk of the grouped dataframe and returns (in our case) a series object with one element for each new aggregation column. Notice that I use a lambda to specify the function we pass to <code>apply())</code>, and that I name its argument <code>d</code>, which reminds me that it’s a dataframe. My lambda returns a pandas series whose index entries specify the new aggregation column names, and whose values constitute the results of the aggregations for each group. Pandas will then stitch everything back together into a lovely dataframe.</p>
+<p>Notice how nice the code looks when we use this pattern. Each aggregation is specified on its own line, which makes it easy to see what aggregation columns we’re creating and allows us to comment, uncomment, and reorder the aggregations without breaking anything.</p>
+<p>Here are some more complex aggregations to illustrate some useful patterns.</p>
+<div class="cell" data-scrolled="true" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># more complex grouped summary</span></span>
+<span id="cb12-2">(</span>
+<span id="cb12-3">    flights</span>
+<span id="cb12-4">    .groupby([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'carrier'</span>])</span>
+<span id="cb12-5">    .<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">apply</span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">lambda</span> d: pd.Series({</span>
+<span id="cb12-6">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'avg_gain'</span>: np.mean(d.dep_delay <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> d.arr_delay), </span>
+<span id="cb12-7">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'pct_delay_gt_30'</span>: np.mean(d.dep_delay <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span>), </span>
+<span id="cb12-8">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'pct_late_dep_early_arr'</span>: np.mean((d.dep_delay <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&amp;</span> (d.arr_delay <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)), </span>
+<span id="cb12-9">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'avg_arr_given_dep_delay_gt_0'</span>: d.query(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'dep_delay &gt; 0'</span>).arr_delay.mean(),</span>
+<span id="cb12-10">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'cor_arr_delay_dep_delay'</span>: np.corrcoef(d.dep_delay, d.arr_delay)[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>],</span>
+<span id="cb12-11">    }))</span>
+<span id="cb12-12">    .head()</span>
+<span id="cb12-13">)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">avg_gain</th>
+<th data-quarto-table-cell-role="th">pct_delay_gt_30</th>
+<th data-quarto-table-cell-role="th">pct_late_dep_early_arr</th>
+<th data-quarto-table-cell-role="th">avg_arr_given_dep_delay_gt_0</th>
+<th data-quarto-table-cell-role="th">cor_arr_delay_dep_delay</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">carrier</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9E</td>
+<td>9.247642</td>
+<td>0.196934</td>
+<td>0.110259</td>
+<td>39.086111</td>
+<td>0.932485</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">AA</td>
+<td>7.743726</td>
+<td>0.113237</td>
+<td>0.105395</td>
+<td>30.087165</td>
+<td>0.891013</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">AS</td>
+<td>16.515152</td>
+<td>0.106061</td>
+<td>0.121212</td>
+<td>28.058824</td>
+<td>0.864565</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">B6</td>
+<td>3.411458</td>
+<td>0.160528</td>
+<td>0.084449</td>
+<td>37.306866</td>
+<td>0.914180</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">DL</td>
+<td>7.622816</td>
+<td>0.097874</td>
+<td>0.100821</td>
+<td>30.078029</td>
+<td>0.899327</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Here’s what’s happening.</p>
+<ul>
+<li><code>np.mean(d.dep_delay - d.arr_delay)</code> aggregates over the difference of two columns.</li>
+<li><code>np.mean(d.dep_delay &gt; 30)</code> computes the proportion of rows where the delay is greater than 30 minutes. Generating a boolean series based on some condition and then using <code>mean()</code> to find the proportion comes up all the time.</li>
+<li><code>np.mean((d.dep_delay &gt; 0) &amp; (d.arr_delay &lt; 0))</code> shows that we can compute proportions where conditions on multiple columns are met.</li>
+<li><code>d.query('dep_delay &gt; 0').arr_delay.mean()</code> computes the average arrival delay on flights where the departure was delayed. Here we first filter each grouped dataframe down to the subset of rows where departure delay is greater than zero using <code>query()</code>, and then we take the mean of the remaining arrival delays.</li>
+<li><code>np.corrcoef(d.dep_delay, d.arr_delay)[0,1]</code> computes the correlation coefficient between departure and arrival delays. Remember we can use pretty much any reduction operation to collapse values down to a scalar.</li>
+</ul>
+<p>You might have noticed that the canonical pandas approach for grouped summaries is to use <code>agg()</code>. That works well if you need to apply the same aggregation function on each column in the dataframe, e.g.&nbsp;taking the mean of every column. But because of the kind of data I work with these days, it’s much more common for me to use customized aggregations like those above, so the <code>groupby()</code> <code>apply()</code> idiom works best for me.</p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>There you have it, how to pull off the five most essential data transformation tasks using pandas in a style reminiscent of my beloved <code>dplyr</code>. Remember that part of the beauty of pandas is that since there are so many ways to do most tasks, you can develop your own style based on the kind of data you work with, what you like about other tools, how you see others using the tools, and of course your own taste and preferences.</p>
+<p>If you found this post helpful or if you have your own preferred style for accomplishing any of these key transformations with pandas, do let me know about it in the comments.</p>
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>pandas</category>
+  <category>tutorial</category>
+  <guid>https://randomrealizations.com/posts/8020-pandas-tutorial/index.html</guid>
+  <pubDate>Tue, 24 Nov 2020 21:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/posts/8020-pandas-tutorial/80_20_pandas.png" medium="image" type="image/png" height="73" width="144"/>
+</item>
+</channel>
+</rss>

@@ -27,5 +27,22 @@
       "/posts/8020-pandas-tutorial/index.html",
       "/posts/hello-world/index.html"
     ]
+  },
+  {
+    "listing": "/archive.html",
+    "items": [
+      "/posts/random-realizations-resurrected/index.html",
+      "/posts/xgboost-from-scratch/index.html",
+      "/posts/xgboost-explained/index.html",
+      "/posts/decision-tree-from-scratch/index.html",
+      "/posts/consider-the-decision-tree/index.html",
+      "/posts/gradient-boosting-machine-with-any-loss-function/index.html",
+      "/posts/hello-pyspark/index.html",
+      "/posts/how-gradient-boosting-does-gradient-descent/index.html",
+      "/posts/get-down-with-gradient-descent/index.html",
+      "/posts/gradient-boosting-machine-from-scratch/index.html",
+      "/posts/8020-pandas-tutorial/index.html",
+      "/posts/hello-world/index.html"
+    ]
   }
 ]

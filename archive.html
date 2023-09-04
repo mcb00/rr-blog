@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Random Realizations – About</title>
+<title>Random Realizations – Archive</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -31,9 +31,12 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./favicon.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-listing/list.min.js"></script>
+<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
@@ -59,10 +62,41 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
 
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-date','listing-title',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  </script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="styles.css">
-<link rel="canonical" href="https://randomrealizations.com/about.html" />
+<link rel="alternate" type="application/rss+xml" title="Random Realizations" href="archive.xml"><link rel="canonical" href="https://randomrealizations.com/archive.html" />
 </head>
 
 <body class="nav-fixed">
@@ -86,11 +120,11 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./about.html" rel="" target="" aria-current="page">
+    <a class="nav-link" href="./about.html" rel="" target="">
  <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./archive.html" rel="" target="">
+    <a class="nav-link active" href="./archive.html" rel="" target="" aria-current="page">
  <span class="menu-text">Archive</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -119,7 +153,7 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
@@ -146,37 +180,260 @@ ul.task-list li input[type="checkbox"] {
         
     </div>
 <!-- main -->
-<div class="quarto-about-jolla">
-  <img src="profile.jpg" class="about-image
-  round " style="height: 15em; width: 15em;">
- <header id="title-block-header" class="quarto-title-block default">
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">About</h1>
+<h1 class="title">Archive</h1>
 </div>
+
+
+
 <div class="quarto-title-meta">
+
+    
+  
+    
   </div>
-</header><main class="content" id="quarto-document-content">
-<p>Welcome to Random Realizations! This blog is a celebration of the fascinating world of data science. I hope you find the content useful, and I hope you enjoy reading along and learning with me!</p>
-<p>And me? Well, I’m Matt Bowers. I’m an ex data scientist at Uber where I solved problems using statistical modeling and machine learning. Over the years I’ve driven product decisions through controlled experimentation and user analytics, built ML products like ETA prediction on large-scale telematics data, and cracked long-standing ML problems in marketplace pricing. Before Uber I earned an MS in Applied Statistics and a PhD in Atmospheric Sciences at Purdue University where I studied the spatial-temporal correlation structure of tropical convection systems and developed statistical methods for climate research.</p>
-<p>But enough about me. Let’s get down with some data science!</p>
-</main> 
-  <hr class="about-sep">
-   <div class="about-links">
-  <a href="https://twitter.com/mcbwrs" class="about-link" rel="" target="">
-    <i class="bi bi-twitter"></i>
-     <span class="about-link-text">Twitter</span>
-  </a>
-  <a href="https://linkedin.com/in/matt-bowers/" class="about-link" rel="" target="">
-    <i class="bi bi-linkedin"></i>
-     <span class="about-link-text">LinkedIn</span>
-  </a>
-  <a href="https://github.com/mcb00" class="about-link" rel="" target="">
-    <i class="bi bi-github"></i>
-     <span class="about-link-text">Github</span>
-  </a>
+  
+
+</header>
+
+<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
+<div class="list quarto-listing-default">
+<div class="quarto-post image-right" data-index="0" data-categories="blogging" data-listing-date-sort="1690923600000" data-listing-file-modified-sort="1691189870034" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3">
+<div class="body">
+<a href="./posts/random-realizations-resurrected/index.html">
+<h3 class="no-anchor listing-title">
+Random Realizations Resurrected
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/random-realizations-resurrected/index.html">
+<div class="listing-date">
+Aug 2, 2023
+</div>
+</a>
 </div>
 </div>
- <!-- /main -->
+<div class="quarto-post image-right" data-index="1" data-categories="gradient boosting,from scratch" data-listing-date-sort="1651870800000" data-listing-file-modified-sort="1691156276856" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6">
+<div class="body">
+<a href="./posts/xgboost-from-scratch/index.html">
+<h3 class="no-anchor listing-title">
+XGBoost from Scratch
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/xgboost-from-scratch/index.html">
+<div class="listing-date">
+May 7, 2022
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="2" data-categories="gradient boosting" data-listing-date-sort="1647118800000" data-listing-file-modified-sort="1691156276855" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="14">
+<div class="body">
+<a href="./posts/xgboost-explained/index.html">
+<h3 class="no-anchor listing-title">
+XGBoost Explained
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/xgboost-explained/index.html">
+<div class="listing-date">
+Mar 13, 2022
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="3" data-categories="gradient boosting,from scratch" data-listing-date-sort="1639342800000" data-listing-file-modified-sort="1692882590599" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11">
+<div class="body">
+<a href="./posts/decision-tree-from-scratch/index.html">
+<h3 class="no-anchor listing-title">
+Decision Tree from Scratch
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/decision-tree-from-scratch/index.html">
+<div class="listing-date">
+Dec 13, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="4" data-categories="gradient boosting" data-listing-date-sort="1639256400000" data-listing-file-modified-sort="1691156276845" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9">
+<div class="body">
+<a href="./posts/consider-the-decision-tree/index.html">
+<h3 class="no-anchor listing-title">
+Consider the Decision Tree
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/consider-the-decision-tree/index.html">
+<div class="listing-date">
+Dec 12, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="5" data-categories="gradient boosting,from scratch" data-listing-date-sort="1634936400000" data-listing-file-modified-sort="1691156276853" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7">
+<div class="body">
+<a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html">
+<h3 class="no-anchor listing-title">
+How to Implement a Gradient Boosting Machine that Works with Any Loss Function
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/gradient-boosting-machine-with-any-loss-function/index.html">
+<div class="listing-date">
+Oct 23, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="6" data-categories="PySpark,tutorial" data-listing-date-sort="1624309200000" data-listing-file-modified-sort="1691156276854" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="13">
+<div class="body">
+<a href="./posts/hello-pyspark/index.html">
+<h3 class="no-anchor listing-title">
+Hello PySpark!
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/hello-pyspark/index.html">
+<div class="listing-date">
+Jun 22, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="7" data-categories="gradient boosting" data-listing-date-sort="1619470800000" data-listing-file-modified-sort="1691156276855" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="15">
+<div class="body">
+<a href="./posts/how-gradient-boosting-does-gradient-descent/index.html">
+<h3 class="no-anchor listing-title">
+How Gradient Boosting Does Gradient Descent
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/how-gradient-boosting-does-gradient-descent/index.html">
+<div class="listing-date">
+Apr 27, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="8" data-categories="gradient boosting" data-listing-date-sort="1611262800000" data-listing-file-modified-sort="1693423021628" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9">
+<div class="body">
+<a href="./posts/get-down-with-gradient-descent/index.html">
+<h3 class="no-anchor listing-title">
+Get Down with Gradient Descent
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/get-down-with-gradient-descent/index.html">
+<div class="listing-date">
+Jan 22, 2021
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="9" data-categories="gradient boosting,from scratch" data-listing-date-sort="1607374800000" data-listing-file-modified-sort="1693423021631" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6">
+<div class="body">
+<a href="./posts/gradient-boosting-machine-from-scratch/index.html">
+<h3 class="no-anchor listing-title">
+How to Build a Gradient Boosting Machine from Scratch
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/gradient-boosting-machine-from-scratch/index.html">
+<div class="listing-date">
+Dec 8, 2020
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="10" data-categories="python,pandas,tutorial" data-listing-date-sort="1606251600000" data-listing-file-modified-sort="1693830388570" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11">
+<div class="body">
+<a href="./posts/8020-pandas-tutorial/index.html">
+<h3 class="no-anchor listing-title">
+The 80/20 Pandas Tutorial
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/8020-pandas-tutorial/index.html">
+<div class="listing-date">
+Nov 25, 2020
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="11" data-categories="blogging" data-listing-date-sort="1605992400000" data-listing-file-modified-sort="1691156276854" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4">
+<div class="body">
+<a href="./posts/hello-world/index.html">
+<h3 class="no-anchor listing-title">
+Hello World! And Why I’m Inspired to Start a Blog
+</h3>
+<div class="listing-subtitle">
+
+</div>
+</a>
+</div>
+<div class="metadata">
+<a href="./posts/hello-world/index.html">
+<div class="listing-date">
+Nov 22, 2020
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class="listing-no-matching d-none">
+No matching items
+</div>
+</div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -197,6 +454,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
   const isCodeAnnotation = (el) => {
     for (const clz of el.classList) {
       if (clz.startsWith('code-annotation-')) {                     
