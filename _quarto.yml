@@ -25,6 +25,8 @@ website:
     right:
       - text: About
         href: about.qmd
+      - text: Archive
+        href: archive.qmd
       - text: Gradient Boosting Series
         href: gradient-boosting-series.qmd
     tools:
