@@ -1,5 +1,5 @@
 ---
-title: "All Posts"
+title: "Home"
 listing:
   contents: posts
   sort: "date desc"
@@ -8,8 +8,9 @@ listing:
   sort-ui: false
   filter-ui: false
   fields: [date, title, description, categories, image]
-  feed:
-    items: 3
+  # feed: true
+    # items: 3
+    # categories: [python]
 page-layout: full
 title-block-banner: false
 ---
