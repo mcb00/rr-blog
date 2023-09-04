@@ -1,0 +1,12 @@
+---
+title: "Archive"
+page-layout: full
+listing:
+  contents: posts/
+  type: default
+  fields: [date, title]
+  sort: 'date desc'
+  feed: 
+    items: 5
+    categories: [python]
+---
