@@ -1985,6 +1985,7 @@ xgboost score: 0.24123239765807963</code></pre>
 </section>
 
  ]]></description>
+  <category>python</category>
   <category>gradient boosting</category>
   <category>from scratch</category>
   <guid>https://randomrealizations.com/posts/xgboost-from-scratch/index.html</guid>
@@ -3659,6 +3660,7 @@ Wall time: 625 ms</code></pre>
 </section>
 
  ]]></description>
+  <category>python</category>
   <category>gradient boosting</category>
   <category>from scratch</category>
   <guid>https://randomrealizations.com/posts/decision-tree-from-scratch/index.html</guid>
