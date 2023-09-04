@@ -12,6 +12,7 @@ listing:
     items: 3
 page-layout: full
 title-block-banner: false
+output-file: index.html
 ---
 
 
