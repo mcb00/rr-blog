@@ -10,7 +10,478 @@
 <atom:link href="https://randomrealizations.com/archive.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <generator>quarto-1.3.433</generator>
-<lastBuildDate>Tue, 01 Aug 2023 21:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 05 Sep 2023 21:00:00 GMT</lastBuildDate>
+<item>
+  <title>Blogging with Quarto and Jupyter: The Complete Guide</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<!-- 
+![](thumbnail.png "quarto, jupyter, and python logos in hexagons")
+-->
+<p>Ahh, blogging. I think we can all agree it’s probably one of the greatest forms of written communication to have ever existed.</p>
+<p>Whats that you say? You’d like to set up your own blog? And you say you want to use a dead simple, data science friendly tech stack? And you wouldn’t be caught dead handing over your painstakingly crafted content to Medium? No worries, friend, I know exactly what you need.</p>
+<p>Enter <a href="https://quarto.org">Quarto</a>.</p>
+<p>In this post we’ll set up a blog using a lightweight tech stack consisting of a terminal running quarto, git, and jupyter, and we’ll use Github Pages to host our website for free. Optionally, for a few dollars a year, we can even host our website at our own custom domain.</p>
+<p>A quick note on how to use this post. <a href="https://quarto.org/docs/websites/website-blog.html">Quarto’s documentation on blogging</a> provides a nice high-level overview of the blogging workflow, and I refer to it and many other bits of Quarto documentation here. At the time of writing, the handful of other blog posts about setting up quarto blogs are aimed at the RStudio user. This post exists to provide a jupyter and python-centric path for you to follow through the entire setup of your new quarto blog, and to impart my opinionated recommendations about best practices.</p>
+<p>Let’s get into it!</p>
+<section id="what-is-quarto" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-quarto">What is Quarto?</h2>
+<p>Quarto is a way to render plain text source files containing markdown and code in python, R, and other languages into published formats like websites, books, slides, journal articles, etc. There is clearly a lot that we can do with it, but Today, we’ll use it to make a nice looking blog out of some jupyter notebook files.</p>
+<p>Quarto follows the familiar convention of using a project directory to house all material for a given project. The directory will include source files like jupyter notebooks or Rmarkdown files, as well as configuration files that control how output files are rendered. We can then use the quarto command line utility to perform actions like previewing and rendering within the project directory.</p>
+</section>
+<section id="instantiate-your-blog" class="level2">
+<h2 class="anchored" data-anchor-id="instantiate-your-blog">Instantiate your blog</h2>
+<section id="create-a-new-quarto-project" class="level3">
+<h3 class="anchored" data-anchor-id="create-a-new-quarto-project">Create a new Quarto project</h3>
+<p>After <a href="https://quarto.org/docs/get-started/">installing quarto</a> fire up a new terminal and check that the install was successful by running</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb1-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">quarto</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--version</span></span></code></pre></div>
+<p>Now think of a name for your blog’s project directory; this will also be the name of its git repository. The name will have no effect on your website’s name or URL, so don’t think too hard. The <a href="https://quarto.org/docs/websites/website-blog.html">quarto documentation</a> calls it <code>myblog</code>, so we’ll one-up them and call ours <code>pirate-ninja-blog</code>. Run the following command to create it in the current directory.</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb2-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">quarto</span> create-project pirate-ninja-blog <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--type</span> website:blog</span></code></pre></div>
+<p>That command creates a directory called <code>pirate-ninja-blog</code> containing everything you need to render your new blog. You can preview your website by running</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb3-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">quarto</span> preview pirate-ninja-blog</span></code></pre></div>
+<p>Your local website will open in a new browser window. As you edit various aspects of your blog, the preview will update with your changes. This preview feature is so simple and so great.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/pirate-ninja-blog-screenshot.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Previewing your blog with quarto preview command</figcaption>
+</figure>
+</div>
+</section>
+<section id="set-up-a-git-repo" class="level3">
+<h3 class="anchored" data-anchor-id="set-up-a-git-repo">Set up a git repo</h3>
+<p>Change into your project directory and we’ll start setting up your git repo.</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb4-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> pirate-ninja-blog</span></code></pre></div>
+<p>initialize a new git repo.</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb5-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> init <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-b</span> main</span></code></pre></div>
+<p>The <code>_site/</code> directory is where quarto puts the rendered output files, so you’ll want to ignore it in git. I also like to just ignore any hidden files too, so add the following to your <code>.gitignore</code> file.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>.gitignore</strong></pre>
+</div>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">/.quarto/</span></span>
+<span id="cb6-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">/_site/</span></span>
+<span id="cb6-3"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">.</span><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">*</span></span></code></pre></div>
+</div>
+<p>For now we’ll just stage the <code>.gitignore</code> file for the initial commit. Eventually you’ll want to commit the other files in your project too, either now or later as you edit them.</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb7-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> add .gitignore </span>
+<span id="cb7-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> commit <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-m</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Initial commit."</span></span></code></pre></div>
+<p>Then follow GitHub’s instructions to <a href="https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#adding-a-local-repository-to-github-using-git">add the local repo to GitHub using git</a>. Basically just create a new blank repo on GitHub’s website, copy the remote repository url, then add the remote repo url to your local git repo.</p>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb8-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> remote add origin <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span>REMOTE_URL<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span></span></code></pre></div>
+<p>Then you’ll be able to push any commits you make to your remote repository on GitHub by saying <code>git push</code>.</p>
+</section>
+</section>
+<section id="understand-the-components-of-a-quarto-blog" class="level2">
+<h2 class="anchored" data-anchor-id="understand-the-components-of-a-quarto-blog">Understand the components of a Quarto blog</h2>
+<section id="contents-of-the-quarto-project-directory" class="level3">
+<h3 class="anchored" data-anchor-id="contents-of-the-quarto-project-directory">Contents of the quarto project directory</h3>
+<p>Let’s have a quick look at what quarto put inside of the project directory.</p>
+<pre><code>_quarto.yml
+about.qmd
+index.qmd
+profile.jpg
+posts
+styles.css
+_site</code></pre>
+<ul>
+<li>Quarto uses yaml files to specify configurations. The <code>_quarto.yml</code> file specifies project-wide configurations.</li>
+<li>Quarto’s markdown file type uses extension <code>qmd``. Each qmd file will correspond to a page in our website.</code>index.qmd<code>is the homepage and</code>about.qmd` is the About page.</li>
+<li><code>profile.jpg</code> is an image that is included on the about page.</li>
+<li><code>styles.css</code> defines css styles for the website.</li>
+<li><code>posts</code> is a directory where we can put qmd and other documents which will be rendered into blog posts.</li>
+<li><code>posts/_metadata.yml</code> contains configurations that apply to all documents in the <code>posts</code> directory.</li>
+<li><code>_site</code> is a directory that contains the rendered website. Whereas all the other files and directories constitute the source code for our blog, <code>_site</code> is the rendered output, i.e.&nbsp;the website itself.</li>
+</ul>
+<p>Let’s take a closer look at these components and start to make the blog yours.</p>
+</section>
+<section id="project-wide-configurations" class="level3">
+<h3 class="anchored" data-anchor-id="project-wide-configurations">Project-wide Configurations</h3>
+<p>The <code>_quarto.yml</code> file controls project-wide configurations, website options, and HTML document options. Options in this file are specified in yaml in a key/value structure with three top level keys: <code>project</code>, <code>website</code>, and <code>format</code>. <a href="https://quarto.org/docs/reference/projects/websites.html">The quarto website options documentation</a> has the full list of options that you can set here. It will be very helpful to take a look at some example <code>_quarto.yml</code> files in the wild, such as the one from <a href="https://github.com/quarto-dev/quarto-web/blob/main/_quarto.yml">quarto.org</a> or even the one from <a href="https://github.com/mcb00/rr-blog/blob/main/_quarto.yml">this blog</a>.</p>
+<p>Under the <code>website</code> key, go ahead and set the title and description for your blog.</p>
+<pre><code>website:
+  title: "Pirate Ninja Blog"
+  description: "A blog about pirates, ninjas, and other things"</code></pre>
+<p>You can also customize your <a href="https://quarto.org/docs/reference/projects/websites.html#navbar">navbar</a> which is visible at the top of all pages on your site. Also go ahead and set your github and twitter urls for the icons in the navbar.</p>
+<p>Under the <code>format</code> key, you can also try changing the <a href="https://quarto.org/docs/output-formats/html-themes.html">HTML theme</a> to one of the other 25 built-in themes.</p>
+</section>
+<section id="the-about-page" class="level3">
+<h3 class="anchored" data-anchor-id="the-about-page">The About Page</h3>
+<p>The <code>about.qmd</code> file defines an About page for the blog. Go ahead and fill in your details in the <code>about.qmd</code> file; you can also replace the <code>profile.jpg</code> file with your own image. Have a look at <a href="https://quarto.org/docs/websites/website-about.html">the quarto documentation on About pages</a> to explore more functionality. Notably, you can change the <code>template</code> option to change the page layout.</p>
+</section>
+<section id="the-homepage" class="level3">
+<h3 class="anchored" data-anchor-id="the-homepage">The Homepage</h3>
+<p>The <code>index.qmd</code> file defines the landing page for your website. It is a <a href="https://quarto.org/docs/websites/website-listings.html">listing page</a> which shows links to all the pages in the <code>posts</code> directory. For now we don’t need to change anything here.</p>
+</section>
+<section id="the-posts-directory" class="level3">
+<h3 class="anchored" data-anchor-id="the-posts-directory">The <code>posts/</code> directory</h3>
+<p>The <code>posts</code> directory contains all your blog posts. There aren’t really requirements for subdirectory structure inside the <code>posts</code> directory, but it’s a best practice to create a new subdirectory for each new blog post. This just helps keep auxillary files like images or conda environment files organized. Out of the box, the <code>posts</code> directory looks like this.</p>
+<pre><code>posts
+├── _metadata.yml
+├── post-with-code
+│&nbsp;&nbsp; ├── image.jpg
+│&nbsp;&nbsp; └── index.qmd
+└── welcome
+    ├── index.qmd
+    └── thumbnail.jpg</code></pre>
+<p>There are two reasons we want to be deliberate about how we organize and name things in the <code>posts</code> directory. First, the vast majority of our blog’s content will live here, so we don’t want it to be a big confusing mess. Second, the directory sstructure and file naming will be reflected in the URLs to our blog posts; if you prefer tidy-looking URLs, and I know you do, then you want to use tidy directory and file names in the <code>posts</code> directory.</p>
+<p>You can check how the URLs look by navigating to one of the pre-populated posts in the site preview in your browser. For instance, the welcome post’s URL would be</p>
+<pre><code>https://example.com/posts/welcome/</code></pre>
+<p>When quarto renders the qmd file at <code>posts/welcome/index.qmd</code> it creates an output document in the website at <code>posts/welcome/index.html</code>. In fact the full URL to the post is,</p>
+<pre><code>https://example.com/posts/welcome/index.html</code></pre>
+<p>but the browser knows if you give it a URL with a path ending in a <code>/</code>, then it should look for the <code>index.html</code> file inside that directory.</p>
+<p>So I think the best practice here is to name your new post subdirectory with the title of the post in all lower case with dashes for spaces, e.g.&nbsp;<code>post-with-code</code>. Then to force all output pages to be called <code>index.html</code>, you can set the <code>output-file</code> key in the <code>posts/_metadata.yml</code> file like this.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>posts/_metadata.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">output-file:</span> index.html</span></code></pre></div>
+</div>
+<p>Note that alternative naming conventions are possible; notably you might want to prefix each post name with the date in yyyy-mm-dd format, so the post subdirectories sort temporally and look nice in a list. That’s the convention used in Quarto’s own blog at <a href="https://github.com/quarto-dev/quarto-web/tree/main">quarto.org</a>, As long as you keep everything for a given post inside its subdirectory, you should be good to go with nice-looking URLs.</p>
+</section>
+</section>
+<section id="authoring-posts-with-jupyter" class="level2">
+<h2 class="anchored" data-anchor-id="authoring-posts-with-jupyter">Authoring posts with jupyter</h2>
+<section id="creating-a-new-post" class="level3">
+<h3 class="anchored" data-anchor-id="creating-a-new-post">Creating a new post</h3>
+<p>It turns out that quarto will render not only <code>.qmd</code> files, but also <code>.ipynb</code> files in the <code>posts</code> directory. So let’s create a new blog post from a notebook.</p>
+<p>I think it’s a best practice to write draft posts in their own git branches, that way if you need to deploy some kind of hotfix to main while you’re drafting a post, you won’t have to deploy a half-written post livin on the main branch. To start a new post, create a new development branch, change into the posts directory, create a new subdirectory with your preferred naming convention, change into that new directory, and fire up jupyter.</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb15-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> checkout <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-b</span> new-post</span>
+<span id="cb15-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> posts</span>
+<span id="cb15-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> new-post</span>
+<span id="cb15-4"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> new-post</span>
+<span id="cb15-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">jupyter</span> notebook</span></code></pre></div>
+<p>Now create a new notebook from the jupyter UI. In order for quarto to recognize the document, the first cell of the notebook must be a raw text cell (press <code>r</code> in command mode to change a cell to raw text), and it must contain the document’s yaml front matter. You can use the following as a frontmatter template.</p>
+<pre><code>---
+title: New Post
+date: 2023-07-12
+description: A nice new post
+categories: [nonsense, code]
+---</code></pre>
+<p>Now to preview your post, open a new terminal, change into your blog’s project directory and run the <code>quarto preview</code> command. You’ll see a link to the new post in the listing on the homepage. I usually like to have the preview open in a browser while I’m editing the jupyter notebook, just to make sure things look the way I want in the rendered output. From here you can keep editing the notebook, and the preview will update in the browser dynamically.</p>
+</section>
+<section id="markdown-and-code-cells" class="level3">
+<h3 class="anchored" data-anchor-id="markdown-and-code-cells">Markdown and code cells</h3>
+<p>From here you can put text in markdown cells and you can write code in code cells. Let’s add a markdown cell with some markdown formatting.</p>
+<pre><code>## A nice heading
+
+Here is some lovely text and an equation.
+
+$$ a^2 + b^2 = c^2 $$
+
+Here's a list.
+
+- a link to an [external website](https://quarto.org).
+- a link to [another post in this blog](/posts/welcome/index.qmd).</code></pre>
+<p>This markdown will be rendered into the HTML page for the post. The last line in the above cell demonstrates the best practice for using relative urls to link to other resources within your website. Instead of providing the full url in the parentheses, just give the path to the qmd or ipynb file that you want to link to. Note that paths need to start with the <code>/</code> at the root of the quarto project, since without it, quarto will try to resolve paths relative to the location of the current document instead of the root of the project.</p>
+<p>Then create a code cell with some code. Try something like this.</p>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Hello, Quarto!'</span>)</span></code></pre></div>
+<p>By default, both code and cell output will be rendered into the HTML output. So far our jupyter notebook looks like this.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/authoring-in-jupyter.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">View of a new post being written in jupyter notebook</figcaption>
+</figure>
+</div>
+<p>Back in the browser window running your blog preview, you can see the rendered page of the new post.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/new-post-preview.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">View of the preview of the rendered post</figcaption>
+</figure>
+</div>
+</section>
+<section id="figures" class="level3">
+<h3 class="anchored" data-anchor-id="figures">Figures</h3>
+<p>Let’s add a figure to our post. Add a new code cell with the following code.</p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># | fig-cap: This is my lovely line plot</span></span>
+<span id="cb19-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># | fig-alt: A line plot extending up and to the right</span></span>
+<span id="cb19-3"></span>
+<span id="cb19-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span>
+<span id="cb19-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> plt</span>
+<span id="cb19-6"></span>
+<span id="cb19-7">x <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.arange(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>)</span>
+<span id="cb19-8">y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> x <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb19-9">plt.plot(x, y)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<p>Notice a couple of important details. First I placed a semicolon at the end of the last line. That supresses the <code>[&lt;matplotlib.lines.Line2D at 0x1111d00a0&gt;]</code> text output, which would otherwise show up in your blog post too.</p>
+<p>Second, I added a couple of special comments at the top of the cell. Quarto allows you to specify numerous <a href="https://quarto.org/docs/computations/execution-options.html">code execution options</a>, designated by the <code># |</code> prefix, to control the behavior and appearance of the code and output at a cell level. I set two keys here, <code>fig-cap</code> and <code>fig-alt</code> which respectively set the figure caption text and the image alt tag text. The <code>fig-alt</code> key is particularly important to set on all your figures because it provides the non-visual description for screenreader users reading your post. The alt tag should be a simple description of what the plot is and possibly what it shows or means. Be a friend of the blind and visually impaired community and set <code>fig-alt</code> on all of your figures.</p>
+</section>
+<section id="version-control" class="level3">
+<h3 class="anchored" data-anchor-id="version-control">Version control</h3>
+<p>As you edit your new post, go ahead and commit your changes on your development branch. Once you’ve finished your new post, you can merge it into main like this.</p>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb20-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> checkout main</span>
+<span id="cb20-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> merge new-post</span></code></pre></div>
+<p>Then you can push to GitHub by running <code>git push</code>. You should also be sure to run a final <code>quarto preview</code> to check that everything looks good before publishing to the web.</p>
+</section>
+</section>
+<section id="publishing-your-blog-to-the-web" class="level2">
+<h2 class="anchored" data-anchor-id="publishing-your-blog-to-the-web">Publishing your blog to the web</h2>
+<section id="hosting-with-github-pages" class="level3">
+<h3 class="anchored" data-anchor-id="hosting-with-github-pages">Hosting with GitHub Pages</h3>
+<p>It’s likely that the easiest (read best) option for you is to host your blog on <a href="https://pages.github.com/">GitHub Pages</a>. This is because GitHub pages is free, and since you already have your blog’s source code checked into a remote repository at GitHub, it’s very easy to set up. <a href="https://quarto.org/docs/publishing/github-pages.html">Quarto’s documentation on publishing to GitHub Pages</a> outlines three ways to publish your website, but I recommend their option 2, using the <code>quarto publish</code> command. Once you set up your <code>gh-pages</code> branch as described in the documentation, you simply run <code>quarto publish</code> at the command line and your updates are deployed to your website.</p>
+</section>
+<section id="setting-up-your-domain-name" class="level3">
+<h3 class="anchored" data-anchor-id="setting-up-your-domain-name">Setting up your domain name</h3>
+<p>By default, if you choose to host with GitHub Pages, your website will be published to a url in the form <code>https://username.github.io/reponame/</code>. You can certainly do this; for example Jake VanderPlas’s awesome blog Pythonic Perambulations lives at <a href="http://jakevdp.github.io">http://jakevdp.github.io</a>.</p>
+<p>But, like me, you might want to get your own custom domain by buying, or really renting, one from a registrar. I use <a href="https://www.namecheap.com">Namecheap</a>. If you decide to go for a custom domain, refer to <a href="https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages">GitHub’s documentation on custom domains</a>. You’ll also need to point your domain registrar to the IP address where GitHub Pages is hosting your website. For an example of how to do this at Namecheap, see <a href="https://www.namecheap.com">Namecheap’s documentation about GitHub Pages</a></p>
+<p>Whether you decide to use the standard <code>github.io</code> domain or your own custom domain, be sure to set the <code>site-url</code> key in your <code>_quarto.yml</code> file to ensure other quarto functionality works correctly. For example</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>_quarto.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">website:</span></span>
+<span id="cb21-2">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">site-url:</span> https://example.com/</span></code></pre></div>
+</div>
+<p>Edit: I found that after upgrading to quarto 1.3, using <code>quarto publish</code> to publish from the <code>gh-pages</code> branch obliterates the <code>CNAME</code> file that is created when you set a custom domain in your repository settings &gt; Pages &gt; Custom Domain. That breaks the mapping from your custom domain to your published website. See this <a href="https://github.com/quarto-dev/quarto-cli/discussions/3249">disscussion thread</a> for details. The fix is to manually create a <code>CNAME</code> file in the root of your project, and include it in the rendered website using the <code>resources</code> option under the <code>project</code> key in <code>_quarto.yml</code>. The <code>CNAME</code> file should just contain your custom domain, excluding any <code>https://</code>.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>CNAME</strong></pre>
+</div>
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">example.com</span></span></code></pre></div>
+</div>
+<p>With the <code>CNAME</code> file in the root of your quarto project, you can then include it in the rendered output.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>_quarto.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">project:</span></span>
+<span id="cb23-2">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">resources:</span></span>
+<span id="cb23-3">    <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">-</span> CNAME</span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="keep-in-touch-with-your-readers" class="level2">
+<h2 class="anchored" data-anchor-id="keep-in-touch-with-your-readers">Keep in touch with your readers</h2>
+<section id="rss-feed" class="level3">
+<h3 class="anchored" data-anchor-id="rss-feed">RSS Feed</h3>
+<p>The RSS feed is handy for syndicating your posts to feed readers, other websites, and to your email subscribers. As described in <a href="https://quarto.org/docs/websites/website-blog.html#rss-feed">quarto’s documentation on RSS feeds</a>, you can automatically generate an RSS feed for your blog by first setting the value of <code>site-url</code> under the <code>website</code> key in <code>_quarto.yml</code>, and then setting <code>feed: true</code> under the <code>listing</code> key in the frontmatter of <code>index.qmd</code>. This will generate an RSS feed in the root of your website called <code>index.xml</code>. Once you have an RSS feed, go ahead and submit it to <a href="https://python-bloggers.com">Python-Bloggers</a> to have your work syndicated to a wider audience and to strengthen our little community of independent data science blogs.</p>
+</section>
+<section id="email-subscriptions" class="level3">
+<h3 class="anchored" data-anchor-id="email-subscriptions">Email Subscriptions</h3>
+<p>The idea here is to have a form field on your website where readers can input their email address to be added to your mailing list. <a href="https://quarto.org/docs/websites/website-blog.html#subscriptions">Quarto’s documentation on subscriptions</a> describes how to set up a subscribe box on your blog using MailChimp, so we won’t repeat it here. Once you have some subscribers, you can send them updates whenever you write a new post. You could do this manually or, in my case, set up an <a href="https://mailchimp.com/help/share-your-blog-posts-with-mailchimp/">automation through MailChimp</a> which uses your RSS feed to send out email updates to the list about new posts.</p>
+</section>
+<section id="comments" class="level3">
+<h3 class="anchored" data-anchor-id="comments">Comments</h3>
+<p>Quarto has build-in support for three different comment systems: hypothesis, utterances, and giscus. The good news is that these are all free to use, easy to set up, and AFAIK do not engage in any sketchy tracking activities. The bad news is that none of them are ideal because they all require the user to create an account and login to leave a comment. We want to encourage readers to comment, so we don’t want them to have to create accounts or deal with passwords or pick all the squares with bicycles or any such nonsense, just to leave a little comment. To that end, I’ve actually been working on self-hosted login-free comments for this blog using <a href="https://isso-comments.de">isso</a>, but it’s a bit more involved than these built-in solutions, so we’ll have to discuss it at length in a future post.</p>
+<p>If you prefer an easy, out-of-the-box solution, I can recommend utterances, which uses GitHub issues to store comments for each post. I used utterances for comments on the first jekyll-based incarnation of this blog; you can still see the utterances comments on posts before this one. Go check out the <a href="https://quarto.org/docs/reference/projects/websites.html#comments">Quarto documentation on comments</a> to see how to set up utterances in your project.</p>
+</section>
+<section id="analytics" class="level3">
+<h3 class="anchored" data-anchor-id="analytics">Analytics</h3>
+<p>As a data enthusiast, you’ll likely enjoy collecting some data about page views and visitors to your site. You might be tempted to use Google Analytics to do this; indeed quarto makes it very easy to just add a line to your <code>_quarto.yml</code> file to set it up. Unfortunately, in this case, going with the easy and free solution means supporting <a href="https://en.wikipedia.org/wiki/Privacy_concerns_regarding_Google">Google’s dubious corporate surveillance activities</a>. Be a conscientious internet citizen and avoid using Google Analytics on your blog. Fortunately, there are numerous privacy-friendly alternatives to Google Analytics. For this blog I’m self-hosting <a href="https://umami.is">umami analytics</a>, which might warrant its own post in the future.</p>
+</section>
+</section>
+<section id="more-humbly-suggested-best-practices" class="level2">
+<h2 class="anchored" data-anchor-id="more-humbly-suggested-best-practices">More humbly suggested best practices</h2>
+<section id="using-conda-environments-for-reproducibility" class="level3">
+<h3 class="anchored" data-anchor-id="using-conda-environments-for-reproducibility">Using conda environments for reproducibility</h3>
+<p>As you know, it’s a good practice to use an environment manager to keep track of packages, their versions, and other dependencies for software in a data science project. The same applies to blog posts; especially if you’re using unusual or bleeding-edge packages in a post. This will help us out a lot when we have to go back and re-run a notebook a couple years later to regenerate the output. Here we’ll use <a href="https://docs.conda.io/projects/conda/en/latest/index.html">conda</a> as our environment manager.</p>
+<p>To be clear, I don’t bother doing this if I’m just using fairly stable functionality in standard packages like pandas, numpy, and matplotlib, but we’ll do it here for illustration. From a terminal sitting inside our post subdirectory at <code>posts/new-post</code>, create a new conda environment with the packages you’re using in the post.</p>
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb24-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">conda</span> create <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> ./venv jupyter numpy matplotlib</span></code></pre></div>
+<p>Note the <code>-p</code> flag which tells conda to save the environment to <code>./venv</code> in the current working directory. This will save all the installed packages here in the post directory instead of in your system-wide location for conda environments. Note also that you’ll want to avoid checking anything in the <code>venv</code> directory into source control, so add <code>venv</code> to the <code>.gitignore</code> file at the root of the quarto project to ignore all <code>venv</code> directories throughout your quarto project.</p>
+<p>Now whenever you work on this post, you’ll navigate to the post subdirectory with a terminal and activate the conda environment.</p>
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb25-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">conda</span> activate ./venv</span></code></pre></div>
+<p>Then you can fire up your jupyter notebook from the command line, and it will use the active conda environment.</p>
+<p>Since we don’t want to check the <code>venv</code> directory with all its installed libraries into source control, we need to create an <code>environment.yml</code> file from which the environment can later be reproduced. With the local conda environment active, run the following.</p>
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb26-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">conda</span> env export <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--from-history</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> environment.yml</span></code></pre></div>
+<p>The <code>--from-history</code> flag tells conda to skip adding a bunch of system specific stuff that will gunk up your environment yaml file and make it harder to use for cross-platform reproducibility. This <code>environment.yml</code> file is the only environment management artifact that you need to check into git.</p>
+<p>Later if you need to recreate the environment from the <code>environment.yml</code> file, you can use the following command.</p>
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb27-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">conda</span> env create <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-f</span> environment.yml <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> ./venv<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">`</span></span></code></pre></div>
+</section>
+<section id="image-file-best-practices" class="level3">
+<h3 class="anchored" data-anchor-id="image-file-best-practices">Image file best practices</h3>
+<p>Let’s talk about image file sizes. The key idea is that we want images to have just enough resolution to look good; any more than that and we’re just draging around larger-than-necessary files and wasting bandwidth and slowing down page load times.</p>
+<p>You can read all about <a href="https://www.foregroundweb.com/image-size/">choosing optimal image sizes</a>, but the TLDR is that images should be just large enough (in pixels) to fill the containers they occupy on the page. In our quarto blog, the two most common kinds of images are inline images we put in the body of posts and image thumbnails that show up as the associated image for a post, e.g.&nbsp;in the listing on our homepage. The inline image container seems to be about 800 pixels wide in my browser and the thumbnails are smaller, so adding some margin of error, I decided to go for 1000x750 for inline images and 500x375 for the thumbnails.</p>
+<p>I use a command line tool called <a href="https://imagemagick.org">Image Magick</a> to resize image files. Go ahead and <a href="https://formulae.brew.sh/formula/imagemagick">install image magick with homebrew</a>, and let’s add some images to our new post.</p>
+<p>For this example I’ll use a nice shot of the <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Why_London_Underground_is_nicknamed_The_Tube.jpg/1920px-Why_London_Underground_is_nicknamed_The_Tube.jpg">London Underground</a> from Wikipedia. Save your image as <code>image.jpg</code>. Then use image magick to create two new resized images for inline and thumbnail use.</p>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb28-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">convert</span> image.jpg <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-resize</span> 1000x1000 main.jpg </span>
+<span id="cb28-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">convert</span> image.jpg <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-resize</span> 500x500 thumbnail.jpg </span></code></pre></div>
+<p>These commands do not change the aspect ratio of the image; they just reduce the size so that the image fits within the size specified.</p>
+<p>Now move both of your new images into the post subdirectory at <code>posts/new-post/</code>. To specify the thumbnail image, set the <code>image</code> key in the post’s front matter. Be sure to also add an alt tag description of the image using the <code>image-alt</code> key to keep it accessible for screen reader users. Our post’s frontmatter now looks like this.</p>
+<pre><code>---
+title: New Post
+date: 2023-07-12
+description: A nice new post
+categories: [nonsense, code]
+image: thumbnail.jpg
+image-alt: "A London Underground train emerging from a tunnel"
+---</code></pre>
+<p>To include an image within the body of a post, use markdown in the post to include the image. I added a markdown cell just under the front matter containing the following.</p>
+<pre><code>![A London Underground train emerging from a tunnel](main.jpg "")</code></pre>
+<p>In your preview browser window, you can see we have the thumbnail for our new post on the homepage listing.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/homepage-with-new-post-thumbnail.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">A screenshot of the homepage showing the new post’s thumbnail image</figcaption>
+</figure>
+</div>
+<p>And we also have the inline image appearing in the body of the post.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/new-post-with-inline-image.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">A screenshot of the new post showing the image included in the body of the post</figcaption>
+</figure>
+</div>
+<p>You can take a look at <a href="https://github.com/mcb00/rr-blog">the source code for this blog</a> to see some examples of including images in posts.</p>
+</section>
+</section>
+<section id="seo" class="level2">
+<h2 class="anchored" data-anchor-id="seo">SEO</h2>
+<p>SEO is a huge topic, but here we’ll just focus on a few fundamental technical aspects that we want to be sure to get right. This boils down to registering with the top search engines by market share and ensuring that we’re providing them with the information they need to properly index our pages.</p>
+<p>I checked the <a href="https://www.statista.com/statistics/216573/worldwide-market-share-of-search-engines/#main-content">top search engines by global market share</a> and as of 2023 it looks like Google has about 85%, Bing has about 8%, and the others have 2% or less each. So let’s focus on setting our site up to work well with Google search and Bing to get over 90% coverage.</p>
+<section id="google-search-console-and-bing-webmaster-tools" class="level3">
+<h3 class="anchored" data-anchor-id="google-search-console-and-bing-webmaster-tools">Google Search Console and Bing Webmaster Tools</h3>
+<p><a href="https://search.google.com/search-console/about">Google Search Console</a> is a tool for web admins to help analyze search traffic and identify any technical issues that might prevent pages from appearing or ranking well in search. Go ahead and set up an account and register your blog in search console. You can refer to <a href="https://developers.google.com/search/docs/monitor-debug/search-console-start">Google’s documentation on search console</a> to guide you through setup and configuration.</p>
+<p>Once you get set up on GSC, you can also create an account for <a href="https://www.bing.com/webmasters/about">Bing Webmaster Tools</a>. Do this after setting up GSC because there is an option to import your information from your GSC account.</p>
+<p>Once you’re set up with GSC and BWT, you’ll get email alerts anytime they crawl your site and detect any indexing problems. When that happens, track down the issues and fix them so your pages can appear in organic searches.</p>
+</section>
+<section id="sitemap" class="level3">
+<h3 class="anchored" data-anchor-id="sitemap">Sitemap</h3>
+<p>A sitemap is an xml document that lists all the pages on your website. It’s a map for the search engine bots that crawl the web looking for new pages to index. Quarto will automatically generate a sitemap called <code>sitemap.xml</code> in the root of your website, as long as you’ve filled out the <code>site-url</code> key in <code>_quarto.yml</code>. You can submit your website for indexing by providing your sitemap in Google Search Console and Bing Webmaster Tools.</p>
+</section>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Boy howdy, that was a lot, but at this point you should have a fully functioning blog, built with a minimalist, data-science-friendly tech stack consisting of quarto, jupyter, and GitHub. If you do create a blog using quarto, drop a link to it in the comments, and we can all check it out and celebrate your creation!</p>
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>tutorial</category>
+  <category>blogging</category>
+  <guid>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/index.html</guid>
+  <pubDate>Tue, 05 Sep 2023 21:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/thumbnail.png" medium="image" type="image/png" height="108" width="144"/>
+</item>
 <item>
   <title>Random Realizations Resurrected</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -3666,242 +4137,6 @@ Wall time: 625 ms</code></pre>
   <guid>https://randomrealizations.com/posts/decision-tree-from-scratch/index.html</guid>
   <pubDate>Sun, 12 Dec 2021 21:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/decision-tree-from-scratch/thumbnail.png" medium="image" type="image/png" height="86" width="144"/>
-</item>
-<item>
-  <title>Consider the Decision Tree</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/consider-the-decision-tree/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/main.jpg" title="." class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">A California cypress tree abides in silence on Alameda Beach.</figcaption>
-</figure>
-</div>
-<p>Ah, the decision tree. It’s an underrated and often overlooked hero of modern statistical learning. Trees aren’t particularly powerful learning algorithms on their own, but when utilized as building blocks in larger ensemble models like random forest and gradient boosted trees, they can achieve state of the art performance in many practical applications. Since we’ve been focusing on gradient boosting ensembles lately, let’s take a moment to consider the humble decision tree itself. This post gives a high-level intuition for how trees work, an opinionated list of their key strengths and weaknesses, and some perspective on why ensembling makes them truly shine.</p>
-<p>Onward!</p>
-<section id="classification-and-regression-trees" class="level2">
-<h2 class="anchored" data-anchor-id="classification-and-regression-trees">Classification and Regression Trees</h2>
-<p>A Decision tree is a type of statistical model that takes features or covariates as input and yields a prediction as output. The idea of the decision tree as a statistical learning tool traces back to a monograph published in 1984 by Breiman, Freidman, Olshen, and Stone called “Classification and Regression Trees” (a.k.a. CART). As the name suggests, trees come in two main varieties: classification trees which predict discrete class labels (e.g.&nbsp;<a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">DecisionTreeClassifier</a>) and regression trees which predict numeric values (e.g.&nbsp;<a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html">DecisionTreeRegressor</a>).</p>
-<p>As I mentioned earlier, tree models are not very powerful learners on their own. You might find that an individual tree model is useful for creating a simple and highly interpretable model in specific situations, but in general, trees tend to shine most as building blocks in more complex algorithms. These composite models are called ensembles, and the most important tree ensembles are random forest and gradient boosted trees. While random forest uses either regression or classification trees depending on the type of target, gradient boosting can use regression trees to solve both classification and regression tasks.</p>
-</section>
-<section id="regression-tree-in-action" class="level2">
-<h2 class="anchored" data-anchor-id="regression-tree-in-action">Regression Tree in Action</h2>
-<p>Let’s have a closer look at regression trees by training one on the diabetes dataset from scikit learn. According to the <a href="https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset">documentation</a>:</p>
-<blockquote class="blockquote">
-<p>Ten baseline variables, age, sex, body mass index, average blood pressure, and six blood serum measurements were obtained for each of n = 442 diabetes patients, as well as the response of interest, a quantitative measure of disease progression one year after baseline.</p>
-</blockquote>
-<p>First we load the data. To make our lives easier, we’ll just use two features: average blood pressure (bp) and the first blood serum measurement (s1) to predict the target. I’ll rescale the features to make the values easier for me to read, but it won’t affect our tree–more on that later.</p>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np </span>
-<span id="cb1-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> pd</span>
-<span id="cb1-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> plt</span>
-<span id="cb1-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> seaborn <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> sns</span>
-<span id="cb1-5">color_palette <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"viridis"</span></span></code></pre></div>
-</div>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> load_diabetes</span>
-<span id="cb2-2"></span>
-<span id="cb2-3">X, y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> load_diabetes(as_frame<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>, return_X_y<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb2-4"></span>
-<span id="cb2-5">X <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> X[[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'bp'</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'s1'</span>]]</span></code></pre></div>
-</div>
-<div class="cell" data-scrolled="true" data-execution_count="4">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
-</div>
-</div>
-<p>Let’s grow a tree to predict the target given values of blood pressure and blood serum.</p>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.tree <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> DecisionTreeRegressor</span>
-<span id="cb3-2"></span>
-<span id="cb3-3">tree <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> DecisionTreeRegressor(max_depth<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>)</span>
-<span id="cb3-4">tree.fit(X,y)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-</div>
-<div class="cell" data-scrolled="true" data-execution_count="6">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
-</div>
-</div>
-<p>To make predictions using our fitted tree, we start at the root node (which is at the top), and we work our way down moving left if our feature is less than the split threshold and to the right if it’s greater than the split threshold. For example let’s predict the target for a new case with bp= 1 and s1 = 5. Since our blood pressure of 1 is less than 2.359, we move to the left child node. Here, since our serum of 5 is greater than the threshold at 0.875, we move to the right child node. This node has no further children, and thus we return its predicted value of 155.343.</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">tree.predict(pd.DataFrame({<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'bp'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'s1'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>}, index<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]))</span></code></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="7">
-<pre><code>array([155.34313725])</code></pre>
-</div>
-</div>
-<p>Let’s overlay these splits on our feature scatterplot to see how the tree has partitioned the feature space.</p>
-<div class="cell" data-execution_count="8">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
-</div>
-</div>
-<p>The tree has managed to carve out regions of feature space where the target values tend to be similar within each region, e.g.&nbsp;we have low target values in the bottom left partition and high target values in the far right region.</p>
-<p>Let’s take a look at the regression surface predicted by our tree. Since the tree predicts the exact same value for all instances in a given partition, the surface has only four distinct values.</p>
-<div class="cell" data-execution_count="9">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
-</div>
-</div>
-<p>Fabulous, now that we’ve seen a tree in action, let’s talk about trees’ key strengths and weaknesses.</p>
-</section>
-<section id="why-trees-are-awesome" class="level2">
-<h2 class="anchored" data-anchor-id="why-trees-are-awesome">Why trees are awesome</h2>
-<p>Trees are awesome because they are easy to use, and trees are easy to use because they are robust, require minimal data preprocessing, and can learn complex relationships without user intervention.</p>
-<section id="feature-scaling" class="level3">
-<h3 class="anchored" data-anchor-id="feature-scaling">Feature Scaling</h3>
-<p>Trees owe their minimal data preprocessing requirements and their robustness to the fact that split finding is controlled by the sort order of the input feature values, rather than the values themselves. This means that trees are invariant to the scaling of input features, which in turn means that we don’t need to fuss around with carefully rescaling all the numeric features before fitting a tree. It also means that trees tend to work well even if features are highly skewed or contain outliers.</p>
-</section>
-<section id="categoricals" class="level3">
-<h3 class="anchored" data-anchor-id="categoricals">Categoricals</h3>
-<p>Since trees just split data based on numeric feature values, we can easily handle most categorical features by using integer encoding. For example we might encode a size feature with small = 1, medium = 2, and large = 3. This works particularly well with ordered categories, because partitioning is consistent with the category semantics. It can also work well even if the categories have no order, because with enough splits a tree can carve each category into its own partition.</p>
-</section>
-<section id="missing-values" class="level3">
-<h3 class="anchored" data-anchor-id="missing-values">Missing Values</h3>
-<p>It’s worth calling out that different implementations of the decision tree handle missing feature values in different ways. Notably, scikit-learn handles them by throwing an error and telling you not to pull such shenanigans.</p>
-<pre><code>ValueError: Input contains NaN, infinity or a value too large for dtype('float32').</code></pre>
-<p>On the other hand, XGBoost supports an elegant way to make use of missing values, which we will discuss more in a later post.</p>
-</section>
-<section id="interactions" class="level3">
-<h3 class="anchored" data-anchor-id="interactions">Interactions</h3>
-<p>Feature interactions can also be learned automatically. An interaction means that the effect of one feature on the target differs depending on the value of another feature. For example, the effect of some drug may depend on whether or not the patient exercises. After a tree splits on exercise, it can naturally learn the correct drug effects for both exercisers and non-exercisers. This intuition extends to higher-order interactions as well, as long as the tree has enough splits to parse the relationships.</p>
-</section>
-<section id="feature-selection" class="level3">
-<h3 class="anchored" data-anchor-id="feature-selection">Feature Selection</h3>
-<p>Because trees choose the best feature and threshold value at each split, they essentially perform automatic feature selection. This is great because even if we throw a lot of irrelevant features at a decision tree, it will simply tend not to use them for splits. Similarly, if two or more features are highly correlated or even redundant, the tree will simply choose one or the other when making each split; having both in the model will not cause catastrophic instability as it could in a linear model.</p>
-</section>
-<section id="feature-target-relationship" class="level3">
-<h3 class="anchored" data-anchor-id="feature-target-relationship">Feature-Target Relationship</h3>
-<p>Finally, it is possible for trees to discover complex nonlinear feature-target relationships without the need for user-specification of the relationships. This is because trees use local piecewise constant approximations without making any parametric assumptions. With enough splits, the tree can approximate arbitrary feature-target relationships.</p>
-<div class="cell" data-execution_count="11">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
-</div>
-</div>
-</section>
-</section>
-<section id="why-trees-are-not-so-awesome" class="level2">
-<h2 class="anchored" data-anchor-id="why-trees-are-not-so-awesome">Why trees are not so awesome</h2>
-<p>The main weakness of the decision tree is that, on its own, it tends to have poor predictive performance compared to other algorithms. The main reasons for this are the tendency to overfit and prediction quantization issues.</p>
-<section id="overfitting" class="level3">
-<h3 class="anchored" data-anchor-id="overfitting">Overfitting</h3>
-<p>If we grow a decision tree until each leaf has exactly one instance in it, we will have simply memorized the training data, and our model will not generalize well. Basically the only defense against overfitting is to reduce the number of leaf nodes in the tree, either by using hyperparameters to stop splitting earlier or by removing certain leaf nodes after growing a deep tree. The problem here is that some of the benefits of trees, like ability to approximate arbitrary target patterns and ability to learn interaction effects, depend on having enough splits for the task. We can sometimes find ourselves in a situation where we cannot learn these complex relationships without overfitting the tree.</p>
-</section>
-<section id="quantization" class="level3">
-<h3 class="anchored" data-anchor-id="quantization">Quantization</h3>
-<p>Because regression trees use piecewise constant functions to approximate the target, prediction accuracy can deteriorate near split boundaries. For example, if the target is increasing with the feature, a tree might tend to overpredict the target on the left side of split boundaries and overpredict on the right side of split boundaries.</p>
-<div class="cell" data-scrolled="true" data-execution_count="12">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
-</div>
-</div>
-</section>
-<section id="extrapolation" class="level3">
-<h3 class="anchored" data-anchor-id="extrapolation">Extrapolation</h3>
-<p>Because they are trained by partitioning the feature space in a training dataset, trees cannot intelligently extrapolate beyond the data on which they are trained. For example if we query a tree for predictions beyond the greatest feature value encountered in training, it will just return the prediction corresponding to the largest in-sample feature values.</p>
-<div class="cell" data-scrolled="true" data-execution_count="13">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
-</div>
-</div>
-</section>
-<section id="the-dark-side-of-convenience" class="level3">
-<h3 class="anchored" data-anchor-id="the-dark-side-of-convenience">The Dark Side of Convenience</h3>
-<p>Finally, there is always a price to pay for convenience. While trees can work well even with a messy dataset containing outliers, redundant features, and thoughtlessly encoded categoricals, we will rarely achieve the best performance under these conditions. Taking the time to deal with outliers, removing redundant information, purposefully choosing appropriate categorical encodings, and building an understanding of the data will often lead to much better results.</p>
-</section>
-</section>
-<section id="how-ensembling-makes-trees-shine" class="level2">
-<h2 class="anchored" data-anchor-id="how-ensembling-makes-trees-shine">How ensembling makes trees shine</h2>
-<p>We can go a long way toward addressing the issues of overfitting and prediction quantization by using trees as building blocks in larger algorithms called tree ensembles, the most popular examples being random forest and gradient boosted trees. A tree ensemble is a collection of different individual tree models whose predictions are averaged to generate an overall prediction.</p>
-<p>Ensembling helps address overfitting because even if each individual tree is overfitted, the average of their individual noisy predictions will tend to be more stable. Think of it in terms of the <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">bias variance tradeoff</a>, where bias refers to a model’s failure to capture certain patterns and variance refers to how different a model prediction would be if the model were trained on a different sample of training data. Since the ensemble is averaging over the predictions of all the individual models, training it on a different sample of training data would change the individual models predictions, but their overall average prediction will tend to remain stable. Thus, ensembling helps reduce the effects of overfitting by reducing model variance without increasing bias.</p>
-<p>Ensembling also helps address prediction quantization issues. While each individual tree’s predictions might express large jumps in the regression surface, averaging many different trees’ predictions together effectively generates a surface with more partitions and smaller jumps between them. This provides a smoother approximation of the feature-target relationship.</p>
-<div class="cell" data-scrolled="true" data-execution_count="14">
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/consider-the-decision-tree/consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
-</div>
-</div>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>Well, there you go, that’s my take on the high-level overview of the decision tree and its main strengths and weaknesses. As we’ve seen, ensembling allows us to keep the conveniences of the decision tree while mitigating its core weakness of relatively weak predictive power. This is why tree ensembles are so popular in practical applications. We glossed over pretty much all details of how trees actually do their magic, but fear not, next time we’re going to get rowdy and build one of these things from scratch.</p>
-</section>
-
- ]]></description>
-  <category>gradient boosting</category>
-  <guid>https://randomrealizations.com/posts/consider-the-decision-tree/index.html</guid>
-  <pubDate>Sat, 11 Dec 2021 21:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/consider-the-decision-tree/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>
