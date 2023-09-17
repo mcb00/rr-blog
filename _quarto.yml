@@ -3,7 +3,7 @@ project:
   pre-render: 
     - "rm -rf _site/*"
   post-render:
-    - "python post-render.py"
+    - "python scripts/post-render.py"
   resources:
     - CNAME
   preview:
