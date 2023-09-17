@@ -14,7 +14,7 @@ website:
   site-url:  https://randomrealizations.com/
   description: "A blog about data science, statistics, machine learning, and the scientific method"
   favicon: "favicon.png"
-  margin-header: subscribe.html
+  margin-header: includes/subscribe.html
   # comments:
   #   utterances:
   #     repo: mcb00/blog
