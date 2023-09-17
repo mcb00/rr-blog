@@ -19,4 +19,4 @@ output-file: index.html
 
 format:
   html:
-    include-after-body: ../footer.html
+    include-after-body: ../includes/isso-comments.html
