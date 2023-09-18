@@ -14,6 +14,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/xgboost-for-regression-in-python/index.html",
       "/posts/blogging-with-quarto-and-jupyter/index.html",
       "/posts/random-realizations-resurrected/index.html",
       "/posts/xgboost-from-scratch/index.html",
@@ -32,6 +33,7 @@
   {
     "listing": "/archive.html",
     "items": [
+      "/posts/xgboost-for-regression-in-python/index.html",
       "/posts/blogging-with-quarto-and-jupyter/index.html",
       "/posts/random-realizations-resurrected/index.html",
       "/posts/xgboost-from-scratch/index.html",

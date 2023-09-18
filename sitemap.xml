@@ -2,70 +2,74 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://randomrealizations.com/gradient-boosting-series.html</loc>
-    <lastmod>2023-09-06T08:42:25.920Z</lastmod>
+    <lastmod>2023-09-18T12:36:28.632Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/</loc>
-    <lastmod>2023-09-06T08:42:24.970Z</lastmod>
+    <lastmod>2023-09-18T12:36:27.918Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-explained/</loc>
-    <lastmod>2023-09-06T08:42:23.748Z</lastmod>
+    <lastmod>2023-09-18T12:36:26.685Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/random-realizations-resurrected/</loc>
-    <lastmod>2023-09-06T08:42:22.712Z</lastmod>
+    <lastmod>2023-09-18T12:36:25.726Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/decision-tree-from-scratch/</loc>
-    <lastmod>2023-09-06T08:42:21.791Z</lastmod>
+    <lastmod>2023-09-18T12:36:24.877Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
-    <lastmod>2023-09-06T08:42:20.407Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
-    <lastmod>2023-09-06T08:42:19.625Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
-    <lastmod>2023-09-06T08:42:17.993Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2023-09-06T08:42:17.339Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2023-09-06T08:42:18.457Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
-    <lastmod>2023-09-06T08:42:19.194Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-for-regression-in-python/</loc>
+    <lastmod>2023-09-18T12:36:23.472Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/hello-world/</loc>
-    <lastmod>2023-09-06T08:42:19.959Z</lastmod>
+    <lastmod>2023-09-18T12:36:22.012Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
+    <lastmod>2023-09-18T12:36:21.268Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
+    <lastmod>2023-09-18T12:36:20.524Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
+    <lastmod>2023-09-18T12:36:19.440Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
+    <lastmod>2023-09-18T12:36:20.069Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
+    <lastmod>2023-09-18T12:36:21.712Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
+    <lastmod>2023-09-18T12:36:22.520Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/</loc>
-    <lastmod>2023-09-06T08:42:21.254Z</lastmod>
+    <lastmod>2023-09-18T12:36:24.343Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2023-09-06T08:42:22.425Z</lastmod>
+    <lastmod>2023-09-18T12:36:25.447Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/</loc>
-    <lastmod>2023-09-06T08:42:23.170Z</lastmod>
+    <lastmod>2023-09-18T12:36:26.164Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/archive.html</loc>
-    <lastmod>2023-09-06T08:42:24.220Z</lastmod>
+    <lastmod>2023-09-18T12:36:27.165Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/about.html</loc>
-    <lastmod>2023-09-06T08:42:25.195Z</lastmod>
+    <lastmod>2023-09-18T12:36:28.132Z</lastmod>
   </url>
 </urlset>
