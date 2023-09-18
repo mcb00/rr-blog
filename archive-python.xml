@@ -10,7 +10,7 @@
 <atom:link href="https://randomrealizations.com/archive-python.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <generator>quarto-1.3.433</generator>
-<lastBuildDate>Tue, 24 Oct 2023 22:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 17 Sep 2023 22:00:00 GMT</lastBuildDate>
 <item>
   <title>XGBoost for Regression in Python</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -2236,7 +2236,7 @@ font-style: inherit;">=</span>m)</span></code></pre></div>
   <category>gradient boosting</category>
   <category>xgboost</category>
   <guid>https://randomrealizations.com/posts/xgboost-for-regression-in-python/index.html</guid>
-  <pubDate>Tue, 24 Oct 2023 22:00:00 GMT</pubDate>
+  <pubDate>Sun, 17 Sep 2023 22:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/xgboost-for-regression-in-python/kigali-branches.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
