@@ -8,9 +8,11 @@ listing:
     - posts/gradient-boosting-machine-with-any-loss-function
     - posts/consider-the-decision-tree
     - posts/decision-tree-from-scratch
-    - posts/how-to-understand-xgboost
+    - posts/xgboost-explained
     - posts/xgboost-from-scratch
+    - posts/xgboost-for-regression-in-python
     - posts/gradient-boosting-multi-class-classification-from-scratch
+    
   sort: "date"
   type: default
   categories: true
