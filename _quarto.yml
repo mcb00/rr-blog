@@ -27,11 +27,13 @@ website:
         href: about.qmd
       - text: Archive
         href: archive.qmd
-      - text: Resources
+      - text: Series
         menu:
           - text: Gradient Boosting Series
             href: gradient-boosting-series.qmd
-          - text: PythonBloggers
+      - text: Resources
+        menu:
+          - text: Python-Bloggers
             href: https://python-bloggers.com/
           
     tools:
