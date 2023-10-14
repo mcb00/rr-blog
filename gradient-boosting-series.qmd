@@ -10,6 +10,7 @@ listing:
     - posts/decision-tree-from-scratch
     - posts/how-to-understand-xgboost
     - posts/xgboost-from-scratch
+    - posts/gradient-boosting-multi-class-classification-from-scratch
   sort: "date"
   type: default
   categories: true
