@@ -67,3 +67,21 @@ for subfolder_with_path in list_subfolders_with_paths:
        with open(os.path.join(subfolder_with_path, 'index.html'), 'w') as file :
           file.write(filedata)
       
+
+# Add umami tracking script to redirect pages
+print()
+print('Adding umami tracking script to redirect URLs...')
+with open(os.path.join('includes', 'umami.html'), 'r') as file :
+  umami_text = file.read()
+list_subfolders_with_paths = [f.path for f in os.scandir(site_dir) if f.is_dir()]
+for subfolder_with_path in list_subfolders_with_paths:
+  if 'index.html' in os.listdir(subfolder_with_path):
+    # print(f"Reading: {os.path.join(subfolder_with_path, 'index.html')}")
+    with open(os.path.join(subfolder_with_path, 'index.html'), 'r') as file :
+      filedata = file.read()
+    if '<title>Redirect</title>' in filedata:
+       filedata = filedata.replace('</head>', umami_text + '\n</head>')
+       print(f'Adding umami script to {os.path.join(subfolder_with_path, "index.html")}')
+       with open(os.path.join(subfolder_with_path, 'index.html'), 'w') as file :
+          file.write(filedata)
+      
