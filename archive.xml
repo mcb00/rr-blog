@@ -5661,6 +5661,7 @@ xgboost score: 0.24123239765807963</code></pre>
  ]]></description>
   <category>python</category>
   <category>gradient boosting</category>
+  <category>xgboost</category>
   <category>from scratch</category>
   <guid>https://randomrealizations.com/posts/xgboost-from-scratch/index.html</guid>
   <pubDate>Fri, 06 May 2022 22:00:00 GMT</pubDate>
