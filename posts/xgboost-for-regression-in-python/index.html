@@ -203,6 +203,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#encode-string-features" id="toc-encode-string-features" class="nav-link" data-scroll-target="#encode-string-features">Encode string features</a></li>
   <li><a href="#encode-date-and-timestamp-features" id="toc-encode-date-and-timestamp-features" class="nav-link" data-scroll-target="#encode-date-and-timestamp-features">Encode date and timestamp features</a></li>
   <li><a href="#transform-the-target-if-necessary" id="toc-transform-the-target-if-necessary" class="nav-link" data-scroll-target="#transform-the-target-if-necessary">Transform the target if necessary</a></li>
+  <li><a href="#a-note-on-data-transformation-robustness" id="toc-a-note-on-data-transformation-robustness" class="nav-link" data-scroll-target="#a-note-on-data-transformation-robustness">A note on data transformation robustness</a></li>
   </ul></li>
   <li><a href="#train-and-evaluate-the-xgboost-regression-model" id="toc-train-and-evaluate-the-xgboost-regression-model" class="nav-link" data-scroll-target="#train-and-evaluate-the-xgboost-regression-model">Train and Evaluate the XGBoost regression model</a>
   <ul class="collapse">
@@ -432,6 +433,11 @@ memory usage: 162.2+ MB</code></pre>
 <p><img src="index_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="histogram of log sale price showing a more symetric distribution"></p>
 </div>
 </div>
+</section>
+<section id="a-note-on-data-transformation-robustness" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-on-data-transformation-robustness">A note on data transformation robustness</h3>
+<p>Before we jump into training models, let’s talk about how our approach to data transformation might differ between initial modeling explorations and building robust production-ready ML applications. When faced with a new modeling problem, our priority is usually to get a prototype model working ASAP. Often it’s fastest and easiest to apply transformations to the entire dataset before splitting it into training and validation subsets and commencing model iterations. That’s the approach we’re taking here.</p>
+<p>As we move beyond proof of concept toward a production-ready ML application, we would want to start thinking carefully about robustness in our data transformations. Considerations might include issues like how we handle prediction with new values of categorical variables which were not present in training or how to prevent leakage in transformations that compute statistics over the entire dataset. We can benefit from using tools like scikit-learn’s <a href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html"><code>Pipeline</code></a> to chain transformations together and prevent leaking information from the training data into the validation data. We’ll save the details of robust data transformation for another post.</p>
 </section>
 </section>
 <section id="train-and-evaluate-the-xgboost-regression-model" class="level2">

@@ -1348,6 +1348,11 @@ font-style: inherit;">;</span></span></code></pre></div>
 </div>
 </div>
 </section>
+<section id="a-note-on-data-transformation-robustness" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-on-data-transformation-robustness">A note on data transformation robustness</h3>
+<p>Before we jump into training models, let’s talk about how our approach to data transformation might differ between initial modeling explorations and building robust production-ready ML applications. When faced with a new modeling problem, our priority is usually to get a prototype model working ASAP. Often it’s fastest and easiest to apply transformations to the entire dataset before splitting it into training and validation subsets and commencing model iterations. That’s the approach we’re taking here.</p>
+<p>As we move beyond proof of concept toward a production-ready ML application, we would want to start thinking carefully about robustness in our data transformations. Considerations might include issues like how we handle prediction with new values of categorical variables which were not present in training or how to prevent leakage in transformations that compute statistics over the entire dataset. We can benefit from using tools like scikit-learn’s <a href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html"><code>Pipeline</code></a> to chain transformations together and prevent leaking information from the training data into the validation data. We’ll save the details of robust data transformation for another post.</p>
+</section>
 </section>
 <section id="train-and-evaluate-the-xgboost-regression-model" class="level2">
 <h2 class="anchored" data-anchor-id="train-and-evaluate-the-xgboost-regression-model">Train and Evaluate the XGBoost regression model</h2>
