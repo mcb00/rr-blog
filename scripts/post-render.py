@@ -80,7 +80,7 @@ for subfolder_with_path in list_subfolders_with_paths:
     with open(os.path.join(subfolder_with_path, 'index.html'), 'r') as file :
       filedata = file.read()
     if '<title>Redirect</title>' in filedata:
-       filedata = filedata.replace('<title>Redirect</title>', '<title>Redirect</title>\n' + umami_text)
+       filedata = filedata.replace('  <script type="text/javascript">', '  <script type="text/javascript" data-umami-event="Redirect">')
        print(f'Adding umami script to {os.path.join(subfolder_with_path, "index.html")}')
        with open(os.path.join(subfolder_with_path, 'index.html'), 'w') as file :
           file.write(filedata)
