@@ -23,6 +23,8 @@ website:
   open-graph:
     image: opengraph.png
     image-alt: "circle painted by hand in a single brush stroke"
+    image-width: 800
+    image-height: 600
     title: "Random Realizations"
     description: "A blog about data science, statistics, machine learning, and the scientific method"
   navbar:
