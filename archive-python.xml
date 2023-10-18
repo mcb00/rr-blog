@@ -9,6 +9,11 @@
 <link>https://randomrealizations.com/archive.html#category=python</link>
 <atom:link href="https://randomrealizations.com/archive-python.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
+<image>
+<url>https://randomrealizations.com/logo-enso-white-background.png</url>
+<title>Random Realizations</title>
+<link>https://randomrealizations.com/archive.html#category=python</link>
+</image>
 <generator>quarto-1.3.433</generator>
 <lastBuildDate>Sat, 14 Oct 2023 22:00:00 GMT</lastBuildDate>
 <item>
