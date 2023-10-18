@@ -10,9 +10,11 @@
 <atom:link href="https://randomrealizations.com/archive.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <image>
-<url>https://randomrealizations.com/logo-enso-white-background.png</url>
+<url>https://randomrealizations.com/opengraph.png</url>
 <title>Random Realizations</title>
 <link>https://randomrealizations.com/archive.html</link>
+<height>108</height>
+<width>144</width>
 </image>
 <generator>quarto-1.3.433</generator>
 <lastBuildDate>Sat, 14 Oct 2023 22:00:00 GMT</lastBuildDate>
