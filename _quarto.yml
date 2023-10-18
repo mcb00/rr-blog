@@ -20,7 +20,8 @@ website:
   #     repo: mcb00/blog
   #     issue-term: title
   image: logo-enso-white-background.png
-  image-alt: circle painted by hand in a single brush stroke
+  open-graph:
+    image-alt: "circle painted by hand in a single brush stroke"
   navbar:
     background: dark
     logo: logo.png
