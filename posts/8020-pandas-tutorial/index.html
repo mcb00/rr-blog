@@ -248,6 +248,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">November 8, 2023</p>
+    </div>
+  </div>
     
   </div>
   
@@ -322,46 +328,75 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="imports-and-data" class="level2">
 <h2 class="anchored" data-anchor-id="imports-and-data">Imports and Data</h2>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>We’ll use the <a href="https://github.com/hadley/nycflights13">nycflights13</a> dataset which contains data on the 336,776 flights that departed from New York City in 2013.</p>
+<p>We’ll use the <a href="https://github.com/hadley/nycflights13">nycflights13</a> dataset which contains data on the roughly 300k flights that departed from New York City in 2013.</p>
 <div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">'https://www.openintro.org/book/statdata/nycflights.csv'</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>storage_options <span class="op">=</span> {<span class="st">'User-Agent'</span>: <span class="st">'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0'</span>}</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>flights <span class="op">=</span> pd.read_csv(url, storage_options<span class="op">=</span>storage_options)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">'https://www.openintro.org/book/statdata/nycflights.csv'</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>storage_options <span class="op">=</span> {<span class="st">'User-Agent'</span>: <span class="st">'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0'</span>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url, storage_options<span class="op">=</span>storage_options)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Typically if I’m only going to be using a single dataframe, I’ll use the name “df”. This is a pretty strong convention in pandas, e.g.&nbsp;you can see the name “df” being used all over the pandas documentation; therefore it makes your code easier for others to understand. If there will be more than one dataframe, I suggest prepending a meaningful name to the “df”, e.g.&nbsp;<code>flights_df</code>.</p>
+<p>Let’s have a look at the dataframe structure using the <code>info()</code> method.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df.info()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 32735 entries, 0 to 32734
+Data columns (total 16 columns):
+ #   Column     Non-Null Count  Dtype 
+---  ------     --------------  ----- 
+ 0   year       32735 non-null  int64 
+ 1   month      32735 non-null  int64 
+ 2   day        32735 non-null  int64 
+ 3   dep_time   32735 non-null  int64 
+ 4   dep_delay  32735 non-null  int64 
+ 5   arr_time   32735 non-null  int64 
+ 6   arr_delay  32735 non-null  int64 
+ 7   carrier    32735 non-null  object
+ 8   tailnum    32735 non-null  object
+ 9   flight     32735 non-null  int64 
+ 10  origin     32735 non-null  object
+ 11  dest       32735 non-null  object
+ 12  air_time   32735 non-null  int64 
+ 13  distance   32735 non-null  int64 
+ 14  hour       32735 non-null  int64 
+ 15  minute     32735 non-null  int64 
+dtypes: int64(12), object(4)
+memory usage: 4.0+ MB</code></pre>
+</div>
 </div>
 </section>
 <section id="select-rows-based-on-their-values-with-query" class="level2">
 <h2 class="anchored" data-anchor-id="select-rows-based-on-their-values-with-query">Select rows based on their values with <code>query()</code></h2>
 <p><code>query()</code> lets you retain a subset of rows based on the values of the data; it’s like <code>dplyr::filter()</code> in R or <code>WHERE</code> in SQL. Its argument is a string specifying the condition to be met for rows to be included in the result. You specify the condition as an expression involving the column names and comparison operators like <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>==</code> (equal), and <code>~=</code> (not equal). You can specify compound expressions using <code>and</code> and <code>or</code>, and you can even check if the column value matches any items in a list.</p>
-<div class="cell" data-scrolled="true" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compare one column to a value</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'month == 6'</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># compare two column values</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'arr_delay &gt; dep_delay'</span>)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># using arithmetic</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'arr_delay &gt; 0.5 * air_time'</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># using "and"</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'month == 6 and day == 1'</span>)</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># using "or"</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'origin == "JFK" or dest == "JFK"'</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># column value matching any item in a list</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'carrier in ["AA", "UA"]'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-scrolled="true" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compare one column to a value</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'month == 6'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># compare two column values</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'arr_delay &gt; dep_delay'</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># using arithmetic</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'arr_delay &gt; 0.5 * air_time'</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># using "and"</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'month == 6 and day == 1'</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># using "or"</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'origin == "JFK" or dest == "JFK"'</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># column value matching any item in a list</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'carrier in ["AA", "UA"]'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>You may have noticed that it seems to be much more popular to filter pandas data frames using boolean indexing. Indeed when I ask my favorite search engine how to filter a pandas dataframe on its values, I find <a href="https://cmdlinetips.com/2018/02/how-to-subset-pandas-dataframe-based-on-values-of-a-column/">this tutorial</a>, <a href="https://medium.com/swlh/3-ways-to-filter-pandas-dataframe-by-column-values-dfb6609b31de">this blog post</a>, <a href="https://stackoverflow.com/questions/17071871/how-to-select-rows-from-a-dataframe-based-on-column-values">various</a> <a href="https://stackoverflow.com/questions/11869910/pandas-filter-rows-of-dataframe-with-operator-chaining">questions</a> on Stack Overflow, and even <a href="https://pandas.pydata.org/pandas-docs/stable/getting_started/intro_tutorials/03_subset_data.html">the pandas documentation</a>, all espousing boolean indexing. Here’s what it looks like.</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># canonical boolean indexing</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>flights[(flights[<span class="st">'carrier'</span>] <span class="op">==</span> <span class="st">"AA"</span>) <span class="op">&amp;</span> (flights[<span class="st">'origin'</span>] <span class="op">==</span> <span class="st">"JFK"</span>)]</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the equivalent use of query()</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>flights.query(<span class="st">'carrier == "AA" and origin == "JFK"'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># canonical boolean indexing</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df[(df[<span class="st">'carrier'</span>] <span class="op">==</span> <span class="st">"AA"</span>) <span class="op">&amp;</span> (df[<span class="st">'origin'</span>] <span class="op">==</span> <span class="st">"JFK"</span>)]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the equivalent use of query()</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df.query(<span class="st">'carrier == "AA" and origin == "JFK"'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>There are a few reasons I prefer <code>query()</code> over boolean indexing.</p>
 <ol type="1">
@@ -374,48 +409,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="select-columns-by-name-with-filter" class="level2">
 <h2 class="anchored" data-anchor-id="select-columns-by-name-with-filter">Select columns by name with <code>filter()</code></h2>
 <p><code>filter()</code> lets you pick out a specific set of columns by name; it’s analogous to <code>dplyr::select()</code> in R or <code>SELECT</code> in SQL. You can either provide exactly the column names you want, or you can grab all columns whose names contain a given substring or which match a given regular expression. This isn’t a big deal when your dataframe has only a few columns, but is particularly useful when you have a dataframe with tens or hundreds of columns.</p>
-<div class="cell" data-scrolled="true" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select a list of columns</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>([<span class="st">'origin'</span>, <span class="st">'dest'</span>])</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns containing a particular substring</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>(like<span class="op">=</span><span class="st">'time'</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns matching a regular expression</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>flights.<span class="bu">filter</span>(regex<span class="op">=</span><span class="st">'e$'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-scrolled="true" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select a list of columns</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df.<span class="bu">filter</span>([<span class="st">'origin'</span>, <span class="st">'dest'</span>])</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns containing a particular substring</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>df.<span class="bu">filter</span>(like<span class="op">=</span><span class="st">'time'</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># select columns matching a regular expression</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>df.<span class="bu">filter</span>(regex<span class="op">=</span><span class="st">'e$'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="sort-rows-with-sort_values" class="level2">
 <h2 class="anchored" data-anchor-id="sort-rows-with-sort_values">Sort rows with <code>sort_values()</code></h2>
 <p><code>sort_values()</code> changes the order of the rows based on the data values; it’s like<code>dplyr::arrange()</code> in R or <code>ORDER BY</code> in SQL. You can specify one or more columns on which to sort, where their order denotes the sorting priority. You can also specify whether to sort in ascending or descending order.</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>flights.sort_values(<span class="st">'air_time'</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column in descending order</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>flights.sort_values(<span class="st">'air_time'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by carrier, then within carrier, sort by descending distance</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>flights.sort_values([<span class="st">'carrier'</span>, <span class="st">'distance'</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>df.sort_values(<span class="st">'air_time'</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by a single column in descending order</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>df.sort_values(<span class="st">'air_time'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># sort by carrier, then within carrier, sort by descending distance</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>df.sort_values([<span class="st">'carrier'</span>, <span class="st">'distance'</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="add-new-columns-with-assign" class="level2">
 <h2 class="anchored" data-anchor-id="add-new-columns-with-assign">Add new columns with <code>assign()</code></h2>
 <p><code>assign()</code> adds new columns which can be functions of the existing columns; it’s like <code>dplyr::mutate()</code> from R.</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add a new column based on other columns</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>flights.assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># another new column based on existing columns</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>flights.assign(gain <span class="op">=</span> <span class="kw">lambda</span> x: x.dep_delay <span class="op">-</span> x.arr_delay)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add a new column based on other columns</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>df.assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># another new column based on existing columns</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>df.assign(gain <span class="op">=</span> <span class="kw">lambda</span> x: x.dep_delay <span class="op">-</span> x.arr_delay)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>If you’re like me, this way of using <code>assign()</code> might seem a little strange at first. Let’s break it down. In the call to <code>assign()</code> the keyword argument <code>speed</code> tells pandas the name of our new column. The business to the right of the <code>=</code> is a inline lambda function that takes the dataframe we passed to <code>assign()</code> and returns the column we want to add.</p>
 <p>I like using <code>x</code> as the lambda argument because its easy to type and it evokes tabular data (think <a href="https://en.wikipedia.org/wiki/Design_matrix">design matrix</a>), which reminds me that it refers to the entire dataframe. We can then access the other columns in our dataframe using the dot like <code>x.other_column</code>.</p>
 <p>It’s true that you can skip the whole lambda business and refer to the dataframe to which you are assigning directly inside the assign. That might look like this.</p>
-<pre><code>flights.assign(speed = flights.distance / flights.air_time)</code></pre>
+<pre><code>df.assign(speed = flights.distance / flights.air_time)</code></pre>
 <p>I prefer using a lambda for the following reasons.</p>
 <ol type="1">
-<li>If you gave your dataframe a good name, using the lambda will save you from typing the name every time you want to refer to a column.</li>
+<li>Using the lambda will save you from typing the name every time you want to refer to a column.</li>
 <li>The lambda makes your code more portable. Since you refer to the dataframe as a generic <code>x</code>, you can reuse this same assignment code on a dataframe with a different name.</li>
 <li>Most importantly, the lambda will allow you to harness the power of dot chaining.</li>
 </ol>
@@ -424,45 +459,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="chain-transformations-together-with-the-dot-chain">Chain transformations together with the dot chain</h2>
 <p>One of the awesome things about pandas is that the <code>object.method()</code> paradigm lets us easily build up complex dataframe transformations from a sequence of method calls. In R, this is effectively accomplished by the pipe <code>%&gt;%</code> operator. For example, suppose we want to look at high-speed flights from JFK to Honolulu, which would require us to query for JFK to Honolulu flights, assign a speed column, and maybe sort on that new speed column.</p>
 <p>We can say:</p>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># neatly chain method calls together</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'origin == "JFK"'</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'dest == "HNL"'</span>)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    .sort_values(by<span class="op">=</span><span class="st">'speed'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># neatly chain method calls together</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    df</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'origin == "JFK"'</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'dest == "HNL"'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    .sort_values(by<span class="op">=</span><span class="st">'speed'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We compose the dot chain by wrapping the entire expression in parentheses and indenting each line within. The first line is the name of the dataframe on which we are operating. Each subsequent line has a single method call.</p>
-<p>There are a few great things about writing the code this way: 1. Readability. It’s easy to scan down the left margin of the code to see what’s happening. The first line gives us our noun (the dataframe) and each subsequent line starts with a verb. You could read this as “take <code>flights</code> then query the rows where origin is JFK, then query for rows where destination is HNL, then assign a new column called speed, then sort the dataframe by speed, then query only for the rows where speed is greater than 8.0. 1. Flexibility - It’s easy to comment out individual lines and re-run the cell. It’s also easy to reorder operations, since only one thing happens on each line. 1. Neatness - We have not polluted our workspace with any intermediate variables, nor have we wasted any mental energy thinking of names for any temporary variables.</p>
+<p>There are a few great things about writing the code this way:</p>
+<ol type="1">
+<li>Readability - It’s easy to scan down the left margin of the code to see what’s happening. The first line gives us our noun (the dataframe) and each subsequent line starts with a verb. You could read this as “take <code>df</code> then query the rows where origin is JFK, then query for rows where destination is HNL, then assign a new column called speed, then sort the dataframe by speed, then query only for the rows where speed is greater than 8.0.</li>
+<li>Flexibility - It’s easy to comment out individual lines and re-run the cell. It’s also easy to reorder operations, since only one thing happens on each line.</li>
+<li>Neatness - We have not polluted our workspace with any intermediate variables, nor have we wasted any mental energy thinking of names for any temporary variables.</li>
+</ol>
 <p>By default, dot chains do not modify the original dataframe; they just output a temporary result that we can inspect directly in the output. If you want to store the result, or pass it along to another function (e.g.&nbsp;for plotting), you can simply assign the entire dot chain to a variable.</p>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sotre the output of the dot chain in a new dataframe</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>flights_high_speed <span class="op">=</span> (</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># store the output of the dot chain in a new dataframe</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>high_speed_flights_df <span class="op">=</span> (</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    df</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    .assign(speed <span class="op">=</span> <span class="kw">lambda</span> x: x.distance <span class="op">/</span> x.air_time)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">'speed &gt; 8.0'</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="collapsing-rows-into-grouped-summaries-with-groupby" class="level2">
 <h2 class="anchored" data-anchor-id="collapsing-rows-into-grouped-summaries-with-groupby">Collapsing rows into grouped summaries with <code>groupby()</code></h2>
-<p><code>groupby()</code> combined with <code>apply()</code> gives us flexibility and control over our grouped summaries; it’s like <code>dplyr::group_by()</code> and <code>dplyr::summarise()</code> in R. This is the primary pattern I use for SQL-style groupby operations in pandas. Specifically it unlocks the following essential functionality you’re used to having in SQL. 1. specify the names of the aggregation columns we create 1. specify which aggregation function to use on which columns 1. compose more complex aggregations such as the proportion of rows meeting some condition 1. aggregate over arbitrary functions of multiple columns</p>
+<p><code>groupby()</code> combined with <code>apply()</code> gives us flexibility and control over our grouped summaries; it’s like <code>dplyr::group_by()</code> and <code>dplyr::summarise()</code> in R. This is the primary pattern I use for SQL-style groupby operations in pandas. Specifically it unlocks the following essential functionality you’re used to having in SQL.</p>
+<ol type="1">
+<li>specify the names of the aggregation columns we create</li>
+<li>specify which aggregation function to use on which columns</li>
+<li>compose more complex aggregations such as the proportion of rows meeting some condition</li>
+<li>aggregate over arbitrary functions of multiple columns</li>
+</ol>
 <p>Let’s check out the departure delay stats for each carrier.</p>
 <div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grouped summary with groupby and apply</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'n_flights'</span>: <span class="bu">len</span>(d),</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'med_delay'</span>: d.dep_delay.median(),</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_delay'</span>: d.dep_delay.mean(),</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    }))</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    .head()</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grouped summary with groupby and apply</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    df</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'n_flights'</span>: <span class="bu">len</span>(d),</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'med_delay'</span>: d.dep_delay.median(),</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_delay'</span>: d.dep_delay.mean(),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    }))</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    .head()</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
@@ -527,19 +573,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Notice how nice the code looks when we use this pattern. Each aggregation is specified on its own line, which makes it easy to see what aggregation columns we’re creating and allows us to comment, uncomment, and reorder the aggregations without breaking anything.</p>
 <p>Here are some more complex aggregations to illustrate some useful patterns.</p>
 <div class="cell" data-scrolled="true" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># more complex grouped summary</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    flights</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_gain'</span>: np.mean(d.dep_delay <span class="op">-</span> d.arr_delay), </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_delay_gt_30'</span>: np.mean(d.dep_delay <span class="op">&gt;</span> <span class="dv">30</span>), </span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_late_dep_early_arr'</span>: np.mean((d.dep_delay <span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">&amp;</span> (d.arr_delay <span class="op">&lt;</span> <span class="dv">0</span>)), </span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_arr_given_dep_delay_gt_0'</span>: d.query(<span class="st">'dep_delay &gt; 0'</span>).arr_delay.mean(),</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">'cor_arr_delay_dep_delay'</span>: np.corrcoef(d.dep_delay, d.arr_delay)[<span class="dv">0</span>,<span class="dv">1</span>],</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    }))</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    .head()</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># more complex grouped summary</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    df</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">'carrier'</span>])</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: pd.Series({</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_gain'</span>: np.mean(d.dep_delay <span class="op">-</span> d.arr_delay), </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_delay_gt_30'</span>: np.mean(d.dep_delay <span class="op">&gt;</span> <span class="dv">30</span>), </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pct_late_dep_early_arr'</span>: np.mean((d.dep_delay <span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">&amp;</span> (d.arr_delay <span class="op">&lt;</span> <span class="dv">0</span>)), </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">'avg_arr_given_dep_delay_gt_0'</span>: d.query(<span class="st">'dep_delay &gt; 0'</span>).arr_delay.mean(),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">'cor_arr_delay_dep_delay'</span>: np.corrcoef(d.dep_delay, d.arr_delay)[<span class="dv">0</span>,<span class="dv">1</span>],</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    }))</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    .head()</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="11">
 <div>
 
