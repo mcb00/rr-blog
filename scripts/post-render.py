@@ -2,7 +2,6 @@
 This script performs post processing on a rendered Quarto site by doing
   - adding canonical url tags to pages
   - stripping index.html from urls in the sitemap
-  - stripping index.html from urls in redirects
 """
 
 from xml.dom.minidom import parse, parseString
@@ -51,37 +50,3 @@ filedata = filedata.replace('index.html', '')
 with open(sitemap_file, 'w') as file:
   file.write(filedata)
 
-
-# Remove index.html from redirects
-print()
-print('Removing index.html from redirect target urls...')
-list_subfolders_with_paths = [f.path for f in os.scandir(site_dir) if f.is_dir()]
-for subfolder_with_path in list_subfolders_with_paths:
-  if 'index.html' in os.listdir(subfolder_with_path):
-    # print(f"Reading: {os.path.join(subfolder_with_path, 'index.html')}")
-    with open(os.path.join(subfolder_with_path, 'index.html'), 'r') as file :
-      filedata = file.read()
-    if '<title>Redirect</title>' in filedata:
-       filedata = filedata.replace('index.html', '')
-       print(f'Editing target url in redirect at {os.path.join(subfolder_with_path, "index.html")}')
-       with open(os.path.join(subfolder_with_path, 'index.html'), 'w') as file :
-          file.write(filedata)
-      
-
-# Add umami tracking script to redirect pages
-print()
-print('Adding umami tracking script to redirect URLs...')
-with open(os.path.join('includes', 'umami.html'), 'r') as file :
-  umami_text = file.read()
-list_subfolders_with_paths = [f.path for f in os.scandir(site_dir) if f.is_dir()]
-for subfolder_with_path in list_subfolders_with_paths:
-  if 'index.html' in os.listdir(subfolder_with_path):
-    # print(f"Reading: {os.path.join(subfolder_with_path, 'index.html')}")
-    with open(os.path.join(subfolder_with_path, 'index.html'), 'r') as file :
-      filedata = file.read()
-    if '<title>Redirect</title>' in filedata:
-       filedata = filedata.replace('  <script type="text/javascript">', '  <script type="text/javascript" data-umami-event="Redirect">')
-       print(f'Adding umami script to {os.path.join(subfolder_with_path, "index.html")}')
-       with open(os.path.join(subfolder_with_path, 'index.html'), 'w') as file :
-          file.write(filedata)
-      
