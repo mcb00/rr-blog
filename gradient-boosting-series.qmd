@@ -12,6 +12,7 @@ listing:
     - posts/xgboost-from-scratch
     - posts/xgboost-for-regression-in-python
     - posts/gradient-boosting-multi-class-classification-from-scratch
+    - posts/xgboost-for-classification-in-python
     
   sort: "date"
   type: default
