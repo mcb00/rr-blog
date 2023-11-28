@@ -11,12 +11,14 @@
       "/posts/xgboost-explained/index.html",
       "/posts/xgboost-from-scratch/index.html",
       "/posts/xgboost-for-regression-in-python/index.html",
-      "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html"
+      "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html",
+      "/posts/xgboost-for-classification-in-python/index.html"
     ]
   },
   {
     "listing": "/index.html",
     "items": [
+      "/posts/xgboost-for-classification-in-python/index.html",
       "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html",
       "/posts/xgboost-for-regression-in-python/index.html",
       "/posts/blogging-with-quarto-and-jupyter/index.html",
@@ -37,6 +39,7 @@
   {
     "listing": "/archive.html",
     "items": [
+      "/posts/xgboost-for-classification-in-python/index.html",
       "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html",
       "/posts/xgboost-for-regression-in-python/index.html",
       "/posts/blogging-with-quarto-and-jupyter/index.html",

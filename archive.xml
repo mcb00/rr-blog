@@ -17,7 +17,939 @@
 <width>144</width>
 </image>
 <generator>quarto-1.3.433</generator>
-<lastBuildDate>Sun, 15 Oct 2023 04:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 28 Nov 2023 05:00:00 GMT</lastBuildDate>
+<item>
+  <title>XGBoost for Binary and Multi-Class Classification in Python</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/xgboost-for-classification-in-python/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Today we continue the <a href="../../gradient-boosting-series.html">saga on gradient boosting</a> with a down-to-Earth tutorial on the essentials of solving classification problems with XGBoost. We’ll run through two examples: one for binary classification and another for multi-class classification. In both cases I’ll show you how to train XGBoost models using either the scikit-learn interface or the native xgboost training API. Once trained, we’ll evaluate the models with validation data then inspect them with feature importance and partial dependence plots. You can use the XGBoost classification notebook in my <a href="https://github.com/mcb00/ds-templates">ds-templates repository</a> to follow along with your own dataset.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-classification-main.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Afternoon in the Mara</figcaption>
+</figure>
+</div>
+<section id="preparing-data-for-xgboost-classifier" class="level2">
+<h2 class="anchored" data-anchor-id="preparing-data-for-xgboost-classifier">Preparing Data for XGBoost Classifier</h2>
+<p>Our dataset must satisfy two requirements to be used in an XGBoost classifier. First all feature data must be numeric—no strings and no datetimes; if you have non-numeric features, you need to <a href="../../posts/xgboost-for-regression-in-python/#prepare-raw-data-for-xgboost">transform your feature data</a>. Second, the target must be integer encoded using <img src="https://latex.codecogs.com/png.latex?%5C%7B0,1%5C%7D"> for binary targets and <img src="https://latex.codecogs.com/png.latex?%5C%7B0,1,%5Cdots,K%5C%7D"> for multiclass targets. Note that if your data is encoded to positive integers (no 0 class) XGBoost will throw potentially cryptic errors. You can use the scikit-learn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html"><code>LabelEncoder</code></a> (which we’ll do below) to generate a valid target encoding.</p>
+</section>
+<section id="xgboost-training-apis" class="level2">
+<h2 class="anchored" data-anchor-id="xgboost-training-apis">XGBoost Training APIs</h2>
+<p>The <code>xgboost</code> python library offers two API’s for training classification models: the native <a href="https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.training"><code>train</code></a> function and a wrapper class called <a href="https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn"><code>XGBClassifier</code></a>, which offers an API consistent with the scikit-learn universe. I’ll show you how to use both approaches in the examples below, but if you’re planning to use other utilities from scikit-learn, you might find the <code>XGBClassifier</code> approach to be more convenient, since the trained model object will generally play nice with sklearn functionality.</p>
+</section>
+<section id="binary-classification-example" class="level2">
+<h2 class="anchored" data-anchor-id="binary-classification-example">Binary Classification Example</h2>
+<section id="breast-cancer-wisconsin-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="breast-cancer-wisconsin-dataset">Breast Cancer Wisconsin Dataset</h3>
+<p>We’ll demonstrate binary classification in XGBoost using the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer">breast cancer wisconsin data</a>, one of scikit-learn’s built-in toy datasets. This is a tiny dataset with 569 observations of 30 features and a binary target representing whether samples are malignant or benign..</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np </span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd </span>
+<span id="cb1-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> plt </span>
+<span id="cb1-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> datasets</span>
+<span id="cb1-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> xgboost <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> xgb </span>
+<span id="cb1-6"></span>
+<span id="cb1-7">dbunch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> datasets.load_breast_cancer(as_frame<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb1-8">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dbunch.frame</span>
+<span id="cb1-9">features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dbunch.feature_names </span>
+<span id="cb1-10">target_names <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dbunch.target_names </span>
+<span id="cb1-11">target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'target'</span> </span>
+<span id="cb1-12">df.info()</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 569 entries, 0 to 568
+Data columns (total 31 columns):
+ #   Column                   Non-Null Count  Dtype  
+---  ------                   --------------  -----  
+ 0   mean radius              569 non-null    float64
+ 1   mean texture             569 non-null    float64
+ 2   mean perimeter           569 non-null    float64
+ 3   mean area                569 non-null    float64
+ 4   mean smoothness          569 non-null    float64
+ 5   mean compactness         569 non-null    float64
+ 6   mean concavity           569 non-null    float64
+ 7   mean concave points      569 non-null    float64
+ 8   mean symmetry            569 non-null    float64
+ 9   mean fractal dimension   569 non-null    float64
+ 10  radius error             569 non-null    float64
+ 11  texture error            569 non-null    float64
+ 12  perimeter error          569 non-null    float64
+ 13  area error               569 non-null    float64
+ 14  smoothness error         569 non-null    float64
+ 15  compactness error        569 non-null    float64
+ 16  concavity error          569 non-null    float64
+ 17  concave points error     569 non-null    float64
+ 18  symmetry error           569 non-null    float64
+ 19  fractal dimension error  569 non-null    float64
+ 20  worst radius             569 non-null    float64
+ 21  worst texture            569 non-null    float64
+ 22  worst perimeter          569 non-null    float64
+ 23  worst area               569 non-null    float64
+ 24  worst smoothness         569 non-null    float64
+ 25  worst compactness        569 non-null    float64
+ 26  worst concavity          569 non-null    float64
+ 27  worst concave points     569 non-null    float64
+ 28  worst symmetry           569 non-null    float64
+ 29  worst fractal dimension  569 non-null    float64
+ 30  target                   569 non-null    int64  
+dtypes: float64(30), int64(1)
+memory usage: 137.9 KB</code></pre>
+</div>
+</div>
+<p>In this dataset, the features are all numeric, so no need to do preprocessing before passing to XGBoost. Below we’ll have a look at the target to ensure it’s encoded in <img src="https://latex.codecogs.com/png.latex?%5C%7B0,1%5C%7D"> and to check the class balance.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(df[target].unique())</span>
+<span id="cb3-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(target_names)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0 1]
+['malignant' 'benign']</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">df.target.value_counts().sort_index().plot.bar()</span>
+<span id="cb5-2">plt.xlabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'target'</span>) </span>
+<span id="cb5-3">plt.ylabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'count'</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img" alt="bar plot showing the count of observations in each class"></p>
+<figcaption class="figure-caption">class counts for the breast cancer dataset</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Next We randomly split data into train and validation sets.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.model_selection <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> train_test_split</span>
+<span id="cb6-2"></span>
+<span id="cb6-3">n_valid <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">50</span> </span>
+<span id="cb6-4"></span>
+<span id="cb6-5">train_df, valid_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> train_test_split(df, test_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>n_valid, random_state<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb6-6">train_df.shape, valid_df.shape</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>((519, 31), (50, 31))</code></pre>
+</div>
+</div>
+</section>
+<section id="training-with-the-train-function" class="level3">
+<h3 class="anchored" data-anchor-id="training-with-the-train-function">Training with the <code>train</code> function</h3>
+<p>We need to set a couple of <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">model parameters</a>, most notably <code>objective</code>, which should be set to <code>binary:logistic</code> for binary classification. I also prefer to explicitly set <code>tree_method</code> to something other than its default of <code>auto</code>; usually I’ll start with <code>exact</code> on small datasets or <code>approx</code> on larger ones. Note also that The <code>train</code> function expects to receive data as <code>DMatrix</code> objects, not pandas dataframes, so we need to create dense matrix objects as well.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">params <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb8-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'exact'</span>,</span>
+<span id="cb8-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'binary:logistic'</span>,</span>
+<span id="cb8-4">}</span>
+<span id="cb8-5">num_boost_round <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">50</span></span>
+<span id="cb8-6"></span>
+<span id="cb8-7">dtrain <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.DMatrix(label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>train_df[target], data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>train_df[features])</span>
+<span id="cb8-8">dvalid <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.DMatrix(label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>valid_df[target], data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>valid_df[features])</span>
+<span id="cb8-9">model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>dtrain, num_boost_round<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_boost_round,</span>
+<span id="cb8-10">                  evals<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'valid'</span>)],</span>
+<span id="cb8-11">                  verbose_eval<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0] train-logloss:0.46232   valid-logloss:0.49033
+[10]    train-logloss:0.04394   valid-logloss:0.13434
+[20]    train-logloss:0.01515   valid-logloss:0.12193
+[30]    train-logloss:0.00995   valid-logloss:0.11988
+[40]    train-logloss:0.00766   valid-logloss:0.12416
+[49]    train-logloss:0.00657   valid-logloss:0.12799</code></pre>
+</div>
+</div>
+</section>
+<section id="training-with-xgbclassifier" class="level3">
+<h3 class="anchored" data-anchor-id="training-with-xgbclassifier">Training with <code>XGBClassifier</code></h3>
+<p>The <code>XGBClassifier</code> takes dataframes or numpy arrays as input, so this time we don’t need to create those dense matrix objects.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">params <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb10-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'exact'</span>,</span>
+<span id="cb10-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'binary:logistic'</span>,</span>
+<span id="cb10-4">}</span>
+<span id="cb10-5">num_boost_round <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">50</span></span>
+<span id="cb10-6"></span>
+<span id="cb10-7">clf <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.XGBClassifier(n_estimators<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_boost_round, <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span>params)</span>
+<span id="cb10-8">clf.fit(train_df[features], train_df[target], </span>
+<span id="cb10-9">        eval_set<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[(train_df[features], train_df[target]), (valid_df[features], valid_df[target])], </span>
+<span id="cb10-10">        verbose<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0] validation_0-logloss:0.46232    validation_1-logloss:0.49033
+[10]    validation_0-logloss:0.04394    validation_1-logloss:0.13434
+[20]    validation_0-logloss:0.01515    validation_1-logloss:0.12193
+[30]    validation_0-logloss:0.00995    validation_1-logloss:0.11988
+[40]    validation_0-logloss:0.00766    validation_1-logloss:0.12416
+[49]    validation_0-logloss:0.00657    validation_1-logloss:0.12799</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluating-the-model" class="level3">
+<h3 class="anchored" data-anchor-id="evaluating-the-model">Evaluating the Model</h3>
+<p>We’ll use the <code>sklearn.metrics</code> module to evaluate model performance on the held-out validation set. Have a look at the <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics">scikit-learn metrics for classification</a> for examples of other metrics to use.</p>
+<p>One thing to watch out for when computing metrics is the difference between the actual labels (usually called <code>y_true</code>), the model’s predicted labels (usually called <code>y_pred</code>), and the models predicted probabilities (usually called <code>y_score</code>). If you’re using the <code>XGBClassifier</code> wrapper, you can get predicted labels with the <code>predict</code> method and predicted probabilities with the <code>predict_proba</code> method. Also note that whereas <code>predict</code> returns a vector of size (num data), <code>predict_proba</code> returns a vector of size (num data, num classes); thus for binary classification, we’ll take just the second column of the array which gives the probability of class 1.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1">y_true <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> valid_df[target]</span>
+<span id="cb12-2">y_pred <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> clf.predict(valid_df[features])</span>
+<span id="cb12-3">y_score <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> clf.predict_proba(valid_df[features])[:,<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span></code></pre></div>
+</div>
+<p>Probably the simplest classification metric is accuracy, the proportion of labels we predicted correctly.</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> metrics </span>
+<span id="cb13-2"></span>
+<span id="cb13-3">metrics.accuracy_score(y_true, y_pred)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<pre><code>0.96</code></pre>
+</div>
+</div>
+<p>We can generate a classification report with several different metrics at once.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(metrics.classification_report(y_true, y_pred, target_names<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>target_names))</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              precision    recall  f1-score   support
+
+   malignant       0.93      0.93      0.93        15
+      benign       0.97      0.97      0.97        35
+
+    accuracy                           0.96        50
+   macro avg       0.95      0.95      0.95        50
+weighted avg       0.96      0.96      0.96        50
+</code></pre>
+</div>
+</div>
+<p>And we can compute the AUC, a popular classification metric based on the ROC curve, which depends on the predicted probability rather than the predicted labels.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">metrics.roc_auc_score(y_true, y_score)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>0.9885714285714287</code></pre>
+</div>
+</div>
+</section>
+<section id="feature-importance" class="level3">
+<h3 class="anchored" data-anchor-id="feature-importance">Feature Importance</h3>
+<p>Because of the <a href="../../posts/xgboost-for-regression-in-python/#feature-importance-for-xgboost">limitations of the built-in XGBoost feature importance metrics</a> I recommend that you use either <a href="https://scikit-learn.org/stable/modules/permutation_importance.html">permutation feature importance</a> or perhaps <a href="https://shap.readthedocs.io/en/latest/index.html">SHAP feature importance</a>.</p>
+<p>Here we’ll compute the permutation feature importance, which tells us by how much the model’s performance changes when we scramble a particular feature’s values at prediction time. This reflects how much the model relies on each feature when making predictions.</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.inspection <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> permutation_importance</span>
+<span id="cb19-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.metrics <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> make_scorer</span>
+<span id="cb19-3"></span>
+<span id="cb19-4">scorer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> make_scorer(metrics.log_loss, greater_is_better<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, needs_proba<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb19-5">permu_imp <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> permutation_importance(clf, valid_df[features], valid_df[target], </span>
+<span id="cb19-6">                                   n_repeats<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span>, random_state<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, scoring<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>scorer)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1">importances_permutation <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.Series(permu_imp[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'importances_mean'</span>], index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>features)</span>
+<span id="cb20-2">importances_permutation.sort_values(ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)[<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>:].plot.barh()</span>
+<span id="cb20-3">plt.title(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Permutation Importance on Out-of-Sample Set'</span>)</span>
+<span id="cb20-4">plt.xlabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'change in log likelihood'</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img" alt="horizontal bar plot showing permutation feature importance"></p>
+<figcaption class="figure-caption">top 10 features by permutation importance on validation set</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="partial-dependence" class="level2">
+<h2 class="anchored" data-anchor-id="partial-dependence">Partial Dependence</h2>
+<p>A <a href="https://scikit-learn.org/stable/modules/partial_dependence.html">partial dependence plot (PDP)</a> is a representation of the dependence between the model output and one or more feature variables. In binary classification, the model output is the probability of the so-called positive class, i.e.&nbsp;the class with encoded label 1, which corresponds to probability of “benign” in this example.. We can loosely interpret the partial dependence as showing how the expected value of the target changes across values of a particular feature, marginalizing over other features. I say “loosely” because it comes with caveats, a particularly serious one being that correlation among features tends to invalidate the above interpretation. Anyway, we can treat PDPs as useful heuristics for getting a sense of how a model thinks the target changes with feature values.</p>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.inspection <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> PartialDependenceDisplay</span>
+<span id="cb21-2"></span>
+<span id="cb21-3">PartialDependenceDisplay.from_estimator(clf, </span>
+<span id="cb21-4">                                        valid_df[features], </span>
+<span id="cb21-5">                                        [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'worst area'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'area error'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'mean area'</span>])<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img" alt="line plots showing partial dependence of probability of benign"></p>
+<figcaption class="figure-caption">PDP of target probability of benign vs three features</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="multi-class-classification-example" class="level2">
+<h2 class="anchored" data-anchor-id="multi-class-classification-example">Multi-Class Classification Example</h2>
+<section id="forest-cover-type-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="forest-cover-type-dataset">Forest Cover Type Dataset</h3>
+<p>We’ll illustrate multi-class classification using the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_covtype.html#sklearn.datasets.fetch_covtype">scikit-learn forest cover type dataset</a>, which has around 580k observations of 54 features and a target with 7 classes.</p>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">dbunch <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> datasets.fetch_covtype(as_frame<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb22-2">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dbunch.frame</span>
+<span id="cb22-3">features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dbunch.feature_names </span>
+<span id="cb22-4">df.info()</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 581012 entries, 0 to 581011
+Data columns (total 55 columns):
+ #   Column                              Non-Null Count   Dtype  
+---  ------                              --------------   -----  
+ 0   Elevation                           581012 non-null  float64
+ 1   Aspect                              581012 non-null  float64
+ 2   Slope                               581012 non-null  float64
+ 3   Horizontal_Distance_To_Hydrology    581012 non-null  float64
+ 4   Vertical_Distance_To_Hydrology      581012 non-null  float64
+ 5   Horizontal_Distance_To_Roadways     581012 non-null  float64
+ 6   Hillshade_9am                       581012 non-null  float64
+ 7   Hillshade_Noon                      581012 non-null  float64
+ 8   Hillshade_3pm                       581012 non-null  float64
+ 9   Horizontal_Distance_To_Fire_Points  581012 non-null  float64
+ 10  Wilderness_Area_0                   581012 non-null  float64
+ 11  Wilderness_Area_1                   581012 non-null  float64
+ 12  Wilderness_Area_2                   581012 non-null  float64
+ 13  Wilderness_Area_3                   581012 non-null  float64
+ 14  Soil_Type_0                         581012 non-null  float64
+ 15  Soil_Type_1                         581012 non-null  float64
+ 16  Soil_Type_2                         581012 non-null  float64
+ 17  Soil_Type_3                         581012 non-null  float64
+ 18  Soil_Type_4                         581012 non-null  float64
+ 19  Soil_Type_5                         581012 non-null  float64
+ 20  Soil_Type_6                         581012 non-null  float64
+ 21  Soil_Type_7                         581012 non-null  float64
+ 22  Soil_Type_8                         581012 non-null  float64
+ 23  Soil_Type_9                         581012 non-null  float64
+ 24  Soil_Type_10                        581012 non-null  float64
+ 25  Soil_Type_11                        581012 non-null  float64
+ 26  Soil_Type_12                        581012 non-null  float64
+ 27  Soil_Type_13                        581012 non-null  float64
+ 28  Soil_Type_14                        581012 non-null  float64
+ 29  Soil_Type_15                        581012 non-null  float64
+ 30  Soil_Type_16                        581012 non-null  float64
+ 31  Soil_Type_17                        581012 non-null  float64
+ 32  Soil_Type_18                        581012 non-null  float64
+ 33  Soil_Type_19                        581012 non-null  float64
+ 34  Soil_Type_20                        581012 non-null  float64
+ 35  Soil_Type_21                        581012 non-null  float64
+ 36  Soil_Type_22                        581012 non-null  float64
+ 37  Soil_Type_23                        581012 non-null  float64
+ 38  Soil_Type_24                        581012 non-null  float64
+ 39  Soil_Type_25                        581012 non-null  float64
+ 40  Soil_Type_26                        581012 non-null  float64
+ 41  Soil_Type_27                        581012 non-null  float64
+ 42  Soil_Type_28                        581012 non-null  float64
+ 43  Soil_Type_29                        581012 non-null  float64
+ 44  Soil_Type_30                        581012 non-null  float64
+ 45  Soil_Type_31                        581012 non-null  float64
+ 46  Soil_Type_32                        581012 non-null  float64
+ 47  Soil_Type_33                        581012 non-null  float64
+ 48  Soil_Type_34                        581012 non-null  float64
+ 49  Soil_Type_35                        581012 non-null  float64
+ 50  Soil_Type_36                        581012 non-null  float64
+ 51  Soil_Type_37                        581012 non-null  float64
+ 52  Soil_Type_38                        581012 non-null  float64
+ 53  Soil_Type_39                        581012 non-null  float64
+ 54  Cover_Type                          581012 non-null  int32  
+dtypes: float64(54), int32(1)
+memory usage: 241.6 MB</code></pre>
+</div>
+</div>
+<p>Here again the features are all numeric, so we don’t need to further preprocess them. Let’s have a look at the target.</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1">df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Cover_Type'</span>].value_counts().sort_index().plot.bar()</span>
+<span id="cb24-2">plt.xlabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'cover type'</span>) </span>
+<span id="cb24-3">plt.ylabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'count'</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img" alt="bar plot showing the count of observations in each class"></p>
+<figcaption class="figure-caption">class counts for the forest cover type dataset</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>For multi-class classification, our target variable must take values in <img src="https://latex.codecogs.com/png.latex?%5C%7B0,1,%5Cdots,K%5C%7D">. However, from the histogram of the cover type above, we see that it takes values in <img src="https://latex.codecogs.com/png.latex?%5C%7B1,2,%5Cdots,7%5C%7D">. To fix this we can use the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html">scikit-learn label encoder</a> to create a valid target column.</p>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.preprocessing <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> LabelEncoder </span>
+<span id="cb25-2"></span>
+<span id="cb25-3">target <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'encoded'</span></span>
+<span id="cb25-4">enc <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> LabelEncoder()</span>
+<span id="cb25-5">df[target] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> enc.fit_transform(df[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Cover_Type'</span>])</span>
+<span id="cb25-6"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(np.sort(df[target].unique()))</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0 1 2 3 4 5 6]</code></pre>
+</div>
+</div>
+<p>Then we can create training and validation sets.</p>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1">n_valid <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20000</span></span>
+<span id="cb27-2"></span>
+<span id="cb27-3">train_df, valid_df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> train_test_split(df, test_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>n_valid, random_state<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb27-4">train_df.shape, valid_df.shape</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<pre><code>((561012, 56), (20000, 56))</code></pre>
+</div>
+</div>
+</section>
+<section id="training-with-the-train-function-1" class="level3">
+<h3 class="anchored" data-anchor-id="training-with-the-train-function-1">Training with the <code>train</code> function</h3>
+<p>If you’re training with the <code>train</code> function, multi-class classification can be done with two objectives: <code>multi:softmax</code> and <code>multi:softprob</code>. Both use the same loss function—negative multinomial log likelihood—but the softmax option produces a trained <code>Booster</code> object whose predict method returns a 1d array of predicted labels, whereas the softprob option produces a trained <code>Booster</code> object whose predict method returns a 2d array of predicted probabilities. In either case, you also need to explicitly tell XGBoost how many classes the target has with the <code>num_class</code> parameter.</p>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">params <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb29-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'approx'</span>,</span>
+<span id="cb29-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'multi:softprob'</span>,</span>
+<span id="cb29-4">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'num_class'</span>: df[target].nunique()</span>
+<span id="cb29-5">}</span>
+<span id="cb29-6">num_boost_round <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span></span>
+<span id="cb29-7"></span>
+<span id="cb29-8">dtrain <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.DMatrix(label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>train_df[target], data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>train_df[features])</span>
+<span id="cb29-9">dvalid <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.DMatrix(label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>valid_df[target], data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>valid_df[features])</span>
+<span id="cb29-10">model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>dtrain, num_boost_round<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_boost_round,</span>
+<span id="cb29-11">                  evals<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'valid'</span>)],</span>
+<span id="cb29-12">                  verbose_eval<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0] train-mlogloss:1.42032  valid-mlogloss:1.42366
+[2] train-mlogloss:1.00541  valid-mlogloss:1.00963
+[4] train-mlogloss:0.80557  valid-mlogloss:0.81109
+[6] train-mlogloss:0.69432  valid-mlogloss:0.70085
+[8] train-mlogloss:0.62653  valid-mlogloss:0.63350
+[9] train-mlogloss:0.60111  valid-mlogloss:0.60794</code></pre>
+</div>
+</div>
+</section>
+<section id="training-with-xgbclassifier-1" class="level3">
+<h3 class="anchored" data-anchor-id="training-with-xgbclassifier-1">Training with <code>XGBClassifier</code></h3>
+<p>In multi-class classification, I think the scikit-learn <code>XGBClassifier</code> wrapper is quite a bit more convenient than the native <code>train</code> function. You can set the <code>objective</code> parameter to <code>multi:softprob</code>, and <code>XGBClassifier.fit</code> will produce a model having both <code>predict</code> and <code>predict_proba</code> methods. Also there is no need to explicitly set the number of classes in the target and no need to create the <code>DMatrix</code> objects.</p>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1">params <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> {</span>
+<span id="cb31-2">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'approx'</span>,</span>
+<span id="cb31-3">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'multi:softprob'</span>,</span>
+<span id="cb31-4">}</span>
+<span id="cb31-5">num_boost_round <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span></span>
+<span id="cb31-6"></span>
+<span id="cb31-7">clf <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> xgb.XGBClassifier(n_estimators<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>num_boost_round, <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span>params)</span>
+<span id="cb31-8">clf.fit(train_df[features], train_df[target], </span>
+<span id="cb31-9">        eval_set<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[(train_df[features], train_df[target]), (valid_df[features], valid_df[target])], </span>
+<span id="cb31-10">        verbose<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0] validation_0-mlogloss:1.42032   validation_1-mlogloss:1.42366
+[2] validation_0-mlogloss:1.00541   validation_1-mlogloss:1.00963
+[4] validation_0-mlogloss:0.80557   validation_1-mlogloss:0.81109
+[6] validation_0-mlogloss:0.69432   validation_1-mlogloss:0.70085
+[8] validation_0-mlogloss:0.62653   validation_1-mlogloss:0.63350
+[9] validation_0-mlogloss:0.60111   validation_1-mlogloss:0.60794</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluating-the-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="evaluating-the-model-1">Evaluating the Model</h3>
+<p>This time, we’ll keep the entire 2d array of predicted probabilities in <code>y_score</code>.</p>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1">y_true <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> valid_df[target]</span>
+<span id="cb33-2">y_pred <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> clf.predict(valid_df[features])</span>
+<span id="cb33-3">y_score <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> clf.predict_proba(valid_df[features])</span>
+<span id="cb33-4">y_true.shape, y_pred.shape, y_score.shape</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>((20000,), (20000,), (20000, 7))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1">metrics.accuracy_score(y_true, y_pred)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<pre><code>0.77425</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(metrics.classification_report(y_true, y_pred))</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              precision    recall  f1-score   support
+
+           0       0.77      0.74      0.75      7365
+           1       0.78      0.84      0.81      9725
+           2       0.75      0.85      0.80      1207
+           3       0.82      0.78      0.80        85
+           4       0.93      0.26      0.40       317
+           5       0.76      0.31      0.44       627
+           6       0.88      0.68      0.77       674
+
+    accuracy                           0.77     20000
+   macro avg       0.81      0.64      0.68     20000
+weighted avg       0.78      0.77      0.77     20000
+</code></pre>
+</div>
+</div>
+<p>Some binary classification metrics, like AUC, can be extended to the multi-class setting by computing the metric for each class, then averaging in some way to get an overall score. The details are controlled by the <code>average</code> and <code>multi_class</code> parameters, which are described in the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score">documentation</a>.</p>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1">metrics.roc_auc_score(y_true, y_score, average<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'weighted'</span>, multi_class<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'ovr'</span>)</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<pre><code>0.9129422094408693</code></pre>
+</div>
+</div>
+</section>
+<section id="feature-importance-1" class="level3">
+<h3 class="anchored" data-anchor-id="feature-importance-1">Feature Importance</h3>
+<p>We can compute permutation feature importance with exactly the same code that we used for the binary classifier.</p>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1">scorer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> make_scorer(metrics.log_loss, greater_is_better<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, needs_proba<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb41-2">permu_imp <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> permutation_importance(clf, valid_df[features], valid_df[target], </span>
+<span id="cb41-3">                                   n_repeats<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span>, random_state<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, scoring<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>scorer)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1">importances_permutation <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.Series(permu_imp[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'importances_mean'</span>], index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>features)</span>
+<span id="cb42-2">importances_permutation.sort_values(ascending<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)[<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>:].plot.barh()</span>
+<span id="cb42-3">plt.title(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Permutation Importance on Out-of-Sample Set'</span>)</span>
+<span id="cb42-4">plt.xlabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'change in multivariate log likelihood'</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-26-output-1.png" class="img-fluid figure-img" alt="horizontal bar plot showing permutation feature importance"></p>
+<figcaption class="figure-caption">top 10 features by permutation importance on validation set</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="partial-dependence-1" class="level3">
+<h3 class="anchored" data-anchor-id="partial-dependence-1">Partial Dependence</h3>
+<p>Recall that partial dependence reflects how the expected model output changes with a particular feature. In the multi-class setting, the model has multiple outputs—one probability for each class—so we need to choose which class probability to show in the plots. We choose the target class with the <code>target</code> parameter; be sure to pass in the encoded value, e.g.&nbsp;we need to use the label encoder to transform a raw class label back into the encoded value. Here we’ll examine partial dependence for the probability of cover type 3.</p>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1">PartialDependenceDisplay.from_estimator(clf, </span>
+<span id="cb43-2">                                        X<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>valid_df[features], </span>
+<span id="cb43-3">                                        features<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Elevation'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Horizontal_Distance_To_Roadways'</span>], </span>
+<span id="cb43-4">                                        target<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>enc.transform([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>])[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>])<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-for-classification-in-python_files/figure-html/cell-27-output-1.png" class="img-fluid figure-img" alt="line plots showing partial dependence of probability of cover type 3 vs two features"></p>
+<figcaption class="figure-caption">PDP of target probability of cover type == 3 vs elevation and distance to roadway</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Well, for me, those are really the minimal nuts and bolts one needs to get XGBoost models working on classification problems. If you dig this tutorial, or if you have additional insights into using XGBoost to solve classification problems, let me know about it down in the comments!</p>
+</section>
+<section id="go-deeper" class="level2">
+<h2 class="anchored" data-anchor-id="go-deeper">Go Deeper</h2>
+<p>If you’re feeling like Alice, and you want to go tumbling down the rabbit hole, might I recommend checking out some of the following:</p>
+<ul>
+<li><a href="../../posts/xgboost-explained/">XGBoost Explained</a> - for a deep dive into the math</li>
+<li><a href="../../posts/xgboost-from-scratch/">XGBoost from Scratch</a> - to see how to implement all those equations in code</li>
+<li><a href="../../posts/gradient-boosting-multi-class-classification-from-scratch/">Multi-Class Gradient Boosting from Scratch</a> - to fully grok the multi-class gradient boosting algorithm</li>
+</ul>
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>tutorial</category>
+  <category>gradient boosting</category>
+  <category>xgboost</category>
+  <guid>https://randomrealizations.com/posts/xgboost-for-classification-in-python/index.html</guid>
+  <pubDate>Tue, 28 Nov 2023 05:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-classification-thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Gradient Boosting Multi-Class Classification from Scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -2566,1959 +3498,6 @@ image-alt: "A London Underground train emerging from a tunnel"
   <guid>https://randomrealizations.com/posts/random-realizations-resurrected/index.html</guid>
   <pubDate>Wed, 02 Aug 2023 04:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/random-realizations-resurrected/thumbnail.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>XGBoost from Scratch</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/xgboost-from-scratch/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-from-scratch/main.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">A weathered tree reaches toward the sea at Playa Mal País</figcaption>
-</figure>
-</div>
-<p>Well, dear reader, it’s that time again, time for us to do a seemingly unnecessary scratch build of a popular algorithm that most people would simply import from the library without a second thought. But readers of this blog are not most people. Of course you know that when we do scratch builds, it’s not for the hell of it, it’s for the purpose of demystification. To that end, today we are going to implement XGBoost from scratch in python, using only numpy and pandas.</p>
-<p>Specifically we’re going to implement the core statistical learning algorithm of XGBoost, including most of the key hyperparameters and their functionality. Our implementation will also support user-defined custom objective functions, meaning that it can perform regression, classification, and whatever exotic learning tasks you can dream up, as long as you can write down a twice-differentiable objective function. We’ll refrain from implementing some simple features like column subsampling which will be left to you, gentle reader, as exercises. In terms of tree methods, we’re going to implement the exact tree-splitting algorithm, leaving the sparsity-aware method (used to handle missing feature values) and the approximate method (used for scalability) as exercises or maybe topics for future posts.</p>
-<p>As always, if something is unclear, try backtracking through the previous posts on gradient boosting and decision trees to clarify your intuition. We’ve already built up all the statistical and computational background needed to make sense of this scratch build. Here are the most important prerequisite posts:</p>
-<ol type="1">
-<li><a href="../../posts/gradient-boosting-machine-from-scratch/">Gradient Boosting Machine from Scratch</a></li>
-<li><a href="../../posts/decision-tree-from-scratch/">Decision Tree From Scratch</a></li>
-<li><a href="../../posts/how-to-understand-xgboost/">How to Understand XGBoost</a></li>
-</ol>
-<p>Great, let’s do this.</p>
-<section id="the-xgboost-model-class" class="level2">
-<h2 class="anchored" data-anchor-id="the-xgboost-model-class">The XGBoost Model Class</h2>
-<p>We begin with the user-facing API for our model, a class called <code>XGBoostModel</code> which will implement gradient boosting and prediction. To be more consistent with the XGBoost library, we’ll pass hyperparameters to our model in a parameter dictionary, so our init method is going to pull relevant parameters out of the dictionary and set them as object attributes. Note the use of python’s <code>defaultdict</code> so we don’t have to worry about handling key errors if we try to access a parameter that the user didn’t set in the dictionary.</p>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> math</span>
-<span id="cb1-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np </span>
-<span id="cb1-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> pd</span>
-<span id="cb1-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> collections <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> defaultdict</span></code></pre></div>
-</div>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">class</span> XGBoostModel():</span>
-<span id="cb2-2">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">'''XGBoost from Scratch</span></span>
-<span id="cb2-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    '''</span></span>
-<span id="cb2-4">    </span>
-<span id="cb2-5">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, params, random_seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>):</span>
-<span id="cb2-6">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> defaultdict(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">lambda</span>: <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>, params)</span>
-<span id="cb2-7">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb2-8">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb2-9">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb2-10">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span></span>
-<span id="cb2-11">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'base_score'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb2-12">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'base_score'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.5</span></span>
-<span id="cb2-13">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb2-14">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span></span>
-<span id="cb2-15">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.rng <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.random.default_rng(seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>random_seed)</span></code></pre></div>
-</div>
-<p>The fit method, based on our classic GBM, takes a feature dataframe, a target vector, the objective function, and the number of boosting rounds as arguments. The user-supplied objective function should be an object with loss, gradient, and hessian methods, each of which takes a target vector and a prediction vector as input; the loss method should return a scalar loss score, the gradient method should return a vector of gradients, and the hessian method should return a vector of hessians.</p>
-<p>In contrast to boosting in the classic GBM, instead of computing residuals between the current predictions and the target, we compute gradients and hessians of the loss function with respect to the current predictions, and instead of predicting residuals with a decision tree, we fit a special XGBoost tree booster (which we’ll implement in a moment) using the gradients and hessians. I’ve also added row subsampling by drawing a random subset of instance indices and passing them to the tree booster during each boosting round. The rest of the fit method is the same as the classic GBM, and the predict method is identical too.</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> fit(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X, y, objective, num_boost_round, verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>):</span>
-<span id="cb3-2">    current_predictions <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> np.ones(shape<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>y.shape)</span>
-<span id="cb3-3">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> []</span>
-<span id="cb3-4">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(num_boost_round):</span>
-<span id="cb3-5">        gradients <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> objective.gradient(y, current_predictions)</span>
-<span id="cb3-6">        hessians <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> objective.hessian(y, current_predictions)</span>
-<span id="cb3-7">        sample_idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span> <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb3-8">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.rng.choice(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(y), </span>
-<span id="cb3-9">                                 size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>math.floor(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(y)), </span>
-<span id="cb3-10">                                 replace<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>)</span>
-<span id="cb3-11">        booster <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(X, gradients, hessians, </span>
-<span id="cb3-12">                              <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth, sample_idxs)</span>
-<span id="cb3-13">        current_predictions <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> booster.predict(X)</span>
-<span id="cb3-14">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters.append(booster)</span>
-<span id="cb3-15">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> verbose: </span>
-<span id="cb3-16">            <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'[</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>i<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">] train loss = </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>objective<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>loss(y, current_predictions)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb3-17">            </span>
-<span id="cb3-18"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> predict(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X):</span>
-<span id="cb3-19">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> (<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate </span>
-<span id="cb3-20">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> np.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>([booster.predict(X) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> booster <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters], axis<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>))</span>
-<span id="cb3-21"></span>
-<span id="cb3-22">XGBoostModel.fit <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> fit</span>
-<span id="cb3-23">XGBoostModel.predict <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> predict            </span></code></pre></div>
-</div>
-<p>All we have to do now is implement the tree booster.</p>
-</section>
-<section id="the-xgboost-tree-booster" class="level2">
-<h2 class="anchored" data-anchor-id="the-xgboost-tree-booster">The XGBoost Tree Booster</h2>
-<p>The XGBoost tree booster is a modified version of the decision tree that we built in the decision tree from scratch post. Like the decision tree, we recursively build a binary tree structure by finding the best split rule for each node in the tree. The main difference is the criterion for evaluating splits and the way that we define a leaf’s predicted value. Instead of being functions of the target values of the instances in each node, the criterion and predicted values are functions of the instance gradients and hessians. Thus we need only make a couple of modifications to our previous decision tree implementation to create the XGBoost tree booster.</p>
-<section id="initialization-and-inserting-child-nodes" class="level3">
-<h3 class="anchored" data-anchor-id="initialization-and-inserting-child-nodes">Initialization and Inserting Child Nodes</h3>
-<p>Most of the init method is just parsing the parameter dictionary to assign parameters as object attributes. The one notable difference from our decision tree is in the way we define the node’s predicted value. We define <code>self.value</code> according to equation 5 of the XGBoost paper, a simple function of the gradient and hessian values of the instances in the current node. Of course the init also goes on to build the tree via the maybe insert child nodes method. This method is nearly identical to the one we implemented for our decision tree. So far so good.</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">class</span> TreeBooster():</span>
-<span id="cb4-2"> </span>
-<span id="cb4-3">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X, g, h, params, max_depth, idxs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>):</span>
-<span id="cb4-4">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params</span>
-<span id="cb4-5">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> max_depth</span>
-<span id="cb4-6">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">assert</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth must be nonnegative'</span></span>
-<span id="cb4-7">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb4-8">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb4-9">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb4-10">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.gamma <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gamma'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gamma'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.0</span></span>
-<span id="cb4-11">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.colsample_bynode <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb4-12">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb4-13">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">isinstance</span>(g, pd.Series): g <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g.values</span>
-<span id="cb4-14">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">isinstance</span>(h, pd.Series): h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> h.values</span>
-<span id="cb4-15">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> idxs <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">is</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>: idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.arange(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(g))</span>
-<span id="cb4-16">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> X, g, h, idxs</span>
-<span id="cb4-17">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.n, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.c <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(idxs), X.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb4-18">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>g[idxs].<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (h[idxs].<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda) <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Eq (5)</span></span>
-<span id="cb4-19">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb4-20">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>:</span>
-<span id="cb4-21">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._maybe_insert_child_nodes()</span>
-<span id="cb4-22"></span>
-<span id="cb4-23">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _maybe_insert_child_nodes(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>):</span>
-<span id="cb4-24">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.c): <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._find_better_split(i)</span>
-<span id="cb4-25">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.is_leaf: <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span></span>
-<span id="cb4-26">        x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X.values[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs,<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx]</span>
-<span id="cb4-27">        left_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.nonzero(x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold)[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]</span>
-<span id="cb4-28">        right_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.nonzero(x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold)[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]</span>
-<span id="cb4-29">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, </span>
-<span id="cb4-30">                                <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs[left_idx])</span>
-<span id="cb4-31">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, </span>
-<span id="cb4-32">                                 <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs[right_idx])</span>
-<span id="cb4-33"></span>
-<span id="cb4-34">    <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">@property</span></span>
-<span id="cb4-35">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> is_leaf(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>): <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb4-36"></span>
-<span id="cb4-37">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _find_better_split(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, feature_idx):</span>
-<span id="cb4-38">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">pass</span></span></code></pre></div>
-</div>
-</section>
-<section id="split-finding" class="level3">
-<h3 class="anchored" data-anchor-id="split-finding">Split Finding</h3>
-<p>Split finding follows the exact same pattern that we used in the decision tree, except we keep track of gradient and hessian stats instead of target value stats, and of course we use the XGBoost gain criterion (equation 7 from the paper) for evaluating splits.</p>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _find_better_split(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, feature_idx):</span>
-<span id="cb5-2">    x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X.values[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs, feature_idx]</span>
-<span id="cb5-3">    g, h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs], <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs]</span>
-<span id="cb5-4">    sort_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.argsort(x)</span>
-<span id="cb5-5">    sort_g, sort_h, sort_x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g[sort_idx], h[sort_idx], x[sort_idx]</span>
-<span id="cb5-6">    sum_g, sum_h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>(), h.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>()</span>
-<span id="cb5-7">    sum_g_right, sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sum_g, sum_h</span>
-<span id="cb5-8">    sum_g_left, sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb5-9"></span>
-<span id="cb5-10">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.n <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>):</span>
-<span id="cb5-11">        g_i, h_i, x_i, x_i_next <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sort_g[i], sort_h[i], sort_x[i], sort_x[i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb5-12">        sum_g_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> g_i<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> sum_g_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-=</span> g_i</span>
-<span id="cb5-13">        sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> h_i<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-=</span> h_i</span>
-<span id="cb5-14">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">or</span> x_i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> x_i_next:<span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">continue</span></span>
-<span id="cb5-15">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight: <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">break</span></span>
-<span id="cb5-16"></span>
-<span id="cb5-17">        gain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.5</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> ((sum_g_left<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb5-18">                        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> (sum_g_right<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb5-19">                        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> (sum_g<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb5-20">                        ) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.gamma<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Eq(7) in the xgboost paper</span></span>
-<span id="cb5-21">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> gain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far: </span>
-<span id="cb5-22">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> feature_idx</span>
-<span id="cb5-23">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> gain</span>
-<span id="cb5-24">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> (x_i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> x_i_next) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span></span>
-<span id="cb5-25">            </span>
-<span id="cb5-26">TreeBooster._find_better_split <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> _find_better_split</span></code></pre></div>
-</div>
-</section>
-<section id="prediction" class="level3">
-<h3 class="anchored" data-anchor-id="prediction">Prediction</h3>
-<p>Prediction works exactly the same as in our decision tree, and the methods are nearly identical.</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> predict(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X):</span>
-<span id="cb6-2">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> np.array([<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._predict_row(row) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i, row <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> X.iterrows()])</span>
-<span id="cb6-3"></span>
-<span id="cb6-4"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _predict_row(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, row):</span>
-<span id="cb6-5">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.is_leaf: </span>
-<span id="cb6-6">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.value</span>
-<span id="cb6-7">    child <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.left <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> row[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb6-8">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.right</span>
-<span id="cb6-9">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> child._predict_row(row)</span>
-<span id="cb6-10"></span>
-<span id="cb6-11">TreeBooster.predict <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> predict </span>
-<span id="cb6-12">TreeBooster._predict_row <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> _predict_row </span></code></pre></div>
-</div>
-</section>
-</section>
-<section id="the-complete-xgboost-from-scratch-implementation" class="level2">
-<h2 class="anchored" data-anchor-id="the-complete-xgboost-from-scratch-implementation">The Complete XGBoost From Scratch Implementation</h2>
-<p>Here’s the entire implementation which produces a usable <code>XGBoostModel</code> class with fit and predict methods.</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">class</span> XGBoostModel():</span>
-<span id="cb7-2">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">'''XGBoost from Scratch</span></span>
-<span id="cb7-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    '''</span></span>
-<span id="cb7-4">    </span>
-<span id="cb7-5">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, params, random_seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>):</span>
-<span id="cb7-6">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> defaultdict(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">lambda</span>: <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>, params)</span>
-<span id="cb7-7">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-8">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb7-9">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-10">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span></span>
-<span id="cb7-11">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'base_score'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-12">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'base_score'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.5</span></span>
-<span id="cb7-13">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-14">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span></span>
-<span id="cb7-15">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.rng <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.random.default_rng(seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>random_seed)</span>
-<span id="cb7-16">                </span>
-<span id="cb7-17">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> fit(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X, y, objective, num_boost_round, verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>):</span>
-<span id="cb7-18">        current_predictions <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> np.ones(shape<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>y.shape)</span>
-<span id="cb7-19">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> []</span>
-<span id="cb7-20">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(num_boost_round):</span>
-<span id="cb7-21">            gradients <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> objective.gradient(y, current_predictions)</span>
-<span id="cb7-22">            hessians <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> objective.hessian(y, current_predictions)</span>
-<span id="cb7-23">            sample_idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span> <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-24">                <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.rng.choice(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(y), </span>
-<span id="cb7-25">                                     size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>math.floor(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.subsample<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(y)), </span>
-<span id="cb7-26">                                     replace<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>)</span>
-<span id="cb7-27">            booster <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(X, gradients, hessians, </span>
-<span id="cb7-28">                                  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth, sample_idxs)</span>
-<span id="cb7-29">            current_predictions <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> booster.predict(X)</span>
-<span id="cb7-30">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters.append(booster)</span>
-<span id="cb7-31">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> verbose: </span>
-<span id="cb7-32">                <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'[</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>i<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">] train loss = </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>objective<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>loss(y, current_predictions)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb7-33">            </span>
-<span id="cb7-34">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> predict(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X):</span>
-<span id="cb7-35">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> (<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.base_prediction <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.learning_rate </span>
-<span id="cb7-36">                <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> np.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>([booster.predict(X) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> booster <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.boosters], axis<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>))</span>
-<span id="cb7-37">    </span>
-<span id="cb7-38"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">class</span> TreeBooster():</span>
-<span id="cb7-39"> </span>
-<span id="cb7-40">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X, g, h, params, max_depth, idxs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>):</span>
-<span id="cb7-41">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params</span>
-<span id="cb7-42">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> max_depth</span>
-<span id="cb7-43">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">assert</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth must be nonnegative'</span></span>
-<span id="cb7-44">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-45">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb7-46">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb7-47">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.gamma <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gamma'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gamma'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.0</span></span>
-<span id="cb7-48">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.colsample_bynode <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-49">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span></span>
-<span id="cb7-50">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">isinstance</span>(g, pd.Series): g <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g.values</span>
-<span id="cb7-51">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">isinstance</span>(h, pd.Series): h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> h.values</span>
-<span id="cb7-52">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> idxs <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">is</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>: idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.arange(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(g))</span>
-<span id="cb7-53">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> X, g, h, idxs</span>
-<span id="cb7-54">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.n, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.c <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(idxs), X.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb7-55">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>g[idxs].<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (h[idxs].<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda) <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Eq (5)</span></span>
-<span id="cb7-56">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb7-57">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>:</span>
-<span id="cb7-58">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._maybe_insert_child_nodes()</span>
-<span id="cb7-59"></span>
-<span id="cb7-60">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _maybe_insert_child_nodes(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>):</span>
-<span id="cb7-61">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.c): <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._find_better_split(i)</span>
-<span id="cb7-62">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.is_leaf: <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span></span>
-<span id="cb7-63">        x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X.values[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs,<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx]</span>
-<span id="cb7-64">        left_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.nonzero(x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold)[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]</span>
-<span id="cb7-65">        right_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.nonzero(x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold)[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]</span>
-<span id="cb7-66">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, </span>
-<span id="cb7-67">                                <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs[left_idx])</span>
-<span id="cb7-68">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> TreeBooster(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.params, </span>
-<span id="cb7-69">                                 <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.max_depth <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs[right_idx])</span>
-<span id="cb7-70"></span>
-<span id="cb7-71">    <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">@property</span></span>
-<span id="cb7-72">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> is_leaf(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>): <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb7-73">    </span>
-<span id="cb7-74">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _find_better_split(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, feature_idx):</span>
-<span id="cb7-75">        x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.X.values[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs, feature_idx]</span>
-<span id="cb7-76">        g, h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.g[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs], <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.h[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.idxs]</span>
-<span id="cb7-77">        sort_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.argsort(x)</span>
-<span id="cb7-78">        sort_g, sort_h, sort_x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g[sort_idx], h[sort_idx], x[sort_idx]</span>
-<span id="cb7-79">        sum_g, sum_h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> g.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>(), h.<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">sum</span>()</span>
-<span id="cb7-80">        sum_g_right, sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sum_g, sum_h</span>
-<span id="cb7-81">        sum_g_left, sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.</span></span>
-<span id="cb7-82"></span>
-<span id="cb7-83">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.n <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>):</span>
-<span id="cb7-84">            g_i, h_i, x_i, x_i_next <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sort_g[i], sort_h[i], sort_x[i], sort_x[i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb7-85">            sum_g_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> g_i<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> sum_g_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-=</span> g_i</span>
-<span id="cb7-86">            sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> h_i<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-=</span> h_i</span>
-<span id="cb7-87">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">or</span> x_i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> x_i_next:<span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">continue</span></span>
-<span id="cb7-88">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.min_child_weight: <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">break</span></span>
-<span id="cb7-89"></span>
-<span id="cb7-90">            gain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.5</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> ((sum_g_left<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h_left <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb7-91">                            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> (sum_g_right<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h_right <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb7-92">                            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> (sum_g<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> (sum_h <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.reg_lambda))</span>
-<span id="cb7-93">                            ) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.gamma<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Eq(7) in the xgboost paper</span></span>
-<span id="cb7-94">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> gain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far: </span>
-<span id="cb7-95">                <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> feature_idx</span>
-<span id="cb7-96">                <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.best_score_so_far <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> gain</span>
-<span id="cb7-97">                <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> (x_i <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> x_i_next) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span></span>
-<span id="cb7-98">                </span>
-<span id="cb7-99">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> predict(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X):</span>
-<span id="cb7-100">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> np.array([<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._predict_row(row) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> i, row <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> X.iterrows()])</span>
-<span id="cb7-101"></span>
-<span id="cb7-102">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> _predict_row(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, row):</span>
-<span id="cb7-103">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.is_leaf: </span>
-<span id="cb7-104">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.value</span>
-<span id="cb7-105">        child <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.left <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> row[<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.split_feature_idx] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.threshold <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">\</span></span>
-<span id="cb7-106">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.right</span>
-<span id="cb7-107">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> child._predict_row(row)</span></code></pre></div>
-</div>
-</section>
-<section id="testing" class="level2">
-<h2 class="anchored" data-anchor-id="testing">Testing</h2>
-<p>Let’s take this baby for a spin and benchmark its performance against the actual XGBoost library. We use the scikit learn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_california_housing.html">California housing dataset</a> for benchmarking.</p>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> fetch_california_housing</span>
-<span id="cb8-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.model_selection <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> train_test_split</span>
-<span id="cb8-3">    </span>
-<span id="cb8-4">X, y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> fetch_california_housing(as_frame<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>, return_X_y<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb8-5">X_train, X_test, y_train, y_test <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> train_test_split(X, y, test_size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span>, </span>
-<span id="cb8-6">                                                    random_state<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">43</span>)</span></code></pre></div>
-</div>
-<p>Let’s start with a nice friendly squared error objective function for training. We should probably have a future post all about how to define custom objective functions in XGBoost, but for now, here’s how I define squared error.</p>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">class</span> SquaredErrorObjective():</span>
-<span id="cb9-2">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> loss(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, y, pred): <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> np.mean((y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> pred)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>)</span>
-<span id="cb9-3">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> gradient(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, y, pred): <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> pred <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> y</span>
-<span id="cb9-4">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> hessian(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, y, pred): <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> np.ones(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(y))</span></code></pre></div>
-</div>
-<p>Here I use a more or less arbitrary set of hyperparameters for training. Feel free to play around with tuning and trying other parameter combinations yourself.</p>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> xgboost <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> xgb</span>
-<span id="cb10-2"></span>
-<span id="cb10-3">params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {</span>
-<span id="cb10-4">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.1</span>,</span>
-<span id="cb10-5">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>,</span>
-<span id="cb10-6">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.8</span>,</span>
-<span id="cb10-7">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.5</span>,</span>
-<span id="cb10-8">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gamma'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.0</span>,</span>
-<span id="cb10-9">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">25</span>,</span>
-<span id="cb10-10">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'base_score'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.0</span>,</span>
-<span id="cb10-11">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'exact'</span>,</span>
-<span id="cb10-12">}</span>
-<span id="cb10-13">num_boost_round <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span></span>
-<span id="cb10-14"></span>
-<span id="cb10-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># train the from-scratch XGBoost model</span></span>
-<span id="cb10-16">model_scratch <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> XGBoostModel(params, random_seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">42</span>)</span>
-<span id="cb10-17">model_scratch.fit(X_train, y_train, SquaredErrorObjective(), num_boost_round)</span>
-<span id="cb10-18"></span>
-<span id="cb10-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># train the library XGBoost model</span></span>
-<span id="cb10-20">dtrain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(X_train, label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>y_train)</span>
-<span id="cb10-21">dtest <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(X_test, label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>y_test)</span>
-<span id="cb10-22">model_xgb <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params, dtrain, num_boost_round)</span></code></pre></div>
-</div>
-<p>Let’s check the models’ performance on the held out test data to benchmark our implementation.</p>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">pred_scratch <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> model_scratch.predict(X_test)</span>
-<span id="cb11-2">pred_xgb <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> model_xgb.predict(dtest)</span>
-<span id="cb11-3"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'scratch score: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>SquaredErrorObjective()<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>loss(y_test, pred_scratch)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb11-4"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'xgboost score: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>SquaredErrorObjective()<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>loss(y_test, pred_xgb)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>scratch score: 0.2434125759558149
-xgboost score: 0.24123239765807963</code></pre>
-</div>
-</div>
-<p>Well, look at that! Our scratch-built SGBoost is looking pretty consistent with the library. Go us!</p>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>I’d say this is a pretty good milestone for us here at Random Realizations. We’ve been hammering away at the various concepts around gradient boosting, leaving a trail of equations and scratch-built algos in our wake. Today we put all of that together to create a legit scratch build of XGBoost, something that would have been out of reach for me before we embarked on this journey together over a year ago. To anyone with the patience to read through this stuff, cheers to you! I hope you’re learning and enjoying this as much as I am.</p>
-</section>
-<section id="reader-exercises" class="level2">
-<h2 class="anchored" data-anchor-id="reader-exercises">Reader Exercises</h2>
-<p>If you want to take this a step further and deepen your understanding and coding abilities, let me recommend some exercises for you.</p>
-<ol type="1">
-<li>Implement column subsampling. XGBoost itself provides column subsampling by tree, by level, and by node. Try implementing by tree first, then try adding by level or by node as well. These should be pretty straightforward to do.</li>
-<li>Implement sparsity aware split finding for missing feature values (Algorithm 2 in the <a href="https://arxiv.org/abs/1603.02754">XGBoost paper</a>). This will be a little more involved, since you’ll need to refactor and modify several parts of the tree booster class.</li>
-</ol>
-</section>
-
- ]]></description>
-  <category>python</category>
-  <category>gradient boosting</category>
-  <category>xgboost</category>
-  <category>from scratch</category>
-  <guid>https://randomrealizations.com/posts/xgboost-from-scratch/index.html</guid>
-  <pubDate>Sat, 07 May 2022 04:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/xgboost-from-scratch/thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>
