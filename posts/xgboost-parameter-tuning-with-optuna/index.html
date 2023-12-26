@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matt Bowers">
-<meta name="dcterms.date" content="2023-12-18">
-<meta name="description" content="My strategy for efficiently tuning XGBoost parameters with optuna">
+<meta name="dcterms.date" content="2023-12-26">
+<meta name="description" content="My approach for efficiently tuning XGBoost parameters with optuna in python">
 
-<title>Random Realizations – Tuning XGBoost Parameters with Optuna</title>
+<title>Random Realizations – The Ultimate Guide to XGBoost Parameter Tuning</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -203,16 +203,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#xgboost-parameters" id="toc-xgboost-parameters" class="nav-link" data-scroll-target="#xgboost-parameters">XGBoost Parameters</a>
   <ul class="collapse">
   <li><a href="#tree-parameters" id="toc-tree-parameters" class="nav-link" data-scroll-target="#tree-parameters">Tree Parameters</a></li>
-  <li><a href="#boosting-parameters" id="toc-boosting-parameters" class="nav-link" data-scroll-target="#boosting-parameters">Boosting Parameters</a></li>
+  <li><a href="#boosting-parameters-and-early-stopping" id="toc-boosting-parameters-and-early-stopping" class="nav-link" data-scroll-target="#boosting-parameters-and-early-stopping">Boosting Parameters and Early Stopping</a></li>
   </ul></li>
   <li><a href="#an-efficient-parameter-search-strategy-for-xgboost" id="toc-an-efficient-parameter-search-strategy-for-xgboost" class="nav-link" data-scroll-target="#an-efficient-parameter-search-strategy-for-xgboost">An Efficient Parameter Search Strategy for XGBoost</a></li>
-  <li><a href="#tuning-xgboost-parameters-with-optuna" id="toc-tuning-xgboost-parameters-with-optuna" class="nav-link" data-scroll-target="#tuning-xgboost-parameters-with-optuna">Tuning XGBoost Parameters with Optuna</a>
-  <ul class="collapse">
+  <li><a href="#tuning-xgboost-parameters-with-optuna" id="toc-tuning-xgboost-parameters-with-optuna" class="nav-link" data-scroll-target="#tuning-xgboost-parameters-with-optuna">Tuning XGBoost Parameters with Optuna</a></li>
   <li><a href="#example-tuning-the-bluebook-for-bulldozers-regression-model" id="toc-example-tuning-the-bluebook-for-bulldozers-regression-model" class="nav-link" data-scroll-target="#example-tuning-the-bluebook-for-bulldozers-regression-model">Example: Tuning the Bluebook for Bulldozers Regression Model</a></li>
-  </ul></li>
   <li><a href="#preliminaries-base-parameters-and-scoring-function" id="toc-preliminaries-base-parameters-and-scoring-function" class="nav-link" data-scroll-target="#preliminaries-base-parameters-and-scoring-function">Preliminaries: base parameters and scoring function</a></li>
-  <li><a href="#stage-1-tune-tree-parameters-with-optuna" id="toc-stage-1-tune-tree-parameters-with-optuna" class="nav-link" data-scroll-target="#stage-1-tune-tree-parameters-with-optuna">Stage 1: Tune Tree Parameters with Optuna</a></li>
-  <li><a href="#stage-2-tune-boosting-parameters-with-early-stopping" id="toc-stage-2-tune-boosting-parameters-with-early-stopping" class="nav-link" data-scroll-target="#stage-2-tune-boosting-parameters-with-early-stopping">Stage 2: Tune Boosting Parameters with Early Stopping</a></li>
+  <li><a href="#tune-tree-parameters-with-optuna" id="toc-tune-tree-parameters-with-optuna" class="nav-link" data-scroll-target="#tune-tree-parameters-with-optuna">Tune Tree Parameters with Optuna</a></li>
+  <li><a href="#stage-2-low-learning-rate-for-high-performance" id="toc-stage-2-low-learning-rate-for-high-performance" class="nav-link" data-scroll-target="#stage-2-low-learning-rate-for-high-performance">Stage 2: Low Learning Rate for High Performance</a></li>
   <li><a href="#train-and-evaluate-the-final-model" id="toc-train-and-evaluate-the-final-model" class="nav-link" data-scroll-target="#train-and-evaluate-the-final-model">Train and Evaluate the Final Model</a></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   </ul>
@@ -223,7 +221,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Tuning XGBoost Parameters with Optuna</h1>
+<h1 class="title">The Ultimate Guide to XGBoost Parameter Tuning</h1>
   <div class="quarto-categories">
     <div class="quarto-category">python</div>
     <div class="quarto-category">tutorial</div>
@@ -234,7 +232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    My strategy for efficiently tuning XGBoost parameters with optuna
+    My approach for efficiently tuning XGBoost parameters with optuna in python
   </div>
 </div>
 
@@ -251,7 +249,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">December 18, 2023</p>
+      <p class="date">December 26, 2023</p>
     </div>
   </div>
   
@@ -270,12 +268,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="when-should-you-do-hyperparameter-tuning" class="level2">
 <h2 class="anchored" data-anchor-id="when-should-you-do-hyperparameter-tuning">When should you do hyperparameter tuning?</h2>
-<p>Hyperparameter tuning can easily be overlooked in the move-fast-and-break-everything husstle of building an ML product, but it can also easily become overkill, depending on the application. There are two key questions to ask:</p>
+<p>Hyperparameter tuning can easily be overlooked in the move-fast-and-break-everything hustle of building an ML product, but it can also easily become overkill, depending on the application. There are two key questions to ask:</p>
 <ol type="1">
 <li>How much value is created by an incremental gain in model prediction accuracy?</li>
 <li>What is the cost of increasing model prediction accuracy?</li>
 </ol>
-<p>The point is that sometimes a small gain in model prediction performance translates into millions of dollars of impact. The dream scenario is that you swoop in on some key model in your organization, markedly improve its accuracy with an easy afternoon of hyperparameter tuning, realize massive improvements in your org’s KPIs, and get mad respect, bonuses, and promoted. But the reality is that ofen additional model accuracy doesn’t really change business KPIs by very much. Try to figure out the actual value of improved model accuracy and proceed accordingly.</p>
+<p>The point is that sometimes a small gain in model prediction performance translates into millions of dollars of impact. The dream scenario is that you swoop in on some key model in your organization, markedly improve its accuracy with an easy afternoon of hyperparameter tuning, realize massive improvements in your org’s KPIs, and get mad respect, bonuses, and promoted. But the reality is that often additional model accuracy doesn’t really change business KPIs by very much. Try to figure out the actual value of improved model accuracy and proceed accordingly.</p>
 <p>Remember too that hyperparameter tuning has its costs, most obviously the developer time and compute resources for the search itself. It can also lead us to deeper and deeper models which take longer to train, occupy larger memory footprints, and have higher prediction latency. Blindly chasing prediction accuracy can even backfire and make a system worse,e.g.&nbsp;by <a href="https://matheusfacure.github.io/python-causality-handbook/11-Propensity-Score.html#common-issues-with-propensity-score">degrading causal reasoning in decision-making systems</a>.</p>
 <p>Moral of the story: think before you tune.</p>
 </section>
@@ -289,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="anchored" data-anchor-id="tree-construction-algorithm">Tree construction algorithm</h4>
 <p>The tree construction algorithm boils down to split finding, and different algorithms have different ways of generating candidate splits to consider. In XGBoost we have the parameter:</p>
 <ul>
-<li><code>tree_method</code> - select tree construction algorithm: <code>exact</code>, <code>hist</code>, or default <code>approx</code>. The exact method tends to be slow, so I usually consider approx and hist in parameter searches.</li>
+<li><code>tree_method</code> - select tree construction algorithm: <code>exact</code>, <code>hist</code>, <code>approx</code>, or the horrifying default—<code>auto</code>—which outsources your choice of tree construction algo to XGBoost and which you should never ever use. I’ve been burned by this hidden <code>tree_method=auto</code> default multiple times before learning my lesson. Why is the online model worse than the offline model? Why is this model suddenly taking so much longer to train? Avoid these debugging nightmares and set <code>tree_method</code> explicitly; the exact method tends to be slow and ironically less accurate, so I use either approx or hist.</li>
 </ul>
 </section>
 <section id="tree-complexity-parameters" class="level4">
@@ -297,7 +295,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Tree complexity just means how many leaf nodes the trees have, and therefore how expressive they can be. I use these two parameters:</p>
 <ul>
 <li><code>max_depth</code> - maximum number of split levels allowed. Reasonable values are usually from 3-12.</li>
-<li><code>min_child_weight</code> - minimum allowable sum of hessian values over data in a node. When using mean squared error as the objective, this is the minimum number of samples allowed in a leaf node. In that case, values in [1, 200] usually work well.</li>
+<li><code>min_child_weight</code> - minimum allowable sum of hessian values over data in a node. When using the default squared error objective, this is the minimum number of samples allowed in a leaf node (see <a href="https://stats.stackexchange.com/questions/317073/explanation-of-min-child-weight-in-xgboost-algorithm">this explanation</a> of why that’s true). For a squared error objective, values in [1, 200] usually work well.</li>
 </ul>
 <p>These two parameters oppose each other; increasing max depth allows for more expressive trees, while increasing min child weight makes trees less expressive and therefore is a powerful way to counter overfitting. Note that <code>gamma</code> (a.k.a. <code>min_split_loss</code>) also limits node splitting, but I usually don’t use it because <code>min_child_weight</code> seems to work well enough on its own.</p>
 </section>
@@ -313,283 +311,387 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="anchored" data-anchor-id="regularization-parameters">Regularization parameters</h4>
 <p>In XGBoost, regularization penalizes the actual values predicted by the individual trees, pushing values toward zero. I usually use:</p>
 <ul>
-<li><code>reg_lambda</code> - L2 regularization of tree predicted values. Increasing this parameter decreases tree expressiveness and therefore counters overfitting. Valid values are in [0,<span class="math inline">\(\infty\)</span>), but good values typically fall in [1,10].</li>
+<li><code>reg_lambda</code> - L2 regularization of tree predicted values. Increasing this parameter decreases tree expressiveness and therefore counters overfitting. Valid values are in [0,<span class="math inline">\(\infty\)</span>), but good values typically fall in [0,10].</li>
 </ul>
 <p>There is also an L1 regularization parameter called <code>reg_alpha</code>; feel free to use it instead. It seems that using one or the other is usually sufficient.</p>
 </section>
 </section>
-<section id="boosting-parameters" class="level3">
-<h3 class="anchored" data-anchor-id="boosting-parameters">Boosting Parameters</h3>
+<section id="boosting-parameters-and-early-stopping" class="level3">
+<h3 class="anchored" data-anchor-id="boosting-parameters-and-early-stopping">Boosting Parameters and Early Stopping</h3>
 <p>Trained gradient boosting models take the form:</p>
 <p><span class="math display">\[ F(\mathbf{x}) = b + \eta \sum_{k=1}^{K} f_k(\mathbf{x}) \]</span></p>
-<p>where <span class="math inline">\(b\)</span> is the constant base predicted value, <span class="math inline">\(f_k(\cdot)\)</span> is the base learner for round <span class="math inline">\(k\)</span>, parameter <span class="math inline">\(K\)</span> is the number of boosting rounds, and parameter <span class="math inline">\(\eta\)</span> is the learning rate. In XGBoost these parameters are controlled by:</p>
+<p>where <span class="math inline">\(b\)</span> is the constant base predicted value, <span class="math inline">\(f_k(\cdot)\)</span> is the base learner for round <span class="math inline">\(k\)</span>, parameter <span class="math inline">\(K\)</span> is the number of boosting rounds, and parameter <span class="math inline">\(\eta\)</span> is the learning rate. In XGBoost these parameters correspond with:</p>
 <ul>
-<li><code>num_boost_round</code> - the number of boosting iterations.</li>
-<li><code>learning_rate</code> - the scaling or “shrinkage” factor applied to the predicted value of each base learner. Valid values are in (0,1]; the default is 0.3.</li>
+<li><code>num_boost_round</code> (<span class="math inline">\(K\)</span>) - the number of boosting iterations</li>
+<li><code>learning_rate</code> (<span class="math inline">\(\eta\)</span>) - the scaling or “shrinkage” factor applied to the predicted value of each base learner. Valid values are in (0,1]; the default is 0.3. Fun fact: the <span class="math inline">\(\eta\)</span> character is called “eta”, and <code>learning_rate</code> is aliased to <code>eta</code> in xgboost, so you can use parameter <code>eta</code> instead of <code>learning_rate</code> if you like.</li>
 </ul>
-<p>These two parameters are very closely linked; the optimal value of one depends on the value of the other, where smaller learning rates require more boosting rounds to reach optimality. While training a model with a given learning rate, accuracy tends to increase with additional boosting rounds up to a certain point, but beyond that point it flattens out or even gets worse. We can leverage this fact to make our tuning more efficient by using XGBoost’s <code>early_stopping_rounds: int</code> argument, which terminates training after observing the specified number of boosting rounds without any improvement to the evaluation metric on the validation set.</p>
+<p>These two parameters are very closely linked; the optimal value of one depends on the value of the other. To illustrate their relationship, we can train two different XGBoost models on the same training dataset, where one model has a lower learning rate than the other.</p>
+<div class="cell" data-execution_count="3">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_regression </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_regression(<span class="dv">5000</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>X_train, X_valid, y_train, y_valid <span class="op">=</span> train_test_split(X, y, test_size<span class="op">=</span><span class="fl">0.1</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>eta1, eta2 <span class="op">=</span> <span class="fl">0.3</span>, <span class="fl">0.15</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>reg1 <span class="op">=</span> xgb.XGBRegressor(n_estimators<span class="op">=</span><span class="dv">1000</span>, learning_rate<span class="op">=</span>eta1, early_stopping_rounds<span class="op">=</span><span class="dv">25</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>reg1.fit(X_train, y_train, </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        eval_set<span class="op">=</span>[(X_train, y_train), (X_valid, y_valid)], </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        verbose<span class="op">=</span><span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>reg2 <span class="op">=</span> xgb.XGBRegressor(n_estimators<span class="op">=</span><span class="dv">1000</span>, learning_rate<span class="op">=</span>eta2, early_stopping_rounds<span class="op">=</span><span class="dv">25</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>reg2.fit(X_train, y_train, </span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        eval_set<span class="op">=</span>[(X_train, y_train), (X_valid, y_valid)], </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        verbose<span class="op">=</span><span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>best_round1, best_round2 <span class="op">=</span> reg1.best_iteration, reg2.best_iteration</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>obj1 <span class="op">=</span> reg1.evals_result()[<span class="st">'validation_1'</span>][<span class="st">'rmse'</span>]</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>obj2 <span class="op">=</span> reg2.evals_result()[<span class="st">'validation_1'</span>][<span class="st">'rmse'</span>]</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>best_obj1 <span class="op">=</span> obj1[best_round1]</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>best_obj2 <span class="op">=</span> obj2[best_round1]</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>plt.plot(reg1.evals_result()[<span class="st">'validation_1'</span>][<span class="st">'rmse'</span>], <span class="st">'-b'</span>, label<span class="op">=</span><span class="ss">f'learning_rate=</span><span class="sc">{</span>eta1<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>plt.plot(reg2.evals_result()[<span class="st">'validation_1'</span>][<span class="st">'rmse'</span>], <span class="st">'-r'</span>, label<span class="op">=</span><span class="ss">f'learning_rate=</span><span class="sc">{</span>eta2<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>ax.annotate(<span class="ss">f'learning_rate=</span><span class="sc">{</span>eta1<span class="sc">}</span><span class="ch">\n</span><span class="ss">best_iteration=</span><span class="sc">{</span>best_round1<span class="sc">}</span><span class="ss">'</span>, </span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>            xy<span class="op">=</span>(best_round1, best_obj1), </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            xytext<span class="op">=</span>(best_round1, best_obj1<span class="op">+</span><span class="dv">20</span>),</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            horizontalalignment<span class="op">=</span><span class="st">'right'</span>,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>            arrowprops<span class="op">=</span><span class="bu">dict</span>(facecolor<span class="op">=</span><span class="st">'black'</span>, shrink<span class="op">=</span><span class="fl">0.05</span>))</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>ax.annotate(<span class="ss">f'learning_rate=</span><span class="sc">{</span>eta2<span class="sc">}</span><span class="ch">\n</span><span class="ss">best_iteration=</span><span class="sc">{</span>best_round2<span class="sc">}</span><span class="ss">'</span>, </span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>            xy<span class="op">=</span>(best_round2, best_obj2), </span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>            xytext<span class="op">=</span>(best_round2, best_obj2<span class="op">+</span><span class="dv">20</span>),</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>            horizontalalignment<span class="op">=</span><span class="st">'right'</span>,</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>            arrowprops<span class="op">=</span><span class="bu">dict</span>(facecolor<span class="op">=</span><span class="st">'black'</span>, shrink<span class="op">=</span><span class="fl">0.05</span>))</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'RMSE'</span>) </span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'boosting round'</span>) </span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Validation Scores by Boosting Round'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-2-output-1.png" class="img-fluid figure-img" alt="XGBoost objective curves for two models"></p>
+<figcaption class="figure-caption">Hold-out validation score (RMSE) by boosting round for two XGBoost models differing only by learning rate.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The above figure shows root mean squared error measured on a held-out validation dataset for two different XGBoost models: one with a higher learning rate and one with a lower learning rate. The figure demonstrates two key properties of the boosting parameters:</p>
+<ol type="1">
+<li>While training a model with a given learning rate, the evaluation score (computed on a hold-out set) tends to improve with additional boosting rounds up to a certain point, but beyond that point it flattens out or even gets worse.</li>
+<li>All else constant, a smaller learning rate leads to a model with more boosting rounds and better evaluation score.</li>
+</ol>
+<p>We can leverage the first property to make our tuning more efficient by using XGBoost’s <code>early_stopping_rounds: int</code> argument, which terminates training after observing the specified number of boosting rounds <a href="https://github.com/dmlc/xgboost/pull/6942">without sufficient improvement</a> to the evaluation metric. The models above were trained using <code>early_stopping_rounds=50</code>, which terminates training after 50 boosting rounds without improvement in RMSE on the validation data. For each model, the arrow indicates the boosting round with the best score.</p>
+<p>The figure also exemplifies the second property, where the model with lower learning rate attains a better validation score but requires more boosting rounds to trigger early stopping. Note that smaller and smaller learning rates will provide diminishing improvements to the validation score.</p>
 </section>
 </section>
 <section id="an-efficient-parameter-search-strategy-for-xgboost" class="level2">
 <h2 class="anchored" data-anchor-id="an-efficient-parameter-search-strategy-for-xgboost">An Efficient Parameter Search Strategy for XGBoost</h2>
-<p>Efficiency is the key to effective parameter tuning, because wasting less time means searching more parameter values and finding better models in a given amount of time. Parameter search involves training models over and over, and what determines training time? Well given a training dataset and a tree construction algorithm, by far the most important parameter is the number of boosting rounds. So we want to avoid any unnecessary boosting rounds during parameter search.</p>
-<p>Fortunately, the tree parameters tend to be independent of the boosting parameters, meaning that if we find a good combination of tree parameters, they will usually work well across various boosting parameter values. This insight leads to a strategy where I first simultaneously tune tree parameters and the learning rate while holding the boosting rounds fixed at a moderately small value for fast training. Then I can optionally train a model with optimal tree parameters and aggressive boosting parameters. Specifically, my strategy goes like this:</p>
+<p>Efficiency is the key to effective parameter tuning, because wasting less time means searching more parameter values and finding better models in a given amount of time. But as we just saw, there is a tradeoff between accuracy and training time via the learning rate. Given infinite time and compute resources, we would just choose an arbitrarily tiny learning rate and search through tree parameter values while using early stopping to choose the number of boosting rounds. The problem is that tiny learning rates require tons of boosting rounds, which will make our ideal search prohibitively slow when confronted with the reality of finite time and resources. So what can we do?</p>
+<p>I propose an efficient, greedy approach, based on the assertion that <em>good tree parameters at one learning rate are also good tree parameters at other learning rates</em>. The intuition is that given two models—one with good tree parameters and one with bad tree parameters—the model with good tree parameters will score better, regardless of the learning rate. Thus, tree parameters are “independent” of boosting parameters. See <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> for further justification.</p>
+<p>My greedy approach works as follows where all models are trained with a large number (at least 10k) of boosting rounds and early stopping enabled:</p>
 <ol type="1">
-<li>With early stopping enabled, fix the number of boosting rounds at a reasonable value, and perform a parameter search over all other relevant parameters. Note the best iteration of the best model found during the search.</li>
-<li>Optionally, with early stopping enabled, train a new model using the optimal tree parameter values from stage 1, fix the learning rate at a very small value (<span class="math inline">\(\le 0.01\)</span>), and boost until early stopping is invoked.</li>
+<li>Fix the learning rate at a relatively high value (like 0.3ish) that allows each model to train within a few seconds, and use your favorite hyperparameter tuning technique to find the optimal tree parameters.</li>
+<li>Using these optimal tree parameter values, fix the learning rate as low as you want and train your model, using early stopping to identify the optimal number of boosting rounds.</li>
 </ol>
-<p>If using the one-stage procedure, train the final model using the optimal parameter values, and set the number of boosting rounds to the best iteration of the best model from the search. If using the second aggressive boosting step, train the final model using the optimal tree parameters from stage 1, the small learning rate you chose for stage 2, and the best boosting round from stage 2.</p>
+<p>Why is this a good idea? Because by starting with a high learning rate, you can burn through hundreds of model training trials and find some really good tree parameters in a few minutes. Then, with the confidence that your tree parameters are actually quite good, you can set a really low learning rate and boost a few thousand rounds to get a model with the best of both tree parameter and boosting parameter worlds.</p>
+<blockquote class="blockquote">
+<p>You can check out <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> where I justify this approach by running two parameter searches—one with high learning rate and one with low learning rate—showing that they recover the same optimal tree parameters.</p>
+</blockquote>
 </section>
 <section id="tuning-xgboost-parameters-with-optuna" class="level2">
 <h2 class="anchored" data-anchor-id="tuning-xgboost-parameters-with-optuna">Tuning XGBoost Parameters with Optuna</h2>
 <p><a href="https://optuna.readthedocs.io/en/stable/">Optuna</a> is a model-agnostic python library for hyperparameter tuning. I like it because it has a flexible API that abstracts away the details of the search algorithm being used. That means you can use this one library to tune all kinds of different models, and you can easily switch the parameter sampling approach among grid search, random search, the very sensible default bayesian optimization, and more. Another massive benefit is that optuna provides a specific <a href="https://optuna.readthedocs.io/en/stable/reference/generated/optuna.integration.XGBoostPruningCallback.html">XGBoost integration</a> which terminates training early on lousy parameter combinations.</p>
 <p>You can install optuna with anaconda, e.g.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode .zsh code-with-copy"><code class="sourceCode zsh"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> conda install <span class="at">-c</span> conda-forge optuna</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<section id="example-tuning-the-bluebook-for-bulldozers-regression-model" class="level3">
-<h3 class="anchored" data-anchor-id="example-tuning-the-bluebook-for-bulldozers-regression-model">Example: Tuning the Bluebook for Bulldozers Regression Model</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode .zsh code-with-copy"><code class="sourceCode zsh"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> conda install <span class="at">-c</span> conda-forge optuna</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="example-tuning-the-bluebook-for-bulldozers-regression-model" class="level2">
+<h2 class="anchored" data-anchor-id="example-tuning-the-bluebook-for-bulldozers-regression-model">Example: Tuning the Bluebook for Bulldozers Regression Model</h2>
 <p>To illustrate the procedure, we’ll tune the parameters for the regression model we built back in the <a href="../../posts/xgboost-for-regression-in-python/">XGBoost for regression</a> post. First we’ll load up the bulldozer data and prepare the features and target just like we did before.</p>
-<div class="cell" data-execution_count="1">
+<div class="cell" data-execution_count="4">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time </span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optuna </span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'../xgboost-for-regression-in-python/Train.csv'</span>, parse_dates<span class="op">=</span>[<span class="st">'saledate'</span>])<span class="op">;</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> encode_string_features(df):</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    out_df <span class="op">=</span> df.copy()</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> feature, feature_type <span class="kw">in</span> df.dtypes.items():</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> feature_type <span class="op">==</span> <span class="st">'object'</span>:</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            out_df[feature] <span class="op">=</span> out_df[feature].astype(<span class="st">'category'</span>)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out_df</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> encode_string_features(df)</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'saledate_days_since_epoch'</span>] <span class="op">=</span> (</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'saledate'</span>] <span class="op">-</span> pd.Timestamp(year<span class="op">=</span><span class="dv">1970</span>, month<span class="op">=</span><span class="dv">1</span>, day<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    ).dt.days</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'logSalePrice'</span>] <span class="op">=</span> np.log1p(df[<span class="st">'SalePrice'</span>])</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> [</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">'SalesID'</span>,</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">'MachineID'</span>,</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ModelID'</span>,</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">'datasource'</span>,</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">'auctioneerID'</span>,</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">'YearMade'</span>,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">'MachineHoursCurrentMeter'</span>,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">'UsageBand'</span>,</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelDesc'</span>,</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiBaseModel'</span>,</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiSecondaryDesc'</span>,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelSeries'</span>,</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelDescriptor'</span>,</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductSize'</span>,</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiProductClassDesc'</span>,</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="st">'state'</span>,</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductGroup'</span>,</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductGroupDesc'</span>,</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Drive_System'</span>,</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Enclosure'</span>,</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Forks'</span>,</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pad_Type'</span>,</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Ride_Control'</span>,</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Stick'</span>,</span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Transmission'</span>,</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Turbocharged'</span>,</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Extension'</span>,</span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Width'</span>,</span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Enclosure_Type'</span>,</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Engine_Horsepower'</span>,</span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Hydraulics'</span>,</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pushblock'</span>,</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Ripper'</span>,</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Scarifier'</span>,</span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Tip_Control'</span>,</span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Tire_Size'</span>,</span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Coupler'</span>,</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Coupler_System'</span>,</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Grouser_Tracks'</span>,</span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Hydraulics_Flow'</span>,</span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Track_Type'</span>,</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Undercarriage_Pad_Width'</span>,</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Stick_Length'</span>,</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Thumb'</span>,</span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pattern_Changer'</span>,</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Grouser_Type'</span>,</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Backhoe_Mounting'</span>,</span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Type'</span>,</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Travel_Controls'</span>,</span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Differential_Type'</span>,</span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Steering_Controls'</span>,</span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>    <span class="st">'saledate_days_since_epoch'</span></span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a> ]</span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> <span class="st">'logSalePrice'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optuna </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'../xgboost-for-regression-in-python/Train.csv'</span>, parse_dates<span class="op">=</span>[<span class="st">'saledate'</span>])<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> encode_string_features(df):</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    out_df <span class="op">=</span> df.copy()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> feature, feature_type <span class="kw">in</span> df.dtypes.items():</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> feature_type <span class="op">==</span> <span class="st">'object'</span>:</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            out_df[feature] <span class="op">=</span> out_df[feature].astype(<span class="st">'category'</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out_df</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> encode_string_features(df)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'saledate_days_since_epoch'</span>] <span class="op">=</span> (</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'saledate'</span>] <span class="op">-</span> pd.Timestamp(year<span class="op">=</span><span class="dv">1970</span>, month<span class="op">=</span><span class="dv">1</span>, day<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    ).dt.days</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'logSalePrice'</span>] <span class="op">=</span> np.log1p(df[<span class="st">'SalePrice'</span>])</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> [</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">'SalesID'</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">'MachineID'</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ModelID'</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">'datasource'</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">'auctioneerID'</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">'YearMade'</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">'MachineHoursCurrentMeter'</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">'UsageBand'</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelDesc'</span>,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiBaseModel'</span>,</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiSecondaryDesc'</span>,</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelSeries'</span>,</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiModelDescriptor'</span>,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductSize'</span>,</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="st">'fiProductClassDesc'</span>,</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="st">'state'</span>,</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductGroup'</span>,</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="st">'ProductGroupDesc'</span>,</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Drive_System'</span>,</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Enclosure'</span>,</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Forks'</span>,</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pad_Type'</span>,</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Ride_Control'</span>,</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Stick'</span>,</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Transmission'</span>,</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Turbocharged'</span>,</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Extension'</span>,</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Width'</span>,</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Enclosure_Type'</span>,</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Engine_Horsepower'</span>,</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Hydraulics'</span>,</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pushblock'</span>,</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Ripper'</span>,</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Scarifier'</span>,</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Tip_Control'</span>,</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Tire_Size'</span>,</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Coupler'</span>,</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Coupler_System'</span>,</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Grouser_Tracks'</span>,</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Hydraulics_Flow'</span>,</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Track_Type'</span>,</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Undercarriage_Pad_Width'</span>,</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Stick_Length'</span>,</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Thumb'</span>,</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Pattern_Changer'</span>,</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Grouser_Type'</span>,</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Backhoe_Mounting'</span>,</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blade_Type'</span>,</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Travel_Controls'</span>,</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Differential_Type'</span>,</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Steering_Controls'</span>,</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="st">'saledate_days_since_epoch'</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a> ]</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> <span class="st">'logSalePrice'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>But this time, since we’re going to slam our validation set over and over during hyperparameter search, we want to reserve an actual test set to check how the final model generalizes. We make four different <code>xgboost.DMatrix</code> datasets for this process: training, validation, training+validation, and test. Training and validation are for the parameter search, and training+validation and test are for the final model.</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>n_valid <span class="op">=</span> <span class="dv">12000</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>n_test <span class="op">=</span> <span class="dv">12000</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>sorted_df <span class="op">=</span> df.sort_values(by<span class="op">=</span><span class="st">'saledate'</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>train_df <span class="op">=</span> sorted_df[:<span class="op">-</span>(n_valid <span class="op">+</span> n_test)] </span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>valid_df <span class="op">=</span> sorted_df[<span class="op">-</span>(n_valid <span class="op">+</span> n_test):<span class="op">-</span>n_test] </span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>test_df <span class="op">=</span> sorted_df[<span class="op">-</span>n_test:]</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>dtrain <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>train_df[features], label<span class="op">=</span>train_df[target], </span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                     enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>dvalid <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>valid_df[features], label<span class="op">=</span>valid_df[target], </span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                     enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>dtest <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>test_df[features], label<span class="op">=</span>test_df[target], </span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                    enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>dtrainvalid <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>pd.concat([train_df, valid_df])[features], </span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                          label<span class="op">=</span>pd.concat([train_df, valid_df])[target], </span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                          enable_categorical<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>n_valid <span class="op">=</span> <span class="dv">12000</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>n_test <span class="op">=</span> <span class="dv">12000</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>sorted_df <span class="op">=</span> df.sort_values(by<span class="op">=</span><span class="st">'saledate'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>train_df <span class="op">=</span> sorted_df[:<span class="op">-</span>(n_valid <span class="op">+</span> n_test)] </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>valid_df <span class="op">=</span> sorted_df[<span class="op">-</span>(n_valid <span class="op">+</span> n_test):<span class="op">-</span>n_test] </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>test_df <span class="op">=</span> sorted_df[<span class="op">-</span>n_test:]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>dtrain <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>train_df[features], label<span class="op">=</span>train_df[target], </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                     enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>dvalid <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>valid_df[features], label<span class="op">=</span>valid_df[target], </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                     enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>dtest <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>test_df[features], label<span class="op">=</span>test_df[target], </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                    enable_categorical<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>dtrainvalid <span class="op">=</span> xgb.DMatrix(data<span class="op">=</span>pd.concat([train_df, valid_df])[features], </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                          label<span class="op">=</span>pd.concat([train_df, valid_df])[target], </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                          enable_categorical<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
 </section>
 <section id="preliminaries-base-parameters-and-scoring-function" class="level2">
 <h2 class="anchored" data-anchor-id="preliminaries-base-parameters-and-scoring-function">Preliminaries: base parameters and scoring function</h2>
-<p>There are a couple of parameters that we usually want to keep fixed across all trials in a parameter search, including the XGBoost objective for training and the evaluation metric to be used for early stopping. We’ll also want to implement a model scoring function that takes a trained model and a dataset and returns the score, in our case, RMSE.</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>metric <span class="op">=</span> <span class="st">'rmse'</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>base_params <span class="op">=</span> {</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'reg:squarederror'</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'eval_metric'</span>: metric,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We’ll go ahead and set a couple of parameters that we usually want to keep fixed across all trials in a parameter search, including the XGBoost objective for training and the evaluation metric to be used for early stopping. We’ll also want to implement a model scoring function that takes a trained model and a dataset and returns the score, in our case, RMSE.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>metric <span class="op">=</span> <span class="st">'rmse'</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>base_params <span class="op">=</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'reg:squarederror'</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'eval_metric'</span>: metric,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> score_model(model, dmat):</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    y_true <span class="op">=</span> dmat.get_label() </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    y_pred <span class="op">=</span> model.predict(dmat) </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mean_squared_error(y_true, y_pred, squared<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> score_model(model: xgb.core.Booster, dmat: xgb.core.DMatrix) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    y_true <span class="op">=</span> dmat.get_label() </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    y_pred <span class="op">=</span> model.predict(dmat) </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mean_squared_error(y_true, y_pred, squared<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="stage-1-tune-tree-parameters-with-optuna" class="level2">
-<h2 class="anchored" data-anchor-id="stage-1-tune-tree-parameters-with-optuna">Stage 1: Tune Tree Parameters with Optuna</h2>
-<p>Next we implement our optuna objective, a function taking an optuna study <code>Trial</code> object and returning the score we want to optimize. We use the <code>suggest_categorical</code>, <code>suggest_float</code>, and <code>suggest_int</code> methods of the <code>Trial</code> object to define the search space for each parameter. Note the use of the pruning callback function which we pass into the <code>callback</code> argument of the XGBoost <code>train</code> function; this is a must, since it allows optuna to prune lousy models after a few boosting rounds. Then we train XGBoost using 500 boosting rounds, which takes only a few seconds on my little laptop. Finally we return the score as computed by our <code>model_score</code> function.</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> objective(trial):</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> {</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">'tree_method'</span>: trial.suggest_categorical(<span class="st">'tree_method'</span>, [<span class="st">'approx'</span>, <span class="st">'hist'</span>]),</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">'max_depth'</span>: trial.suggest_int(<span class="st">'max_depth'</span>, <span class="dv">3</span>, <span class="dv">12</span>),</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">'min_child_weight'</span>: trial.suggest_int(<span class="st">'min_child_weight'</span>, <span class="dv">1</span>, <span class="dv">250</span>),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'subsample'</span>: trial.suggest_float(<span class="st">'subsample'</span>, <span class="fl">0.1</span>, <span class="fl">01.0</span>),</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'colsample_bynode'</span>: trial.suggest_float(<span class="st">'colsample_bynode'</span>, <span class="fl">0.1</span>, <span class="fl">1.0</span>),</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'reg_lambda'</span>: trial.suggest_float(<span class="st">'reg_lambda'</span>, <span class="fl">0.001</span>, <span class="dv">25</span>, log<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">'learning_rate'</span>: trial.suggest_float(<span class="st">'learning_rate'</span>, <span class="fl">0.05</span>, <span class="fl">0.5</span>, log<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    num_boost_round <span class="op">=</span> <span class="dv">500</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    params.update(base_params)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    pruning_callback <span class="op">=</span> optuna.integration.XGBoostPruningCallback(trial, <span class="ss">f'valid-</span><span class="sc">{</span>metric<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrain, num_boost_round<span class="op">=</span>num_boost_round,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                      evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>), (dvalid, <span class="st">'valid'</span>)],</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                      early_stopping_rounds<span class="op">=</span><span class="dv">50</span>,</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                      verbose_eval<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                      callbacks<span class="op">=</span>[pruning_callback])</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.best_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="tune-tree-parameters-with-optuna" class="level2">
+<h2 class="anchored" data-anchor-id="tune-tree-parameters-with-optuna">Tune Tree Parameters with Optuna</h2>
+<p>Next we need to choose a fixed learning rate and tune the tree parameters. We want a learning rate that allows us to train within a few seconds, so we need to time model training. Start with a high learning rate (like 0.8) and work down until you find a rate that takes a few seconds. Below I end up landing at 0.3, which takes about 4 seconds to train on my little laptop.</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'tree_method'</span>: <span class="st">'approx'</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'learning_rate'</span>: learning_rate</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>params.update(base_params)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>tic <span class="op">=</span> time.time()</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrain,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                  evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>), (dvalid, <span class="st">'valid'</span>)],</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                  num_boost_round<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                  early_stopping_rounds<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                  verbose_eval<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'</span><span class="sc">{</span>time<span class="sc">.</span>time() <span class="op">-</span> tic<span class="sc">:.1f}</span><span class="ss"> seconds'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>4.5 seconds</code></pre>
+</div>
+</div>
+<p>Then we implement our optuna objective, a function taking an optuna study <a href="https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.Trial.html"><code>Trial</code></a> object and returning the score we want to optimize. We use the <code>suggest_categorical</code>, <code>suggest_float</code>, and <code>suggest_int</code> methods of the <code>Trial</code> object to define the search space for each parameter. Note the use of the pruning callback function which we pass into the <code>callback</code> argument of the XGBoost <code>train</code> function; this is a must, since it allows optuna to terminate training on lousy models after a few boosting rounds. After training a model with the selected parameter values, we stash the optimal number of boosting rounds from early stopping into an optuna user attribute using the <a href="https://optuna.readthedocs.io/en/stable/tutorial/20_recipes/003_attributes.html"><code>trial.user_attrs()</code></a> method. Finally we return the score computed by our <code>model_score</code> function.</p>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> objective(trial):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> {</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">'tree_method'</span>: trial.suggest_categorical(<span class="st">'tree_method'</span>, [<span class="st">'approx'</span>, <span class="st">'hist'</span>]),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">'max_depth'</span>: trial.suggest_int(<span class="st">'max_depth'</span>, <span class="dv">3</span>, <span class="dv">12</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">'min_child_weight'</span>: trial.suggest_int(<span class="st">'min_child_weight'</span>, <span class="dv">1</span>, <span class="dv">250</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'subsample'</span>: trial.suggest_float(<span class="st">'subsample'</span>, <span class="fl">0.1</span>, <span class="fl">1.0</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'colsample_bynode'</span>: trial.suggest_float(<span class="st">'colsample_bynode'</span>, <span class="fl">0.1</span>, <span class="fl">1.0</span>),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'reg_lambda'</span>: trial.suggest_float(<span class="st">'reg_lambda'</span>, <span class="fl">0.001</span>, <span class="dv">25</span>, log<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">'learning_rate'</span>: learning_rate,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    num_boost_round <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    params.update(base_params)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    pruning_callback <span class="op">=</span> optuna.integration.XGBoostPruningCallback(trial, <span class="ss">f'valid-</span><span class="sc">{</span>metric<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrain, num_boost_round<span class="op">=</span>num_boost_round,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                      evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>), (dvalid, <span class="st">'valid'</span>)],</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                      early_stopping_rounds<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                      verbose_eval<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                      callbacks<span class="op">=</span>[pruning_callback])</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    trial.set_user_attr(<span class="st">'best_iteration'</span>, model.best_iteration)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.best_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To create a new optuna study and search through 50 parameter combinations, you could just run these two lines.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>study <span class="op">=</span> optuna.create_study(direction<span class="op">=</span><span class="st">'minimize'</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>study.optimize(objective, n_trials<span class="op">=</span><span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>But, in practice, I prefer to run these potentially long running tasks for a pre-specified amount of clock time, rather than a specified number of trials—who knows how long 50 trials will take. So, to run the optimization for around 600 seconds (long enough to go make a nice cup of tea, stretch, and come back), I do something like this:</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>study <span class="op">=</span> optuna.create_study(direction<span class="op">=</span><span class="st">'minimize'</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tic <span class="op">=</span> time.time()</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> time.time() <span class="op">-</span> tic <span class="op">&lt;</span> <span class="dv">600</span>:</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    study.optimize(objective, n_trials<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>study <span class="op">=</span> optuna.create_study(direction<span class="op">=</span><span class="st">'minimize'</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>study.optimize(objective, n_trials<span class="op">=</span><span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But, in practice, I prefer to run these potentially long running tasks for a pre-specified amount of clock time, rather than a specified number of trials—who knows how long 50 trials will take. I also want the results to be reproducible. So, to set the random seed and run the optimization for around 300 seconds (long enough to go make a nice cup of tea, stretch, and come back), I do something like this:</p>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>sampler <span class="op">=</span> optuna.samplers.TPESampler(seed<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>study <span class="op">=</span> optuna.create_study(direction<span class="op">=</span><span class="st">'minimize'</span>, sampler<span class="op">=</span>sampler)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>tic <span class="op">=</span> time.time()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> time.time() <span class="op">-</span> tic <span class="op">&lt;</span> <span class="dv">300</span>:</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    study.optimize(objective, n_trials<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Stage 1 =============================='</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best score = </span><span class="sc">{</span>study<span class="sc">.</span>best_trial<span class="sc">.</span>value<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'best params --------------------------'</span>)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, v <span class="kw">in</span> study.best_trial.params.items():</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(k, <span class="st">':'</span>, v)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="26">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Stage 1 =============================='</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best score = </span><span class="sc">{</span>study<span class="sc">.</span>best_trial<span class="sc">.</span>value<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'boosting params ---------------------------'</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'fixed learning rate: </span><span class="sc">{</span>learning_rate<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best boosting round: </span><span class="sc">{</span>study<span class="sc">.</span>best_trial<span class="sc">.</span>user_attrs[<span class="st">"best_iteration"</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'best tree params --------------------------'</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, v <span class="kw">in</span> study.best_trial.params.items():</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(k, <span class="st">':'</span>, v)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Stage 1 ==============================
-best score = 0.22716975344231757
-best params --------------------------
-tree_method : hist
-max_depth : 7
-min_child_weight : 47
-subsample : 0.644239586943823
-colsample_bynode : 0.6324287447379262
-reg_lambda : 0.008813955729768966
-learning_rate : 0.12041680713201537</code></pre>
+best score = 0.23107522766919256
+boosting params ---------------------------
+fixed learning rate: 0.3
+best boosting round: 23
+best tree params --------------------------
+tree_method : approx
+max_depth : 10
+min_child_weight : 6
+subsample : 0.9729188669457949
+colsample_bynode : 0.8491983767203796
+reg_lambda : 0.008587261143813469</code></pre>
 </div>
 </div>
-<p>If we are happy with this result, we can go ahead and train a final model on the training+validation set using these parameter values and our fixed number of boosting rounds. If we decide we want to tune the tree parameters a little more, we can just call <code>study.optimize(...)</code> again, adding as many trials as we want. Once we’re happy with the tree parameters, if we want more accuracy and are willing to accept longer training time and a bigger model, we can proceed to stage 2.</p>
+<p>If we decide we want to tune the tree parameters a little more, we can just call <code>study.optimize(...)</code> again, adding as many trials as we want to the study. Once we’re happy with the tree parameters, we can proceed to stage 2.</p>
 </section>
-<section id="stage-2-tune-boosting-parameters-with-early-stopping" class="level2">
-<h2 class="anchored" data-anchor-id="stage-2-tune-boosting-parameters-with-early-stopping">Stage 2: Tune Boosting Parameters with Early Stopping</h2>
-<p>Now we take the optimal tree parameters that we found in stage 1, and we train a new model with a fixed low learning rate—here I use 0.01, but you could go lower—and a large number of boosting rounds. The lower your learning rate, the better your performance (with diminishing returns) and the more boosting rounds you’ll need to max out the evaluation metric on the validation data.</p>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {}</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>params.update(base_params)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>params.update(study.best_trial.params)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>params[<span class="st">'learning_rate'</span>] <span class="op">=</span> <span class="fl">0.01</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>model_stage2 <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrain, </span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                         num_boost_round<span class="op">=</span><span class="dv">10000</span>,</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                         evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>), (dvalid, <span class="st">'valid'</span>)],</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                         early_stopping_rounds<span class="op">=</span><span class="dv">50</span>,</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>                         verbose_eval<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="stage-2-low-learning-rate-for-high-performance" class="level2">
+<h2 class="anchored" data-anchor-id="stage-2-low-learning-rate-for-high-performance">Stage 2: Low Learning Rate for High Performance</h2>
+<p>Now we take the optimal tree parameters that we found in stage 1, and we train a new model with a fixed low learning rate; here I use 0.01, but you could go lower. The lower your learning rate, the better your performance (with diminishing returns) and the more boosting rounds you’ll need to max out the evaluation metric on the validation data.</p>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>low_learning_rate <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {}</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>params.update(base_params)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>params.update(study.best_trial.params)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>params[<span class="st">'learning_rate'</span>] <span class="op">=</span> low_learning_rate</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>model_stage2 <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrain, </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                         num_boost_round<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                         evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>), (dvalid, <span class="st">'valid'</span>)],</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                         early_stopping_rounds<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                         verbose_eval<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Stage 2 =============================='</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best score = </span><span class="sc">{</span>score_model(model_stage2, dvalid)<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>best_iteration <span class="op">=</span> model_stage2.best_iteration</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best iteration = </span><span class="sc">{</span>best_iteration<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="28">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Stage 2 =============================='</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best score = </span><span class="sc">{</span>score_model(model_stage2, dvalid)<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'boosting params ---------------------------'</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'fixed learning rate: </span><span class="sc">{</span>params[<span class="st">"learning_rate"</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'best boosting round: </span><span class="sc">{</span>model_stage2<span class="sc">.</span>best_iteration<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Stage 2 ==============================
-best score = 0.22271610796451569
-best iteration = 6115</code></pre>
+best score = 0.22172991931438446
+boosting params ---------------------------
+fixed learning rate: 0.01
+best boosting round: 1446</code></pre>
 </div>
 </div>
 </section>
 <section id="train-and-evaluate-the-final-model" class="level2">
 <h2 class="anchored" data-anchor-id="train-and-evaluate-the-final-model">Train and Evaluate the Final Model</h2>
 <p>Now we can train our final model on the combined training and validation datasets using the optimal tree parameters from stage 1 and the fixed learning rate and optimal boosting rounds from stage 2. Then we evaluate on the held out test data.</p>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>params[<span class="st">'learning_rate'</span>] <span class="op">=</span> <span class="fl">0.01</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>model_final <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrainvalid, </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                        num_boost_round<span class="op">=</span>best_iteration,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                        evals<span class="op">=</span>[(dtrain, <span class="st">'train'</span>)],</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                        verbose_eval<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>model_final <span class="op">=</span> xgb.train(params<span class="op">=</span>params, dtrain<span class="op">=</span>dtrainvalid, </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                        num_boost_round<span class="op">=</span>model_stage2.best_iteration,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                        verbose_eval<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Final Model =========================='</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'test score = </span><span class="sc">{</span>score_model(model_final, dtest)<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'parameters ---------------------------'</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, v <span class="kw">in</span> params.items():</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(k, <span class="st">':'</span>, v)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'num_boost_round: </span><span class="sc">{</span>best_iteration<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="30">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Final Model =========================='</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'test score = </span><span class="sc">{</span>score_model(model_final, dtest)<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'parameters ---------------------------'</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, v <span class="kw">in</span> params.items():</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(k, <span class="st">':'</span>, v)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'num_boost_round: </span><span class="sc">{</span>model_stage2<span class="sc">.</span>best_iteration<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Final Model ==========================
-test score = 0.21926622092723846
+test score = 0.21621863543987274
 parameters ---------------------------
 objective : reg:squarederror
 eval_metric : rmse
-tree_method : hist
-max_depth : 7
-min_child_weight : 47
-subsample : 0.644239586943823
-colsample_bynode : 0.6324287447379262
-reg_lambda : 0.008813955729768966
+tree_method : approx
+max_depth : 10
+min_child_weight : 6
+subsample : 0.9729188669457949
+colsample_bynode : 0.8491983767203796
+reg_lambda : 0.008587261143813469
 learning_rate : 0.01
-num_boost_round: 6115</code></pre>
+num_boost_round: 1446</code></pre>
 </div>
 </div>
-<p>Back in the <a href="../../posts/xgboost-for-regression-in-python/">regression post</a> we got an RMSE of about 0.231 just using default parameter values, which put us in about 5th place on the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/leaderboard">leaderboard for the Kagle dozers competition</a>. Now with less than 15 minutes of hyperparameter tuning, our RMSE is down to 0.219 which puts us in 1st place by a huge margin.</p>
+<p>Back in the <a href="../../posts/xgboost-for-regression-in-python/">regression post</a> we got an RMSE of about 0.231 just using default parameter values, which put us in 5th place on the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/leaderboard">leaderboard for the Kagle dozers competition</a>. Now with about 10 minutes of hyperparameter tuning, our RMSE is down to 0.216 which puts us in 1st place by a huge margin. 🙌</p>
 </section>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
