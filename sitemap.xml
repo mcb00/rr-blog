@@ -2,82 +2,86 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://randomrealizations.com/gradient-boosting-series.html</loc>
-    <lastmod>2023-12-26T14:36:24.591Z</lastmod>
+    <lastmod>2024-01-03T15:28:50.973Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/</loc>
-    <lastmod>2023-12-26T14:36:23.681Z</lastmod>
+    <lastmod>2024-01-03T15:28:50.054Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-explained/</loc>
-    <lastmod>2023-12-26T14:36:22.251Z</lastmod>
+    <lastmod>2024-01-03T15:28:48.619Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/</loc>
-    <lastmod>2023-12-26T14:36:21.206Z</lastmod>
+    <lastmod>2024-01-03T15:28:47.620Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2023-12-26T14:36:20.520Z</lastmod>
+    <lastmod>2024-01-03T15:28:46.874Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/</loc>
-    <lastmod>2023-12-26T14:36:19.361Z</lastmod>
+    <lastmod>2024-01-03T15:28:45.723Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
-    <lastmod>2023-12-26T14:36:17.744Z</lastmod>
+    <lastmod>2024-01-03T15:28:44.033Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/hello-world/</loc>
-    <lastmod>2023-12-26T14:36:16.734Z</lastmod>
+    <lastmod>2024-01-03T15:28:43.052Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
-    <lastmod>2023-12-26T14:36:15.989Z</lastmod>
+    <lastmod>2024-01-03T15:28:42.301Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2023-12-26T14:36:15.269Z</lastmod>
+    <lastmod>2024-01-03T15:28:41.572Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2023-12-26T14:36:14.162Z</lastmod>
+    <lastmod>2024-01-03T15:28:40.441Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</loc>
+    <lastmod>2024-01-03T15:28:39.749Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
-    <lastmod>2023-12-26T14:36:14.777Z</lastmod>
+    <lastmod>2024-01-03T15:28:41.113Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
-    <lastmod>2023-12-26T14:36:16.454Z</lastmod>
+    <lastmod>2024-01-03T15:28:42.744Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-for-classification-in-python/</loc>
-    <lastmod>2023-12-26T14:36:17.285Z</lastmod>
+    <lastmod>2024-01-03T15:28:43.574Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-for-regression-in-python/</loc>
-    <lastmod>2023-12-26T14:36:18.537Z</lastmod>
+    <lastmod>2024-01-03T15:28:44.844Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/decision-tree-from-scratch/</loc>
-    <lastmod>2023-12-26T14:36:19.945Z</lastmod>
+    <lastmod>2024-01-03T15:28:46.275Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/random-realizations-resurrected/</loc>
-    <lastmod>2023-12-26T14:36:20.780Z</lastmod>
+    <lastmod>2024-01-03T15:28:47.145Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-multi-class-classification-from-scratch/</loc>
-    <lastmod>2023-12-26T14:36:21.708Z</lastmod>
+    <lastmod>2024-01-03T15:28:48.107Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/archive.html</loc>
-    <lastmod>2023-12-26T14:36:22.763Z</lastmod>
+    <lastmod>2024-01-03T15:28:49.163Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/about.html</loc>
-    <lastmod>2023-12-26T14:36:23.905Z</lastmod>
+    <lastmod>2024-01-03T15:28:50.279Z</lastmod>
   </url>
 </urlset>

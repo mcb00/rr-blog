@@ -108,6 +108,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta property="og:image" content="https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/opengraph.png">
 <meta property="og:site-name" content="Random Realizations">
 <meta property="og:image:alt" content="lunar halo">
+<link rel="canonical" href="https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/" />
 </head>
 
 <body class="nav-fixed">
@@ -199,8 +200,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#when-should-you-do-hyperparameter-tuning" id="toc-when-should-you-do-hyperparameter-tuning" class="nav-link active" data-scroll-target="#when-should-you-do-hyperparameter-tuning">When should you do hyperparameter tuning?</a></li>
-  <li><a href="#xgboost-parameters" id="toc-xgboost-parameters" class="nav-link" data-scroll-target="#xgboost-parameters">XGBoost Parameters</a>
+  <li><a href="#xgboost-parameters" id="toc-xgboost-parameters" class="nav-link active" data-scroll-target="#xgboost-parameters">XGBoost Parameters</a>
   <ul class="collapse">
   <li><a href="#tree-parameters" id="toc-tree-parameters" class="nav-link" data-scroll-target="#tree-parameters">Tree Parameters</a></li>
   <li><a href="#boosting-parameters-and-early-stopping" id="toc-boosting-parameters-and-early-stopping" class="nav-link" data-scroll-target="#boosting-parameters-and-early-stopping">Boosting Parameters and Early Stopping</a></li>
@@ -209,9 +209,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#tuning-xgboost-parameters-with-optuna" id="toc-tuning-xgboost-parameters-with-optuna" class="nav-link" data-scroll-target="#tuning-xgboost-parameters-with-optuna">Tuning XGBoost Parameters with Optuna</a></li>
   <li><a href="#example-tuning-the-bluebook-for-bulldozers-regression-model" id="toc-example-tuning-the-bluebook-for-bulldozers-regression-model" class="nav-link" data-scroll-target="#example-tuning-the-bluebook-for-bulldozers-regression-model">Example: Tuning the Bluebook for Bulldozers Regression Model</a></li>
   <li><a href="#preliminaries-base-parameters-and-scoring-function" id="toc-preliminaries-base-parameters-and-scoring-function" class="nav-link" data-scroll-target="#preliminaries-base-parameters-and-scoring-function">Preliminaries: base parameters and scoring function</a></li>
-  <li><a href="#tune-tree-parameters-with-optuna" id="toc-tune-tree-parameters-with-optuna" class="nav-link" data-scroll-target="#tune-tree-parameters-with-optuna">Tune Tree Parameters with Optuna</a></li>
-  <li><a href="#stage-2-low-learning-rate-for-high-performance" id="toc-stage-2-low-learning-rate-for-high-performance" class="nav-link" data-scroll-target="#stage-2-low-learning-rate-for-high-performance">Stage 2: Low Learning Rate for High Performance</a></li>
+  <li><a href="#stage-1-tune-tree-parameters-with-optuna" id="toc-stage-1-tune-tree-parameters-with-optuna" class="nav-link" data-scroll-target="#stage-1-tune-tree-parameters-with-optuna">Stage 1: Tune Tree Parameters with Optuna</a></li>
+  <li><a href="#stage-2-intensify-the-boosting-parameters" id="toc-stage-2-intensify-the-boosting-parameters" class="nav-link" data-scroll-target="#stage-2-intensify-the-boosting-parameters">Stage 2: Intensify the Boosting Parameters</a></li>
   <li><a href="#train-and-evaluate-the-final-model" id="toc-train-and-evaluate-the-final-model" class="nav-link" data-scroll-target="#train-and-evaluate-the-final-model">Train and Evaluate the Final Model</a></li>
+  <li><a href="#what-could-possibly-go-wrong" id="toc-what-could-possibly-go-wrong" class="nav-link" data-scroll-target="#what-could-possibly-go-wrong">What could possibly go wrong?</a></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   </ul>
 </nav>
@@ -259,24 +260,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>Ahh, the dark art of hyperparameter tuning. It’s a key step in the machine learning workflow, and it’s an activity that can easily be overlooked or be overkill. Therefore, dear reader, it is an art that requires the application of both skill and wisdom to realize its full potential while avoiding its perils. Today I’ll show you my approach for hyperparameter tuning XGBoost, although the principles apply to any GBT framework. I’ll give you some intuition for how to think about the key parameters in XGBoost, and I’ll show you an efficient strategy for parameter tuning GBTs. I’ll be using the optuna python library to tune parameters with bayesian optimization, but you can implement my strategy with whatever hyperparameter tuning utility you like.</p>
+<p>Ahh, the dark art of hyperparameter tuning. It’s a key step in the machine learning workflow, and it’s an activity that can easily be overlooked or be overkill. Therefore, dear reader, it is an art that requires the application of both skill and wisdom to realize its full potential while avoiding its perils. Today I’ll show you my approach for hyperparameter tuning XGBoost, although the principles apply to any GBT framework. I’ll give you some intuition for how to think about the key parameters in XGBoost, and I’ll show you an efficient strategy for parameter tuning GBTs. I’ll be using the optuna python library to tune parameters with bayesian optimization, but you can implement my strategy with whatever hyperparameter tuning utility you like. You can download a notebook with this tuning workflow from my <a href="https://github.com/mcb00/ds-templates">data science templates repository</a>. Finally we’ll wrap up with the kind of cautionary tale data scientists tell their colleagues around the campfire about when all this fancy hyperparameter tuning can backfire catastrophically—ignore at your own peril.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="optuna_main.jpg" class="img-fluid figure-img"></p>
 <figcaption class="figure-caption">Lunar halo on a frosty night in Johnson City, TN</figcaption>
 </figure>
 </div>
-<section id="when-should-you-do-hyperparameter-tuning" class="level2">
-<h2 class="anchored" data-anchor-id="when-should-you-do-hyperparameter-tuning">When should you do hyperparameter tuning?</h2>
-<p>Hyperparameter tuning can easily be overlooked in the move-fast-and-break-everything hustle of building an ML product, but it can also easily become overkill, depending on the application. There are two key questions to ask:</p>
-<ol type="1">
-<li>How much value is created by an incremental gain in model prediction accuracy?</li>
-<li>What is the cost of increasing model prediction accuracy?</li>
-</ol>
-<p>The point is that sometimes a small gain in model prediction performance translates into millions of dollars of impact. The dream scenario is that you swoop in on some key model in your organization, markedly improve its accuracy with an easy afternoon of hyperparameter tuning, realize massive improvements in your org’s KPIs, and get mad respect, bonuses, and promoted. But the reality is that often additional model accuracy doesn’t really change business KPIs by very much. Try to figure out the actual value of improved model accuracy and proceed accordingly.</p>
-<p>Remember too that hyperparameter tuning has its costs, most obviously the developer time and compute resources for the search itself. It can also lead us to deeper and deeper models which take longer to train, occupy larger memory footprints, and have higher prediction latency. Blindly chasing prediction accuracy can even backfire and make a system worse,e.g.&nbsp;by <a href="https://matheusfacure.github.io/python-causality-handbook/11-Propensity-Score.html#common-issues-with-propensity-score">degrading causal reasoning in decision-making systems</a>.</p>
-<p>Moral of the story: think before you tune.</p>
-</section>
 <section id="xgboost-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="xgboost-parameters">XGBoost Parameters</h2>
 <p>Gradient boosting algorithms like XGBoost have two main types of hyperparameters: <em>tree parameters</em> which control the decision tree trained at each boosting round and <em>boosting parameters</em> which control the boosting procedure itself. Below I’ll highlight my favorite parameters, but you can see the full list in the <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">documentation</a>.</p>
@@ -393,13 +383,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="an-efficient-parameter-search-strategy-for-xgboost" class="level2">
 <h2 class="anchored" data-anchor-id="an-efficient-parameter-search-strategy-for-xgboost">An Efficient Parameter Search Strategy for XGBoost</h2>
 <p>Efficiency is the key to effective parameter tuning, because wasting less time means searching more parameter values and finding better models in a given amount of time. But as we just saw, there is a tradeoff between accuracy and training time via the learning rate. Given infinite time and compute resources, we would just choose an arbitrarily tiny learning rate and search through tree parameter values while using early stopping to choose the number of boosting rounds. The problem is that tiny learning rates require tons of boosting rounds, which will make our ideal search prohibitively slow when confronted with the reality of finite time and resources. So what can we do?</p>
-<p>I propose an efficient, greedy approach, based on the assertion that <em>good tree parameters at one learning rate are also good tree parameters at other learning rates</em>. The intuition is that given two models—one with good tree parameters and one with bad tree parameters—the model with good tree parameters will score better, regardless of the learning rate. Thus, tree parameters are “independent” of boosting parameters. See <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> for further justification.</p>
-<p>My greedy approach works as follows where all models are trained with a large number (at least 10k) of boosting rounds and early stopping enabled:</p>
+<p>My approach is based on the claim that <em>good tree parameters at one learning rate are also good tree parameters at other learning rates</em>. The intuition is that given two models—one with good tree parameters and one with bad tree parameters—the model with good tree parameters will score better, regardless of the learning rate. Thus, tree parameters are “independent” of boosting parameters—See <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> for justification of this claim.</p>
+<p>Independence between tree parameters and boosting parameters suggests a two-stage procedure where we first find optimal tree parameters, then we maximize performance by pushing boosting parameters to the extreme. The procedure is:</p>
 <ol type="1">
-<li>Fix the learning rate at a relatively high value (like 0.3ish) that allows each model to train within a few seconds, and use your favorite hyperparameter tuning technique to find the optimal tree parameters.</li>
-<li>Using these optimal tree parameter values, fix the learning rate as low as you want and train your model, using early stopping to identify the optimal number of boosting rounds.</li>
+<li><strong>Tune tree parameters.</strong> Fix the learning rate at a relatively high value (like 0.3ish) and enable early stopping so that each model trains within a few seconds. Use your favorite hyperparameter tuning technique to find the optimal tree parameters.</li>
+<li><strong>Tune boosting parameters.</strong> Using these optimal tree parameter values, fix the learning rate as low as you want and train your model, using early stopping to identify the optimal number of boosting rounds.</li>
 </ol>
-<p>Why is this a good idea? Because by starting with a high learning rate, you can burn through hundreds of model training trials and find some really good tree parameters in a few minutes. Then, with the confidence that your tree parameters are actually quite good, you can set a really low learning rate and boost a few thousand rounds to get a model with the best of both tree parameter and boosting parameter worlds.</p>
+<p>Why is this a good idea? Because by starting with a high learning rate and early stopping enabled, you can burn through hundreds of model training trials and find some really good tree parameters in a few minutes. Then, with the confidence that your tree parameters are actually quite good, you can set a really low learning rate and boost a few thousand rounds to get a model with the best of both tree parameter and boosting parameter worlds.</p>
 <blockquote class="blockquote">
 <p>You can check out <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> where I justify this approach by running two parameter searches—one with high learning rate and one with low learning rate—showing that they recover the same optimal tree parameters.</p>
 </blockquote>
@@ -538,8 +528,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mean_squared_error(y_true, y_pred, squared<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="tune-tree-parameters-with-optuna" class="level2">
-<h2 class="anchored" data-anchor-id="tune-tree-parameters-with-optuna">Tune Tree Parameters with Optuna</h2>
+<section id="stage-1-tune-tree-parameters-with-optuna" class="level2">
+<h2 class="anchored" data-anchor-id="stage-1-tune-tree-parameters-with-optuna">Stage 1: Tune Tree Parameters with Optuna</h2>
 <p>Next we need to choose a fixed learning rate and tune the tree parameters. We want a learning rate that allows us to train within a few seconds, so we need to time model training. Start with a high learning rate (like 0.8) and work down until you find a rate that takes a few seconds. Below I end up landing at 0.3, which takes about 4 seconds to train on my little laptop.</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.3</span></span>
@@ -623,8 +613,8 @@ reg_lambda : 0.008587261143813469</code></pre>
 </div>
 <p>If we decide we want to tune the tree parameters a little more, we can just call <code>study.optimize(...)</code> again, adding as many trials as we want to the study. Once we’re happy with the tree parameters, we can proceed to stage 2.</p>
 </section>
-<section id="stage-2-low-learning-rate-for-high-performance" class="level2">
-<h2 class="anchored" data-anchor-id="stage-2-low-learning-rate-for-high-performance">Stage 2: Low Learning Rate for High Performance</h2>
+<section id="stage-2-intensify-the-boosting-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="stage-2-intensify-the-boosting-parameters">Stage 2: Intensify the Boosting Parameters</h2>
 <p>Now we take the optimal tree parameters that we found in stage 1, and we train a new model with a fixed low learning rate; here I use 0.01, but you could go lower. The lower your learning rate, the better your performance (with diminishing returns) and the more boosting rounds you’ll need to max out the evaluation metric on the validation data.</p>
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>low_learning_rate <span class="op">=</span> <span class="fl">0.01</span></span>
@@ -692,6 +682,18 @@ num_boost_round: 1446</code></pre>
 </div>
 </div>
 <p>Back in the <a href="../../posts/xgboost-for-regression-in-python/">regression post</a> we got an RMSE of about 0.231 just using default parameter values, which put us in 5th place on the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/leaderboard">leaderboard for the Kagle dozers competition</a>. Now with about 10 minutes of hyperparameter tuning, our RMSE is down to 0.216 which puts us in 1st place by a huge margin. 🙌</p>
+</section>
+<section id="what-could-possibly-go-wrong" class="level2">
+<h2 class="anchored" data-anchor-id="what-could-possibly-go-wrong">What could possibly go wrong?</h2>
+<p>Hyperparameter tuning can easily be overlooked in the move-fast-and-break-everything hustle of building an ML product, but it can also easily become overkill or even downright harmful, depending on the application. There are three key questions to ask:</p>
+<ol type="1">
+<li>How much value is created by an incremental gain in model prediction accuracy?</li>
+<li>What is the cost of increasing model prediction accuracy?</li>
+<li>Is my model answering the right question?</li>
+</ol>
+<p>Sometimes a small gain in model prediction performance translates into millions of dollars of impact. The dream scenario is that you swoop in on some key model in your organization, markedly improve its accuracy with an easy afternoon of hyperparameter tuning, realize massive improvements in your org’s KPIs, and get mad respect, bonuses, and promoted. But the reality is that often additional model accuracy doesn’t really change business KPIs by very much. Try to figure out the actual value of improved model accuracy and proceed accordingly.</p>
+<p>Remember too that hyperparameter tuning has its costs, most obviously the developer time and compute resources for the search itself. It can also lead us to larger and deeper models which take longer to train, occupy larger memory footprints, and have higher prediction latency.</p>
+<p>Worst of all and quite counterintuitively, it’s possible that improving a model’s prediction accuracy can compromise overall business KPIs. I’ve seen this with my own eyes at work; offline testing shows that hyperparameter tuning significantly improves a model’s prediction accuracy, but when the model goes into production, an AB test shows that the business KPIs are actually worse. What happened? In this case, the model’s prediction was being used indirectly to infer the relationship between one of the features and the prediction target to inform automatic business decisions. Answering questions about how changing an input will affect an output requires causal reasoning, and <a href="https://arxiv.org/abs/1608.00060">traditional ML models are not the right tool for the job</a>. I’ll have a lot more to say about that soon; let this story foreshadow an epic new epoch on Random Realizations….</p>
 </section>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
