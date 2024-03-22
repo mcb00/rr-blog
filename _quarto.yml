@@ -13,7 +13,7 @@ website:
   title: "Random Realizations"
   site-url:  https://randomrealizations.com/
   description: "A blog about data science, statistics, machine learning, and the scientific method"
-  favicon: "favicon.png"
+  favicon: "favicon-wbg.png"
   margin-header: includes/subscribe.html
   # comments:
   #   utterances:
