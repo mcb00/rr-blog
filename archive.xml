@@ -13,6 +13,8 @@
 <url>https://randomrealizations.com/opengraph.png</url>
 <title>Random Realizations</title>
 <link>https://randomrealizations.com/archive.html</link>
+<height>76</height>
+<width>144</width>
 </image>
 <generator>quarto-1.3.433</generator>
 <lastBuildDate>Tue, 26 Dec 2023 08:00:00 GMT</lastBuildDate>
@@ -1354,8 +1356,6 @@ num_boost_round: 1446</code></pre>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>There it is, an efficient and ridiculously easy hyperparameter tuning strategy for XGBoost using optuna. If you found this helpful, if you have questions, or if you have your own preferred method for parameter search, let me know about it down in the comments!</p>
-
-
 </section>
 
  ]]></description>
@@ -2288,8 +2288,6 @@ font-style: inherit;">;</span></span></code></pre></div>
 <li><a href="../../posts/xgboost-from-scratch/">XGBoost from Scratch</a> - to see how to implement all those equations in code</li>
 <li><a href="../../posts/gradient-boosting-multi-class-classification-from-scratch/">Multi-Class Gradient Boosting from Scratch</a> - to fully grok the multi-class gradient boosting algorithm</li>
 </ul>
-
-
 </section>
 
  ]]></description>
@@ -3266,8 +3264,6 @@ font-style: inherit;">6</span>)</span>
 <li><a href="(https://statweb.stanford.edu/~jhf/ftp/trebst.pdf)">Friedman’s Greedy Function Approximation paper</a></li>
 <li><a href="https://www.researchgate.net/publication/228776646_Additive_Logistic_Regression_A_Statistical_View_of_Boosting">Friedman, Hastie, and Tibshirani 2000: paper on additive logistic regression</a></li>
 </ul>
-
-
 </section>
 
  ]]></description>
@@ -4341,8 +4337,6 @@ font-style: inherit;">=</span>cat_labels)</span>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>There you have it, a simple flow for solving regression problems with XGBoost in python. Remember you can use the XGBoost regression notebook from my <a href="https://github.com/mcb00/ds-templates">ds-templates repo</a> to make it easy to follow this flow on your own problems. If you found this helpful, or if you have additional ideas about solving regression problems with XGBoost, let me know down in the comments.</p>
-
-
 </section>
 
  ]]></description>
@@ -4815,8 +4809,6 @@ image-alt: "A London Underground train emerging from a tunnel"
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>Boy howdy, that was a lot, but at this point you should have a fully functioning blog, built with a minimalist, data-science-friendly tech stack consisting of quarto, jupyter, and GitHub. If you do create a blog using quarto, drop a link to it in the comments, and we can all check it out and celebrate your creation!</p>
-
-
 </section>
 
  ]]></description>
