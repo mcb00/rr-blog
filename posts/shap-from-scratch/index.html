@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2024-06-15">
 <meta name="description" content="How to compute SHAP values from scratch in python">
 
-<title>Random Realizations – SHAP from Scratch</title>
+<title>Random Realizations - SHAP from Scratch</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -179,25 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<h5 style="font-weight:600; font-size:1rem">Subscribe</h5>
-
-<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
-
-    <div class="form-group">
-      <!-- <label for="mce-EMAIL" class="form-label mt-4">Subscribe via email</label> -->
-      <input type="email" value="" name="EMAIL" class="form-control" id="mce-EMAIL" placeholder="enter your email" required="">
-    </div>
-    
-    <div style="margin-top: 10px;">
-    <button type="submit" class="btn btn-secondary btn-sm" data-umami-event="Subscribe">Submit</button>
-    
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
-    
-
-
-<hr>
-</div></form>
+<p>includes/subscribe.html</p>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -264,11 +246,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="what-is-shap" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-shap">What is SHAP?</h2>
-<p>SHAP (SHapley Additive exPlanations) is a conceptual framework, a set of computational methods, and a python library for generating explanations of ML model predictions. The “SHAP” <a href="https://en.wikipedia.org/wiki/Backronym">backronym</a> was introduced in <a href="https://arxiv.org/abs/1705.07874">Lundberg and Lee 2017</a>, which I call the <em>SHAP paper</em>, that expanded on several previously existing ideas which we’ll build up in the following sections.</p>
+<p>SHAP (SHapley Additive exPlanations) is a conceptual framework for creating explanations of ML model predictions. The term also refers to a set of computational methods for generating these explanations and a python library which implements them. The “SHAP” <a href="https://en.wikipedia.org/wiki/Backronym">backronym</a> was introduced in <a href="https://arxiv.org/abs/1705.07874">Lundberg and Lee 2017</a>, which I call the <em>SHAP paper</em>, that expanded on several previously existing ideas which we’ll build up in the following sections. The key concepts are:</p>
 <ul>
-<li>First, <em>Shapley values</em>, a concept from cooperative game theory which originally had nothing to do with machine learning.</li>
-<li>Next, <em>Shapley regression values</em>, which showed how to use Shapley values to generate explanations of model predictions.</li>
-<li>Finally, <em>Shapley sampling values</em>, which offered a computationally tractable way to compute Shapley regression values for any type of model.</li>
+<li><em>Shapley values</em>, a concept from cooperative game theory which originally had nothing to do with machine learning</li>
+<li><em>Shapley regression values</em>, which showed how to use Shapley values to generate explanations of model predictions</li>
+<li><em>Shapley sampling values</em>, which offered a computationally tractable way to compute Shapley regression values for any type of model.</li>
 </ul>
 <p>The SHAP paper tied Shapley regression values and several other existing model explanation methods together by showing they are all members of a class called “additive feature attribution methods.” Under the right conditions, these additive feature attribution methods can generate Shapley values, and when they do we can call them SHAP values.</p>
 <p>After establishing this theoretical framework, the authors go on to discuss various computational methods for computing SHAP values; some are model-agnostic, meaning they work with any type of model, and others are model-specific, meaning they work for specific types of models. It turns out that the previously existing Shapley sampling values method is a model-agnostic approach, but while it’s the most intuitive, computationally speaking it’s relatively inefficient. Thus the authors propose a novel model-agnostic approach called Kernel SHAP, which is really just <a href="https://lime-ml.readthedocs.io/en/latest/">LIME</a> parameterized to yield SHAP values.</p>
@@ -298,7 +280,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>where</p>
 <ul>
 <li><span class="math inline">\(\phi_i\)</span> is the Shapley value for feature of interest <span class="math inline">\(i\)</span>,</li>
+<li>the <span class="math inline">\(\subseteq\)</span> symbol indicates the item on its left is a subset of the object on its right,</li>
 <li><span class="math inline">\(F\)</span> is the set of all features,</li>
+<li>the vertical bars indicate the number of elements in a set, e.g.&nbsp;<span class="math inline">\(|F|\)</span> is the total number of features,</li>
 <li><span class="math inline">\(F \setminus \{i\}\)</span> is the set of all features except the feature of interest,</li>
 <li><span class="math inline">\(S\)</span> is a particular subset of features not including the feature of interest,</li>
 <li><span class="math inline">\(f_{S}\)</span> is a “subset model”—a model that uses only the features in <span class="math inline">\(S\)</span> for both training and prediction,</li>
@@ -623,6 +607,8 @@ Note
 <li><a href="https://arxiv.org/abs/1705.07874">The SHAP Paper (Lundberg and Lee, 2017)</a></li>
 <li><a href="https://christophm.github.io/interpretable-ml-book/">Interpretable Machine Learning by Christoph Molnar</a></li>
 </ul>
+
+
 </section>
 
 </main> <!-- /main -->
