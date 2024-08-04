@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2022-05-07">
 <meta name="description" content="A walkthrough of my from-scratch python implementation of XGBoost.">
 
-<title>Random Realizations - XGBoost from Scratch</title>
+<title>Random Realizations – XGBoost from Scratch</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -174,7 +174,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<p>includes/subscribe.html</p>
+<h5 style="font-weight:600; font-size:1rem">Subscribe</h5>
+
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+
+    <div class="form-group">
+      <!-- <label for="mce-EMAIL" class="form-label mt-4">Subscribe via email</label> -->
+      <input type="email" value="" name="EMAIL" class="form-control" id="mce-EMAIL" placeholder="enter your email" required="">
+    </div>
+    
+    <div style="margin-top: 10px;">
+    <button type="submit" class="btn btn-secondary btn-sm" data-umami-event="Subscribe">Submit</button>
+    
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+    
+
+
+<hr>
+</div></form>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -585,8 +603,6 @@ xgboost score: 0.24123239765807963</code></pre>
 <li>Implement column subsampling. XGBoost itself provides column subsampling by tree, by level, and by node. Try implementing by tree first, then try adding by level or by node as well. These should be pretty straightforward to do.</li>
 <li>Implement sparsity aware split finding for missing feature values (Algorithm 2 in the <a href="https://arxiv.org/abs/1603.02754">XGBoost paper</a>). This will be a little more involved, since you’ll need to refactor and modify several parts of the tree booster class.</li>
 </ol>
-
-
 </section>
 
 </main> <!-- /main -->

@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Matt Bowers">
-<meta name="dcterms.date" content="2024-06-15">
+<meta name="dcterms.date" content="2024-08-04">
 <meta name="description" content="How to compute SHAP values from scratch in python">
 
-<title>Random Realizations - SHAP from Scratch</title>
+<title>Random Realizations – SHAP from Scratch</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -112,6 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta property="og:image" content="https://randomrealizations.com/posts/shap-from-scratch/opengraph.png">
 <meta property="og:site-name" content="Random Realizations">
 <meta property="og:image:alt" content="snow, trees, and mountains overlook lake Tahoe">
+<link rel="canonical" href="https://randomrealizations.com/posts/shap-from-scratch/" />
 </head>
 
 <body class="nav-fixed">
@@ -179,7 +180,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
-<p>includes/subscribe.html</p>
+<h5 style="font-weight:600; font-size:1rem">Subscribe</h5>
+
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+
+    <div class="form-group">
+      <!-- <label for="mce-EMAIL" class="form-label mt-4">Subscribe via email</label> -->
+      <input type="email" value="" name="EMAIL" class="form-control" id="mce-EMAIL" placeholder="enter your email" required="">
+    </div>
+    
+    <div style="margin-top: 10px;">
+    <button type="submit" class="btn btn-secondary btn-sm" data-umami-event="Subscribe">Submit</button>
+    
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+    
+
+
+<hr>
+</div></form>
 </div></div>
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
@@ -227,7 +246,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 15, 2024</p>
+      <p class="date">August 4, 2024</p>
     </div>
   </div>
   
@@ -607,8 +626,6 @@ Note
 <li><a href="https://arxiv.org/abs/1705.07874">The SHAP Paper (Lundberg and Lee, 2017)</a></li>
 <li><a href="https://christophm.github.io/interpretable-ml-book/">Interpretable Machine Learning by Christoph Molnar</a></li>
 </ul>
-
-
 </section>
 
 </main> <!-- /main -->

@@ -13,9 +13,950 @@
 <url>https://randomrealizations.com/opengraph.png</url>
 <title>Random Realizations</title>
 <link>https://randomrealizations.com/archive.html#category=python</link>
+<height>76</height>
+<width>144</width>
 </image>
 <generator>quarto-1.3.433</generator>
-<lastBuildDate>Tue, 26 Dec 2023 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 04 Aug 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>SHAP from Scratch</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/shap-from-scratch/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Ahh, SHAP. As you know it’s become one of the leading frameworks for explaining ML model predictions. I’d guess it’s popularity is due to its appealing theoretical basis, its universal applicability to any type of ML model, and its easy-to-use python package. SHAP promises to turn your black box ML model into a nice friendly interpretable model. The hilarious irony is that, when I first started using it in my work, SHAP itself was a complete black box to me. In this post, we’ll change all that by diving into the SHAP paper, illuminating the key theoretical ideas behind its development step by step, and implementing it from scratch in python. If you aren’t already familiar with how to compute and interpret SHAP values in practice, I’d recommend that you go check out the <a href="https://shap.readthedocs.io/en/latest/index.html">documentation for the shap python package</a> before diving into this post.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/shap-from-scratch/shap_from_scratch_main.jpg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Snow, trees, and mountains overlook Lake Tahoe.</figcaption>
+</figure>
+</div>
+<section id="what-is-shap" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-shap">What is SHAP?</h2>
+<p>SHAP (SHapley Additive exPlanations) is a conceptual framework for creating explanations of ML model predictions. The term also refers to a set of computational methods for generating these explanations and a python library which implements them. The “SHAP” <a href="https://en.wikipedia.org/wiki/Backronym">backronym</a> was introduced in <a href="https://arxiv.org/abs/1705.07874">Lundberg and Lee 2017</a>, which I call the <em>SHAP paper</em>, that expanded on several previously existing ideas which we’ll build up in the following sections. The key concepts are:</p>
+<ul>
+<li><em>Shapley values</em>, a concept from cooperative game theory which originally had nothing to do with machine learning</li>
+<li><em>Shapley regression values</em>, which showed how to use Shapley values to generate explanations of model predictions</li>
+<li><em>Shapley sampling values</em>, which offered a computationally tractable way to compute Shapley regression values for any type of model.</li>
+</ul>
+<p>The SHAP paper tied Shapley regression values and several other existing model explanation methods together by showing they are all members of a class called “additive feature attribution methods.” Under the right conditions, these additive feature attribution methods can generate Shapley values, and when they do we can call them SHAP values.</p>
+<p>After establishing this theoretical framework, the authors go on to discuss various computational methods for computing SHAP values; some are model-agnostic, meaning they work with any type of model, and others are model-specific, meaning they work for specific types of models. It turns out that the previously existing Shapley sampling values method is a model-agnostic approach, but while it’s the most intuitive, computationally speaking it’s relatively inefficient. Thus the authors propose a novel model-agnostic approach called Kernel SHAP, which is really just <a href="https://lime-ml.readthedocs.io/en/latest/">LIME</a> parameterized to yield SHAP values.</p>
+<p>Model-specific approaches can be potentially much more efficient than model-agnostic ones by taking advantage of model idiosyncrasies. For example, there is an analytical solution for the SHAP values of linear models, so Linear SHAP is extremely efficient. Similarly, Deep SHAP (proposed in the SHAP paper) and Tree SHAP (proposed later in <a href="https://www.sciencedirect.com/science/article/pii/S2666827022000500#b20">Lundberg et al 2020</a>) take advantage of idiosyncrasies of deep learning and tree-based models to compute SHAP values efficiently.</p>
+<p>The important thing about these different methods is that they provide computationally tractable ways to compute SHAP values, but ultimately, they are all based on the Shapley sampling values method—the original method to compute what we now call SHAP values. Thus, for the remainder of this post, we’ll focus on this method, building it up from Shapley values to Shapley regression values to Shapley sampling values and ultimately implementing it from scratch in python.</p>
+</section>
+<section id="shapley-values" class="level2">
+<h2 class="anchored" data-anchor-id="shapley-values">Shapley Values</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Shapley_value">Shapley value</a> is named in honor of Nobel prize winning economist Loyd Shapley who introduced the idea in the field of coalitional game theory in the 1950’s. Shapley proposed a way to determine how a coalition of players can fairly share the payout they receive from a cooperative game. We’ll introduce the mathematical formalism in the next section, so for now let’s just touch on the intuition for the approach. Essentially, the method distributes the payout among the players according to the expected contribution of each player across all possible combinations of the players. The thought experiment works as follows:</p>
+<ol type="1">
+<li>Draw a random permutation (ordering) of the players.</li>
+<li>Have the first player play alone, generating some payout. Then have the first two players play together, generating some payout. Then the first three, and so on.</li>
+<li>As each new player is added, attribute the change in the payout to this new player.</li>
+<li>Repeat this experiment for all permutations of the players. A player’s Shapley value is the average change in payout (across all permutations) when that player is added to the game.</li>
+</ol>
+<p>Next we’ll see how this idea can be applied to model explanations.</p>
+</section>
+<section id="shapley-regression-values" class="level2">
+<h2 class="anchored" data-anchor-id="shapley-regression-values">Shapley Regression Values</h2>
+<p>The next idea came from <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/asmb.446">Lipovetsky and Conklin 2001</a>, who proposed a way to use Shapley values to explain the predictions of a linear regression model. <em>Shapley regression values</em> assign an importance value to each feature that represents the effect on the model prediction of including that feature. The basic idea is to train a second model without the feature of interest, and then to compare the predictions from the model with the feature and the model without the feature. This procedure of training two models and comparing their predictions is repeated for all possible subsets of the other features; the average difference in predictions is the Shapley value for the feature of interest.</p>
+<p>The Shapley value for feature <img src="https://latex.codecogs.com/png.latex?i"> on instance <img src="https://latex.codecogs.com/png.latex?x"> is given by equation 4 in the SHAP paper:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cphi_i%20=%20%5Csum_%7BS%20%5Csubseteq%20F%20%5Csetminus%20%5C%7Bi%5C%7D%7D%0A%5Cfrac%7B%7CS%7C!(%7CF%7C%20-%20%7CS%7C%20-%201)!%7D%7B%7CF%7C!%7D%0A%5Bf_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D(x_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D)%20-%20f_S(x_S)%20%5D%0A"></p>
+<p>where</p>
+<ul>
+<li><img src="https://latex.codecogs.com/png.latex?%5Cphi_i"> is the Shapley value for feature of interest <img src="https://latex.codecogs.com/png.latex?i">,</li>
+<li>the <img src="https://latex.codecogs.com/png.latex?%5Csubseteq"> symbol indicates the item on its left is a subset of the object on its right,</li>
+<li><img src="https://latex.codecogs.com/png.latex?F"> is the set of all features,</li>
+<li>the vertical bars indicate the number of elements in a set, e.g.&nbsp;<img src="https://latex.codecogs.com/png.latex?%7CF%7C"> is the total number of features,</li>
+<li><img src="https://latex.codecogs.com/png.latex?F%20%5Csetminus%20%5C%7Bi%5C%7D"> is the set of all features except the feature of interest,</li>
+<li><img src="https://latex.codecogs.com/png.latex?S"> is a particular subset of features not including the feature of interest,</li>
+<li><img src="https://latex.codecogs.com/png.latex?f_%7BS%7D"> is a “subset model”—a model that uses only the features in <img src="https://latex.codecogs.com/png.latex?S"> for both training and prediction,</li>
+<li>and <img src="https://latex.codecogs.com/png.latex?f_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D"> is asubset model using features in <img src="https://latex.codecogs.com/png.latex?S"> and the feature of interest.</li>
+</ul>
+<p>To reiterate, this is the most important equation when it comes to understanding SHAP, as it defines the Shapley value; let’s make sure we understand what’s going on by implementing it in python.</p>
+<p>We start with the feature subsets. Notice that the sum is indexed over all subsets of <img src="https://latex.codecogs.com/png.latex?F%20%5Csetminus%20%5C%7Bi%5C%7D">, which is the set of all features except the <img src="https://latex.codecogs.com/png.latex?i">th feature, the one we’re calculating the Shapley value for. Let’s write a function that takes a list of items and returns an iterable that yields all possible subsets of those items.</p>
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> itertools <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> chain, combinations </span>
+<span id="cb1-2"></span>
+<span id="cb1-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> get_all_subsets(items):</span>
+<span id="cb1-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> chain.from_iterable(combinations(items, r) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> r <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(items)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>))</span>
+<span id="cb1-5"></span>
+<span id="cb1-6"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> s <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span>  get_all_subsets([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>]):</span>
+<span id="cb1-7">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(s)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>()
+(0,)
+(1,)
+(2,)
+(0, 1)
+(0, 2)
+(1, 2)
+(0, 1, 2)</code></pre>
+</div>
+</div>
+<p>To get all subsets of features, other than the feature of interest, we could do something like this.</p>
+<div class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> get_all_other_feature_subsets(n_features, feature_of_interest):</span>
+<span id="cb3-2">    all_other_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [j <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(n_features) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> j <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> feature_of_interest]</span>
+<span id="cb3-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> get_all_subsets(all_other_features)</span>
+<span id="cb3-4"></span>
+<span id="cb3-5"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> s <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> get_all_other_feature_subsets(n_features<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>, feature_of_interest<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>):</span>
+<span id="cb3-6">    <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(s)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>()
+(0,)
+(1,)
+(3,)
+(0, 1)
+(0, 3)
+(1, 3)
+(0, 1, 3)</code></pre>
+</div>
+</div>
+<p>So for each of the feature subsets, we’ll need to calculate the summand, which is the product of a quotient with a bunch of factorials and the difference in predicted values between two subset models. Let’s start with those subset models. Subset model <img src="https://latex.codecogs.com/png.latex?f_%7BS%7D"> is a model trained only on the features in subset <img src="https://latex.codecogs.com/png.latex?S">. We can write a function that takes an untrained model, a training dataset, a feature subset to use, and a single instance to predict on; the function will then train a model using only features in the subset, and it will issue a prediction for the single instance we gave it.</p>
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> subset_model(model, X_train, y_train, feature_subset, instance):</span>
+<span id="cb5-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">assert</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(instance.shape) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Instance must be a 1D array'</span></span>
+<span id="cb5-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(feature_subset) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>:</span>
+<span id="cb5-4">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> y.mean() <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># a model with no features predicts E[y]</span></span>
+<span id="cb5-5">    X_subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> X_train.take(feature_subset, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb5-6">    model.fit(X_subset, y_train)</span>
+<span id="cb5-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> model.predict(instance.take(feature_subset).reshape(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>))[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span></code></pre></div>
+</div>
+<p>Next let’s have a look at <img src="https://latex.codecogs.com/png.latex?%7CS%7C!(%7CF%7C-%7CS%7C-1)!/%7CF%7C!">. The keen reader will notice this factor kind of looks like the answers to those combinatorics questions like how many unique ways can you order the letters in the word MISSISSIPPI. The combinatorics connection is that Shapley values are defined in terms of all permutations of the players , where the included players come first, then the player of interest, followed by the excluded players. In ML models, the order of features doesn’t matter, so we can work with unordered subsets of features, scaling the prediction difference terms by the number of permutations that involve the same sets of included and excluded features. With that in mind, we can see that including the factor in each term of the sum gives us a weighted average over all feature combinations, where the numerator gives the number of permutations in which the included features come first, followed by the feature of interest, followed by the excluded features, and the denominator is the total number of feature permutations.</p>
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> math <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> factorial</span>
+<span id="cb6-2"></span>
+<span id="cb6-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> permutation_factor(n_features, n_subset):</span>
+<span id="cb6-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> factorial(n_subset) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> factorial(n_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> n_subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> factorial(n_features)</span></code></pre></div>
+</div>
+<p>Now we can put these pieces together to compute equation 4—a single Shapley regression value for a single instance and feature of interest.</p>
+<div class="cell" data-execution_count="59">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> compute_single_shap_value(untrained_model,</span>
+<span id="cb7-2">                              X_train,</span>
+<span id="cb7-3">                              y_train,</span>
+<span id="cb7-4">                              feature_of_interest,</span>
+<span id="cb7-5">                              instance):</span>
+<span id="cb7-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"Compute a single SHAP value (equation 4)"</span></span>
+<span id="cb7-7">    n_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> X_train.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span>
+<span id="cb7-8">    shap_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb7-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> subset <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> get_all_other_feature_subsets(n_features, feature_of_interest):</span>
+<span id="cb7-10">        n_subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(subset)</span>
+<span id="cb7-11">        prediction_without_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> subset_model(</span>
+<span id="cb7-12">            untrained_model,</span>
+<span id="cb7-13">            X_train, y_train,</span>
+<span id="cb7-14">            subset,</span>
+<span id="cb7-15">            instance</span>
+<span id="cb7-16">        )</span>
+<span id="cb7-17">        prediction_with_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> subset_model(</span>
+<span id="cb7-18">            untrained_model,</span>
+<span id="cb7-19">            X_train, y_train,</span>
+<span id="cb7-20">            subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> (feature_of_interest,),</span>
+<span id="cb7-21">            instance</span>
+<span id="cb7-22">        )</span>
+<span id="cb7-23">        factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> permutation_factor(n_features, n_subset)</span>
+<span id="cb7-24">        shap_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> (prediction_with_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> prediction_without_feature)</span>
+<span id="cb7-25">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> shap_value</span></code></pre></div>
+</div>
+<p>Let’s use this function to compute a single Shapley regression value for a linear model and a small training dataset with 3 features.</p>
+<div class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> make_regression </span>
+<span id="cb8-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.linear_model <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> LinearRegression </span>
+<span id="cb8-3"></span>
+<span id="cb8-4">X, y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> make_regression(n_samples<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">50</span>, n_features<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>)</span>
+<span id="cb8-5"></span>
+<span id="cb8-6">compute_single_shap_value(untrained_model<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>LinearRegression(),</span>
+<span id="cb8-7">                          X_train<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X, y_train<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>y,</span>
+<span id="cb8-8">                          feature_of_interest<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>,</span>
+<span id="cb8-9">                          instance<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, :])</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="60">
+<pre><code>-0.07477140629329351</code></pre>
+</div>
+</div>
+<p>That gives us a single Shapley value corresponding to a single feature value in a single instance. To get useful model explanations, we’d need to compute Shapley values for each feature of each instance in some dataset of instances. You might notice there’s a big problem with the formulation above. Namely, we are going to have to train a whole bunch of new subset models—one for each subset of the features. If our model has <img src="https://latex.codecogs.com/png.latex?M"> features, we’ll have to train <img src="https://latex.codecogs.com/png.latex?2%5EM"> models, so this will get impractical in a hurry, especially if we’re trying to train anything other than linear models.</p>
+</section>
+<section id="shapley-sampling-values" class="level2">
+<h2 class="anchored" data-anchor-id="shapley-sampling-values">Shapley Sampling Values</h2>
+<p>Next, <a href="https://link.springer.com/article/10.1007/s10115-013-0679-x">Štrumbelj and Kononenko 2014</a> proposed <em>Shapley sampling values</em>, a method which provides a much more efficient way to approximate the subset models used to calculate Shapley regression values. In this approach, the effect of removing some features from the model is approximated by the conditional expectation of the model given the known features.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20f_S(x_S)%20%20:=%20E%5Bf(x)%20%7C%20x_S%5D%20%20"></p>
+<p>This means we’re approximating the output of a subset model by averaging over outputs of the full model. That’s great because now we don’t have to train all those new subset models, we can just query our full model over some set of inputs and average over the outputs to compute these conditional expectation subset models.</p>
+<p>Now how exactly do we compute that conditional expectation? First we rewrite the above conditional expectation (equation 10 in the SHAP paper)</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20E%5Bf(x)%20%7C%20x_S%5D%20%20=%20E_%7Bx_%7B%5Cbar%7BS%7D%7D%7Cx_S%7D%20%5Bf(x)%5D"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BS%7D"> is the set of excluded or missing features. Beside this equation in the paper they give the note “expectation over <img src="https://latex.codecogs.com/png.latex?x_%7B%5Cbar%7BS%7D%7D%20%7C%20x_S">, which means we’re taking the expectation over the missing features given the known features. Then we get another step (equation 11)</p>
+<p><img src="https://latex.codecogs.com/png.latex?E_%7Bx_%7B%5Cbar%7BS%7D%7D%7Cx_S%7D%20%5Bf(x)%5D%20%5Capprox%20E_%7Bx_%7B%5Cbar%7BS%7D%7D%7D%20%5Bf(x)%5D"></p>
+<p>Now it’s not an equality but an approximation. The authors give the note “assume feature independence”. The intuition here is that if the missing features are correlated with the known features, then their distribution depends on the particular values taken by the known features. But here the authors make the simplifying assumption that known and missing features are independent, which allows us to replace the conditional expectation with an unconditional expectation over the missing features.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>So is this assumption that features in <img src="https://latex.codecogs.com/png.latex?S"> are independent from features in <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BS%7D"> a problem? The short answer is… maybe 🤷‍♀️? It’s potentially problematic enough that people have worked out some ways to relax this assumption, e.g.&nbsp;<a href="https://shap-lrjball.readthedocs.io/en/latest/generated/shap.PartitionExplainer.html">partition masking</a>, but that makes <em>Owen values</em> instead of Shapley values, so we’ll save it for another post.</p>
+</div>
+</div>
+<p>Anyway, how do we compute this unconditional expectation over the missing features in practice? We’ll need to use a so-called <em>background dataset</em>, which is just some set of observations of our feature variables that represents their distribution. A good candidate is the training data we used to train our model. Štrumbelj and Kononenko 2014 propose a way to estimate this conditional expectation using resampling of the background dataset.</p>
+<p>The idea is to notice that the instance of interest <img src="https://latex.codecogs.com/png.latex?x"> is a feature vector comprised of the set of “known” features <img src="https://latex.codecogs.com/png.latex?x_S"> and the set of excluded features <img src="https://latex.codecogs.com/png.latex?x_%7B%5Cbar%7BS%7D%7D"> such that <img src="https://latex.codecogs.com/png.latex?x=%5C%7Bx_S,x_%7B%5Cbar%7BS%7D%7D%20%5C%7D">. Our resampling scheme will be based on constructing “masked” samples <img src="https://latex.codecogs.com/png.latex?x%5E*=%5C%7Bx_S,z_%7B%5Cbar%7BS%7D%7D%20%5C%7D"> where <img src="https://latex.codecogs.com/png.latex?z_%7B%5Cbar%7BS%7D%7D"> are values of the missing features drawn from some random observation in the background dataset. We can then compute an estimate <img src="https://latex.codecogs.com/png.latex?%5Chat%7Bf%7D_S(x)"> of the conditional expectation <img src="https://latex.codecogs.com/png.latex?E_%7Bx_%7B%5Cbar%7BS%7D%7D%7D%5Bf(x)%5D"> as</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7Bf%7D_S(x)%20=%20%5Cfrac%7B1%7D%7Bn%7D%20%5Csum_%7Bk=1%7D%5En%20f(%5C%7Bx_S,%20z_%7B%5Cbar%7BS%7D%7D%5E%7B(k)%7D%20%5C%7D)%20"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?z_%7B%5Cbar%7BS%7D%7D%5E%7B(k)%7D"> is the vector of values of the excluded features from the <img src="https://latex.codecogs.com/png.latex?k">-th row of the background dataset. Algorithmically, we can view this as first drawing a sample of observations from the background dataset, second “masking” features in <img src="https://latex.codecogs.com/png.latex?S"> in the sampled background dataset by replacing the observed values <img src="https://latex.codecogs.com/png.latex?z_S"> on each row with the values in the instance <img src="https://latex.codecogs.com/png.latex?x_S">, third using the full model <img src="https://latex.codecogs.com/png.latex?f"> to predict on each of these masked samples in the background dataset, and finally averaging over these predictions. We can implement a new subset model function that takes a fully trained model, a background dataset,a feature subset, and an instance for explanation and returns an approximation of the subset model prediction.</p>
+<div class="cell" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span>
+<span id="cb10-2"></span>
+<span id="cb10-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> subset_model_approximation(trained_model, </span>
+<span id="cb10-4">                               background_dataset,</span>
+<span id="cb10-5">                               feature_subset,  </span>
+<span id="cb10-6">                               instance):</span>
+<span id="cb10-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">""" </span></span>
+<span id="cb10-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    Approximate subset model prediction  (Equation 11)</span></span>
+<span id="cb10-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    \hat{f}_S(x) = E_{x_{\hat{S</span><span class="re">}}}</span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[f_S(x)]</span></span>
+<span id="cb10-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    for feature subset S on single instance x</span></span>
+<span id="cb10-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    """</span></span>
+<span id="cb10-12">    masked_background_dataset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> background_dataset.copy()</span>
+<span id="cb10-13">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(masked_background_dataset.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]):</span>
+<span id="cb10-14">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> feature_subset:</span>
+<span id="cb10-15">            masked_background_dataset[:, j] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> instance[j]</span>
+<span id="cb10-16">    conditional_expectation_of_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.mean(</span>
+<span id="cb10-17">        trained_model.predict(masked_background_dataset)</span>
+<span id="cb10-18">    )</span>
+<span id="cb10-19">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> conditional_expectation_of_model          </span></code></pre></div>
+</div>
+<p>If we replace our <code>subset_model</code> function with this new <code>subset_model_approximation</code> function in our <code>compute_single_shap_value</code> function from earlier, then we’ll be computing Shapley sampling values. And according to the SHAP paper: “if we assume feature independence when approximating conditional expectations (using Equation 11 to estimate subset model output) … then SHAP values can be estimated directly using the Shapley sampling values method.” That means we’ll be computing SHAP values!</p>
+</section>
+<section id="how-to-implement-shap-from-scratch" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-implement-shap-from-scratch">How to Implement SHAP from Scratch</h2>
+<p>Let’s put the pieces together and implement a class for a model explainer that computes SHAP values via the Shapley sampling values method. We’ll talk through a couple of points after the code.</p>
+<div class="cell" data-execution_count="80">
+<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np </span>
+<span id="cb11-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> typing <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> Any, Callable, Iterable</span>
+<span id="cb11-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> math <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> factorial</span>
+<span id="cb11-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> itertools <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> chain, combinations</span>
+<span id="cb11-5"></span>
+<span id="cb11-6"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">class</span> ShapFromScratchExplainer():</span>
+<span id="cb11-7">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>,</span>
+<span id="cb11-8">                 model: Callable[[np.ndarray], <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>], </span>
+<span id="cb11-9">                 background_dataset: np.ndarray,</span>
+<span id="cb11-10">                 max_samples: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>):</span>
+<span id="cb11-11">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> model</span>
+<span id="cb11-12">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> max_samples:</span>
+<span id="cb11-13">            max_samples <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">min</span>(max_samples, background_dataset.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]) </span>
+<span id="cb11-14">            rng <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.default_rng()</span>
+<span id="cb11-15">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.background_dataset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> rng.choice(background_dataset, </span>
+<span id="cb11-16">                                                 size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>max_samples, </span>
+<span id="cb11-17">                                                 replace<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, axis<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb11-18">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">else</span>:</span>
+<span id="cb11-19">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.background_dataset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> background_dataset</span>
+<span id="cb11-20"></span>
+<span id="cb11-21">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> shap_values(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, X: np.ndarray) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> np.ndarray:</span>
+<span id="cb11-22">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"SHAP Values for instances in DataFrame or 2D array"</span></span>
+<span id="cb11-23">        shap_values <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.empty(X.shape)</span>
+<span id="cb11-24">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(X.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]):</span>
+<span id="cb11-25">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(X.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]):</span>
+<span id="cb11-26">                shap_values[i, j] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._compute_single_shap_value(j, X[i, :])</span>
+<span id="cb11-27">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> shap_values</span>
+<span id="cb11-28">       </span>
+<span id="cb11-29">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> _compute_single_shap_value(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, </span>
+<span id="cb11-30">                                   feature: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>,</span>
+<span id="cb11-31">                                   instance: np.array) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>:</span>
+<span id="cb11-32">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">"Compute a single SHAP value (equation 4)"</span></span>
+<span id="cb11-33">        n_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(instance)</span>
+<span id="cb11-34">        shap_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb11-35">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> subset <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._get_all_other_feature_subsets(n_features, feature):</span>
+<span id="cb11-36">            n_subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(subset)</span>
+<span id="cb11-37">            prediction_without_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._subset_model_approximation(</span>
+<span id="cb11-38">                subset, </span>
+<span id="cb11-39">                instance</span>
+<span id="cb11-40">            )</span>
+<span id="cb11-41">            prediction_with_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._subset_model_approximation(</span>
+<span id="cb11-42">                subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> (feature,), </span>
+<span id="cb11-43">                instance</span>
+<span id="cb11-44">            )</span>
+<span id="cb11-45">            factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._permutation_factor(n_features, n_subset)</span>
+<span id="cb11-46">            shap_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> (prediction_with_feature <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> prediction_without_feature)</span>
+<span id="cb11-47">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> shap_value</span>
+<span id="cb11-48">    </span>
+<span id="cb11-49">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> _get_all_subsets(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, items: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">list</span>) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> Iterable:</span>
+<span id="cb11-50">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> chain.from_iterable(combinations(items, r) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> r <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(items)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>))</span>
+<span id="cb11-51">    </span>
+<span id="cb11-52">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> _get_all_other_feature_subsets(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, n_features, feature_of_interest):</span>
+<span id="cb11-53">        all_other_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [j <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(n_features) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> j <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> feature_of_interest]</span>
+<span id="cb11-54">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._get_all_subsets(all_other_features)</span>
+<span id="cb11-55"></span>
+<span id="cb11-56">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> _permutation_factor(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, n_features, n_subset):</span>
+<span id="cb11-57">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> (</span>
+<span id="cb11-58">            factorial(n_subset) </span>
+<span id="cb11-59">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> factorial(n_features <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> n_subset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>) </span>
+<span id="cb11-60">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> factorial(n_features) </span>
+<span id="cb11-61">        )</span>
+<span id="cb11-62">    </span>
+<span id="cb11-63">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> _subset_model_approximation(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, </span>
+<span id="cb11-64">                                    feature_subset: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">tuple</span>[<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>, ...], </span>
+<span id="cb11-65">                                    instance: np.array) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">float</span>:</span>
+<span id="cb11-66">        masked_background_dataset <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.background_dataset.copy()</span>
+<span id="cb11-67">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">range</span>(masked_background_dataset.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]):</span>
+<span id="cb11-68">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> j <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> feature_subset:</span>
+<span id="cb11-69">                masked_background_dataset[:, j] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> instance[j]</span>
+<span id="cb11-70">        conditional_expectation_of_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.mean(</span>
+<span id="cb11-71">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.model(masked_background_dataset)</span>
+<span id="cb11-72">        )</span>
+<span id="cb11-73">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> conditional_expectation_of_model          </span></code></pre></div>
+</div>
+<p>The <code>SHAPExplainerFromScratch</code> API is similar to that of the <a href="https://shap-lrjball.readthedocs.io/en/latest/generated/shap.KernelExplainer.html"><code>KernelExplainer</code></a> from the python library, taking two required arguments during instantiation:</p>
+<ul>
+<li><code>model</code>: “User supplied function that takes a matrix of samples (# samples x # features) and computes the output of the model for those samples.” That means if our model is a scikit-learn model, we’ll need to pass in its predict method, not the model object itself.</li>
+<li><code>background_dataset</code>: “The background dataset to use for integrating out features.” We know about this idea from the Shapley sampling values section above; a good choice for this data could be the training dataset we used to fit the model. By default, we’ll use all the rows of this background dataset, but we’ll also implement the ability to sample down to the desired number of rows with an argument called <code>max_samples</code>.</li>
+</ul>
+<p>Like the <code>KernelExplainer</code>, this class has a method called <code>shap_values</code> which estimates the SHAP values for a set of instances. It takes an argument <code>X</code> which is “a matrix of samples (# samples x # features) on which to explain the model’s output.” This <code>shap_values</code> method just loops through each feature value of each instance of the input samples <code>X</code> and calls an internal method named <code>_compute_single_shap_value</code> to compute each SHAP value. The <code>_compute_single_shap_value</code> method is the real workhorse of the class. It implements equation 4 from the SHAP paper as described in the Shapley regression values section above by calling a few other internal helper methods corresponding to functions that we’ve already written.</p>
+</section>
+<section id="testing-the-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="testing-the-implementation">Testing the Implementation</h2>
+<p>Let’s check our work by comparing SHAP values computed by our implementation with those from the SHAP python library. We’ll use our old friend the diabetes dataset, training a linear model, a random forest, and a gradient boosting machine.</p>
+<div class="cell" data-execution_count="73">
+<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> load_diabetes</span>
+<span id="cb12-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.model_selection <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> train_test_split</span>
+<span id="cb12-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.linear_model <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> LinearRegression</span>
+<span id="cb12-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> sklearn.ensemble <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> GradientBoostingRegressor, RandomForestRegressor</span>
+<span id="cb12-5"></span>
+<span id="cb12-6">X, y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> load_diabetes(as_frame<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>, return_X_y<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb12-7">X_train, X_test, y_train, y_test <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> train_test_split(X, y, test_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.3</span>, </span>
+<span id="cb12-8">                                                    random_state<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb12-9"></span>
+<span id="cb12-10">lin_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> LinearRegression().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb12-11">rfr_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> RandomForestRegressor().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb12-12">gbt_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> GradientBoostingRegressor().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+</div>
+<p>Here’s a little function to compare the SHAP values generated by our implementation and those from the library <code>KernelExplainer</code>.</p>
+<div class="cell" data-execution_count="81">
+<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> shap</span>
+<span id="cb13-2"></span>
+<span id="cb13-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> compare_methods(model, X_background, X_instances):</span>
+<span id="cb13-4">        </span>
+<span id="cb13-5">    library_explainer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> shap.KernelExplainer(model.predict, X_background)</span>
+<span id="cb13-6">    library_shap_values <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> library_explainer.shap_values(X_instances)</span>
+<span id="cb13-7"></span>
+<span id="cb13-8">    from_scratch_explainer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> ShapFromScratchExplainer(model.predict, X_background)</span>
+<span id="cb13-9">    from_scratch_shap_values <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> from_scratch_explainer.shap_values(X_instances)</span>
+<span id="cb13-10"></span>
+<span id="cb13-11">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> np.allclose(library_shap_values, from_scratch_shap_values)</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="82">
+<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">compare_methods(lin_model, </span>
+<span id="cb14-2">                X_background<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>, :], </span>
+<span id="cb14-3">                X_instances<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, :])</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"995f763174824efebecb5c2522c3f6f5","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="82">
+<pre><code>True</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">compare_methods(rfr_model, </span>
+<span id="cb16-2">                X_background<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>, :], </span>
+<span id="cb16-3">                X_instances<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, :])</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"f9468451774b4c758a7696ff10fabc74","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="77">
+<pre><code>True</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="83">
+<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">compare_methods(gbt_model, </span>
+<span id="cb18-2">                X_background<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>, :], </span>
+<span id="cb18-3">                X_instances<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>, :])</span></code></pre></div>
+<div class="cell-output cell-output-display">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"8bdea22fab86440db68c4a669beaf7df","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="83">
+<pre><code>True</code></pre>
+</div>
+</div>
+<p>Beautiful! Our Implementation is consistent with the SHAP library explainer!</p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Well I hope this one was helpful to you. The research phase actually took me a lot longer than I expected; it just took me a while to figure out what SHAP really is and how those different ideas and papers fit together. I thought the implementation itself was pretty fun and relatively easy. What do you think?</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ul>
+<li><a href="https://arxiv.org/abs/1705.07874">The SHAP Paper (Lundberg and Lee, 2017)</a></li>
+<li><a href="https://christophm.github.io/interpretable-ml-book/">Interpretable Machine Learning by Christoph Molnar</a></li>
+</ul>
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>from scratch</category>
+  <guid>https://randomrealizations.com/posts/shap-from-scratch/index.html</guid>
+  <pubDate>Sun, 04 Aug 2024 07:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/posts/shap-from-scratch/shap_from_scratch_thumb.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>The Ultimate Guide to XGBoost Parameter Tuning</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -1354,8 +2295,6 @@ num_boost_round: 1446</code></pre>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>There it is, an efficient and ridiculously easy hyperparameter tuning strategy for XGBoost using optuna. If you found this helpful, if you have questions, or if you have your own preferred method for parameter search, let me know about it down in the comments!</p>
-
-
 </section>
 
  ]]></description>
@@ -2288,8 +3227,6 @@ font-style: inherit;">;</span></span></code></pre></div>
 <li><a href="../../posts/xgboost-from-scratch/">XGBoost from Scratch</a> - to see how to implement all those equations in code</li>
 <li><a href="../../posts/gradient-boosting-multi-class-classification-from-scratch/">Multi-Class Gradient Boosting from Scratch</a> - to fully grok the multi-class gradient boosting algorithm</li>
 </ul>
-
-
 </section>
 
  ]]></description>
@@ -3266,8 +4203,6 @@ font-style: inherit;">6</span>)</span>
 <li><a href="(https://statweb.stanford.edu/~jhf/ftp/trebst.pdf)">Friedman’s Greedy Function Approximation paper</a></li>
 <li><a href="https://www.researchgate.net/publication/228776646_Additive_Logistic_Regression_A_Statistical_View_of_Boosting">Friedman, Hastie, and Tibshirani 2000: paper on additive logistic regression</a></li>
 </ul>
-
-
 </section>
 
  ]]></description>
@@ -4341,8 +5276,6 @@ font-style: inherit;">=</span>cat_labels)</span>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>There you have it, a simple flow for solving regression problems with XGBoost in python. Remember you can use the XGBoost regression notebook from my <a href="https://github.com/mcb00/ds-templates">ds-templates repo</a> to make it easy to follow this flow on your own problems. If you found this helpful, or if you have additional ideas about solving regression problems with XGBoost, let me know down in the comments.</p>
-
-
 </section>
 
  ]]></description>
@@ -4353,479 +5286,6 @@ font-style: inherit;">=</span>cat_labels)</span>
   <guid>https://randomrealizations.com/posts/xgboost-for-regression-in-python/index.html</guid>
   <pubDate>Mon, 18 Sep 2023 07:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/xgboost-for-regression-in-python/kigali-branches.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>Blogging with Quarto and Jupyter: The Complete Guide</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<!-- 
-![](thumbnail.png "quarto, jupyter, and python logos in hexagons")
--->
-<p>Ahh, blogging. I think we can all agree it’s probably one of the greatest forms of written communication to have ever existed.</p>
-<p>Whats that you say? You’d like to set up your own blog? And you say you want to use a dead simple, data science friendly tech stack? And you wouldn’t be caught dead handing over your painstakingly crafted content to Medium? No worries, friend, I know exactly what you need.</p>
-<p>Enter <a href="https://quarto.org">Quarto</a>.</p>
-<p>In this post we’ll set up a blog using a lightweight tech stack consisting of a terminal running quarto, git, and jupyter, and we’ll use Github Pages to host our website for free. Optionally, for a few dollars a year, we can even host our website at our own custom domain.</p>
-<p>A quick note on how to use this post. <a href="https://quarto.org/docs/websites/website-blog.html">Quarto’s documentation on blogging</a> provides a nice high-level overview of the blogging workflow, and I refer to it and many other bits of Quarto documentation here. At the time of writing, the handful of other blog posts about setting up quarto blogs are aimed at the RStudio user. This post exists to provide a jupyter and python-centric path for you to follow through the entire setup of your new quarto blog, and to impart my opinionated recommendations about best practices.</p>
-<p>Let’s get into it!</p>
-<section id="what-is-quarto" class="level2">
-<h2 class="anchored" data-anchor-id="what-is-quarto">What is Quarto?</h2>
-<p>Quarto is a way to render plain text source files containing markdown and code in python, R, and other languages into published formats like websites, books, slides, journal articles, etc. There is clearly a lot that we can do with it, but Today, we’ll use it to make a nice looking blog out of some jupyter notebook files.</p>
-<p>Quarto follows the familiar convention of using a project directory to house all material for a given project. The directory will include source files like jupyter notebooks or Rmarkdown files, as well as configuration files that control how output files are rendered. We can then use the quarto command line utility to perform actions like previewing and rendering within the project directory.</p>
-</section>
-<section id="instantiate-your-blog" class="level2">
-<h2 class="anchored" data-anchor-id="instantiate-your-blog">Instantiate your blog</h2>
-<section id="create-a-new-quarto-project" class="level3">
-<h3 class="anchored" data-anchor-id="create-a-new-quarto-project">Create a new Quarto project</h3>
-<p>After <a href="https://quarto.org/docs/get-started/">installing quarto</a> fire up a new terminal and check that the install was successful by running</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb1-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">quarto</span> <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">--version</span></span></code></pre></div>
-<p>Now think of a name for your blog’s project directory; this will also be the name of its git repository. The name will have no effect on your website’s name or URL, so don’t think too hard. The <a href="https://quarto.org/docs/websites/website-blog.html">quarto documentation</a> calls it <code>myblog</code>, so we’ll one-up them and call ours <code>pirate-ninja-blog</code>. Run the following command to create it in the current directory.</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb2-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">quarto</span> create-project pirate-ninja-blog <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">--type</span> website:blog</span></code></pre></div>
-<p>That command creates a directory called <code>pirate-ninja-blog</code> containing everything you need to render your new blog. You can preview your website by running</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb3-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">quarto</span> preview pirate-ninja-blog</span></code></pre></div>
-<p>Your local website will open in a new browser window. As you edit various aspects of your blog, the preview will update with your changes. This preview feature is so simple and so great.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/pirate-ninja-blog-screenshot.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Previewing your blog with quarto preview command</figcaption>
-</figure>
-</div>
-</section>
-<section id="set-up-a-git-repo" class="level3">
-<h3 class="anchored" data-anchor-id="set-up-a-git-repo">Set up a git repo</h3>
-<p>Change into your project directory and we’ll start setting up your git repo.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb4-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">cd</span> pirate-ninja-blog</span></code></pre></div>
-<p>initialize a new git repo.</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb5-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> init <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-b</span> main</span></code></pre></div>
-<p>The <code>_site/</code> directory is where quarto puts the rendered output files, so you’ll want to ignore it in git. I also like to just ignore any hidden files too, so add the following to your <code>.gitignore</code> file.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>.gitignore</strong></pre>
-</div>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">/.quarto/</span></span>
-<span id="cb6-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">/_site/</span></span>
-<span id="cb6-3"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">.</span><span class="pp" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">*</span></span></code></pre></div>
-</div>
-<p>For now we’ll just stage the <code>.gitignore</code> file for the initial commit. Eventually you’ll want to commit the other files in your project too, either now or later as you edit them.</p>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb7-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> add .gitignore </span>
-<span id="cb7-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> commit <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-m</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"Initial commit."</span></span></code></pre></div>
-<p>Then follow GitHub’s instructions to <a href="https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github#adding-a-local-repository-to-github-using-git">add the local repo to GitHub using git</a>. Basically just create a new blank repo on GitHub’s website, copy the remote repository url, then add the remote repo url to your local git repo.</p>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb8-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> remote add origin <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span>REMOTE_URL<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span></span></code></pre></div>
-<p>Then you’ll be able to push any commits you make to your remote repository on GitHub by saying <code>git push</code>.</p>
-</section>
-</section>
-<section id="understand-the-components-of-a-quarto-blog" class="level2">
-<h2 class="anchored" data-anchor-id="understand-the-components-of-a-quarto-blog">Understand the components of a Quarto blog</h2>
-<section id="contents-of-the-quarto-project-directory" class="level3">
-<h3 class="anchored" data-anchor-id="contents-of-the-quarto-project-directory">Contents of the quarto project directory</h3>
-<p>Let’s have a quick look at what quarto put inside of the project directory.</p>
-<pre><code>_quarto.yml
-about.qmd
-index.qmd
-profile.jpg
-posts
-styles.css
-_site</code></pre>
-<ul>
-<li>Quarto uses yaml files to specify configurations. The <code>_quarto.yml</code> file specifies project-wide configurations.</li>
-<li>Quarto’s markdown file type uses extension <code>qmd``. Each qmd file will correspond to a page in our website.</code>index.qmd<code>is the homepage and</code>about.qmd` is the About page.</li>
-<li><code>profile.jpg</code> is an image that is included on the about page.</li>
-<li><code>styles.css</code> defines css styles for the website.</li>
-<li><code>posts</code> is a directory where we can put qmd and other documents which will be rendered into blog posts.</li>
-<li><code>posts/_metadata.yml</code> contains configurations that apply to all documents in the <code>posts</code> directory.</li>
-<li><code>_site</code> is a directory that contains the rendered website. Whereas all the other files and directories constitute the source code for our blog, <code>_site</code> is the rendered output, i.e.&nbsp;the website itself.</li>
-</ul>
-<p>Let’s take a closer look at these components and start to make the blog yours.</p>
-</section>
-<section id="project-wide-configurations" class="level3">
-<h3 class="anchored" data-anchor-id="project-wide-configurations">Project-wide Configurations</h3>
-<p>The <code>_quarto.yml</code> file controls project-wide configurations, website options, and HTML document options. Options in this file are specified in yaml in a key/value structure with three top level keys: <code>project</code>, <code>website</code>, and <code>format</code>. <a href="https://quarto.org/docs/reference/projects/websites.html">The quarto website options documentation</a> has the full list of options that you can set here. It will be very helpful to take a look at some example <code>_quarto.yml</code> files in the wild, such as the one from <a href="https://github.com/quarto-dev/quarto-web/blob/main/_quarto.yml">quarto.org</a> or even the one from <a href="https://github.com/mcb00/rr-blog/blob/main/_quarto.yml">this blog</a>.</p>
-<p>Under the <code>website</code> key, go ahead and set the title and description for your blog.</p>
-<pre><code>website:
-  title: "Pirate Ninja Blog"
-  description: "A blog about pirates, ninjas, and other things"</code></pre>
-<p>You can also customize your <a href="https://quarto.org/docs/reference/projects/websites.html#navbar">navbar</a> which is visible at the top of all pages on your site. Also go ahead and set your github and twitter urls for the icons in the navbar.</p>
-<p>Under the <code>format</code> key, you can also try changing the <a href="https://quarto.org/docs/output-formats/html-themes.html">HTML theme</a> to one of the other 25 built-in themes.</p>
-</section>
-<section id="the-about-page" class="level3">
-<h3 class="anchored" data-anchor-id="the-about-page">The About Page</h3>
-<p>The <code>about.qmd</code> file defines an About page for the blog. Go ahead and fill in your details in the <code>about.qmd</code> file; you can also replace the <code>profile.jpg</code> file with your own image. Have a look at <a href="https://quarto.org/docs/websites/website-about.html">the quarto documentation on About pages</a> to explore more functionality. Notably, you can change the <code>template</code> option to change the page layout.</p>
-</section>
-<section id="the-homepage" class="level3">
-<h3 class="anchored" data-anchor-id="the-homepage">The Homepage</h3>
-<p>The <code>index.qmd</code> file defines the landing page for your website. It is a <a href="https://quarto.org/docs/websites/website-listings.html">listing page</a> which shows links to all the pages in the <code>posts</code> directory. For now we don’t need to change anything here.</p>
-</section>
-<section id="the-posts-directory" class="level3">
-<h3 class="anchored" data-anchor-id="the-posts-directory">The <code>posts/</code> directory</h3>
-<p>The <code>posts</code> directory contains all your blog posts. There aren’t really requirements for subdirectory structure inside the <code>posts</code> directory, but it’s a best practice to create a new subdirectory for each new blog post. This just helps keep auxillary files like images or conda environment files organized. Out of the box, the <code>posts</code> directory looks like this.</p>
-<pre><code>posts
-├── _metadata.yml
-├── post-with-code
-│&nbsp;&nbsp; ├── image.jpg
-│&nbsp;&nbsp; └── index.qmd
-└── welcome
-    ├── index.qmd
-    └── thumbnail.jpg</code></pre>
-<p>There are two reasons we want to be deliberate about how we organize and name things in the <code>posts</code> directory. First, the vast majority of our blog’s content will live here, so we don’t want it to be a big confusing mess. Second, the directory sstructure and file naming will be reflected in the URLs to our blog posts; if you prefer tidy-looking URLs, and I know you do, then you want to use tidy directory and file names in the <code>posts</code> directory.</p>
-<p>You can check how the URLs look by navigating to one of the pre-populated posts in the site preview in your browser. For instance, the welcome post’s URL would be</p>
-<pre><code>https://example.com/posts/welcome/</code></pre>
-<p>When quarto renders the qmd file at <code>posts/welcome/index.qmd</code> it creates an output document in the website at <code>posts/welcome/index.html</code>. In fact the full URL to the post is,</p>
-<pre><code>https://example.com/posts/welcome/index.html</code></pre>
-<p>but the browser knows if you give it a URL with a path ending in a <code>/</code>, then it should look for the <code>index.html</code> file inside that directory.</p>
-<p>So I think the best practice here is to name your new post subdirectory with the title of the post in all lower case with dashes for spaces, e.g.&nbsp;<code>post-with-code</code>. Then to force all output pages to be called <code>index.html</code>, you can set the <code>output-file</code> key in the <code>posts/_metadata.yml</code> file like this.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>posts/_metadata.yml</strong></pre>
-</div>
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">output-file:</span> index.html</span></code></pre></div>
-</div>
-<p>Note that alternative naming conventions are possible; notably you might want to prefix each post name with the date in yyyy-mm-dd format, so the post subdirectories sort temporally and look nice in a list. That’s the convention used in Quarto’s own blog at <a href="https://github.com/quarto-dev/quarto-web/tree/main">quarto.org</a>, As long as you keep everything for a given post inside its subdirectory, you should be good to go with nice-looking URLs.</p>
-</section>
-</section>
-<section id="authoring-posts-with-jupyter" class="level2">
-<h2 class="anchored" data-anchor-id="authoring-posts-with-jupyter">Authoring posts with jupyter</h2>
-<section id="creating-a-new-post" class="level3">
-<h3 class="anchored" data-anchor-id="creating-a-new-post">Creating a new post</h3>
-<p>It turns out that quarto will render not only <code>.qmd</code> files, but also <code>.ipynb</code> files in the <code>posts</code> directory. So let’s create a new blog post from a notebook.</p>
-<p>I think it’s a best practice to write draft posts in their own git branches, that way if you need to deploy some kind of hotfix to main while you’re drafting a post, you won’t have to deploy a half-written post livin on the main branch. To start a new post, create a new development branch, change into the posts directory, create a new subdirectory with your preferred naming convention, change into that new directory, and fire up jupyter.</p>
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb15-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> checkout <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-b</span> new-post</span>
-<span id="cb15-2"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">cd</span> posts</span>
-<span id="cb15-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mkdir</span> new-post</span>
-<span id="cb15-4"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">cd</span> new-post</span>
-<span id="cb15-5"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">jupyter</span> notebook</span></code></pre></div>
-<p>Now create a new notebook from the jupyter UI. In order for quarto to recognize the document, the first cell of the notebook must be a raw text cell (press <code>r</code> in command mode to change a cell to raw text), and it must contain the document’s yaml front matter. You can use the following as a frontmatter template.</p>
-<pre><code>---
-title: New Post
-date: 2023-07-12
-description: A nice new post
-categories: [nonsense, code]
----</code></pre>
-<p>Now to preview your post, open a new terminal, change into your blog’s project directory and run the <code>quarto preview</code> command. You’ll see a link to the new post in the listing on the homepage. I usually like to have the preview open in a browser while I’m editing the jupyter notebook, just to make sure things look the way I want in the rendered output. From here you can keep editing the notebook, and the preview will update in the browser dynamically.</p>
-</section>
-<section id="markdown-and-code-cells" class="level3">
-<h3 class="anchored" data-anchor-id="markdown-and-code-cells">Markdown and code cells</h3>
-<p>From here you can put text in markdown cells and you can write code in code cells. Let’s add a markdown cell with some markdown formatting.</p>
-<pre><code>## A nice heading
-
-Here is some lovely text and an equation.
-
-$$ a^2 + b^2 = c^2 $$
-
-Here's a list.
-
-- a link to an [external website](https://quarto.org).
-- a link to [another post in this blog](/posts/welcome/index.qmd).</code></pre>
-<p>This markdown will be rendered into the HTML page for the post. The last line in the above cell demonstrates the best practice for using relative urls to link to other resources within your website. Instead of providing the full url in the parentheses, just give the path to the qmd or ipynb file that you want to link to. Note that paths need to start with the <code>/</code> at the root of the quarto project, since without it, quarto will try to resolve paths relative to the location of the current document instead of the root of the project.</p>
-<p>Then create a code cell with some code. Try something like this.</p>
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Hello, Quarto!'</span>)</span></code></pre></div>
-<p>By default, both code and cell output will be rendered into the HTML output. So far our jupyter notebook looks like this.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/authoring-in-jupyter.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">View of a new post being written in jupyter notebook</figcaption>
-</figure>
-</div>
-<p>Back in the browser window running your blog preview, you can see the rendered page of the new post.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/new-post-preview.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">View of the preview of the rendered post</figcaption>
-</figure>
-</div>
-</section>
-<section id="figures" class="level3">
-<h3 class="anchored" data-anchor-id="figures">Figures</h3>
-<p>Let’s add a figure to our post. Add a new code cell with the following code.</p>
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># | fig-cap: This is my lovely line plot</span></span>
-<span id="cb19-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># | fig-alt: A line plot extending up and to the right</span></span>
-<span id="cb19-3"></span>
-<span id="cb19-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np</span>
-<span id="cb19-5"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> plt</span>
-<span id="cb19-6"></span>
-<span id="cb19-7">x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.arange(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>)</span>
-<span id="cb19-8">y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> x <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span></span>
-<span id="cb19-9">plt.plot(x, y)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<p>Notice a couple of important details. First I placed a semicolon at the end of the last line. That supresses the <code>[&lt;matplotlib.lines.Line2D at 0x1111d00a0&gt;]</code> text output, which would otherwise show up in your blog post too.</p>
-<p>Second, I added a couple of special comments at the top of the cell. Quarto allows you to specify numerous <a href="https://quarto.org/docs/computations/execution-options.html">code execution options</a>, designated by the <code># |</code> prefix, to control the behavior and appearance of the code and output at a cell level. I set two keys here, <code>fig-cap</code> and <code>fig-alt</code> which respectively set the figure caption text and the image alt tag text. The <code>fig-alt</code> key is particularly important to set on all your figures because it provides the non-visual description for screenreader users reading your post. The alt tag should be a simple description of what the plot is and possibly what it shows or means. Be a friend of the blind and visually impaired community and set <code>fig-alt</code> on all of your figures.</p>
-</section>
-<section id="version-control" class="level3">
-<h3 class="anchored" data-anchor-id="version-control">Version control</h3>
-<p>As you edit your new post, go ahead and commit your changes on your development branch. Once you’ve finished your new post, you can merge it into main like this.</p>
-<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb20-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> checkout main</span>
-<span id="cb20-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">git</span> merge new-post</span></code></pre></div>
-<p>Then you can push to GitHub by running <code>git push</code>. You should also be sure to run a final <code>quarto preview</code> to check that everything looks good before publishing to the web.</p>
-</section>
-</section>
-<section id="publishing-your-blog-to-the-web" class="level2">
-<h2 class="anchored" data-anchor-id="publishing-your-blog-to-the-web">Publishing your blog to the web</h2>
-<section id="hosting-with-github-pages" class="level3">
-<h3 class="anchored" data-anchor-id="hosting-with-github-pages">Hosting with GitHub Pages</h3>
-<p>It’s likely that the easiest (read best) option for you is to host your blog on <a href="https://pages.github.com/">GitHub Pages</a>. This is because GitHub pages is free, and since you already have your blog’s source code checked into a remote repository at GitHub, it’s very easy to set up. <a href="https://quarto.org/docs/publishing/github-pages.html">Quarto’s documentation on publishing to GitHub Pages</a> outlines three ways to publish your website, but I recommend their option 2, using the <code>quarto publish</code> command. Once you set up your <code>gh-pages</code> branch as described in the documentation, you simply run <code>quarto publish</code> at the command line and your updates are deployed to your website.</p>
-</section>
-<section id="setting-up-your-domain-name" class="level3">
-<h3 class="anchored" data-anchor-id="setting-up-your-domain-name">Setting up your domain name</h3>
-<p>By default, if you choose to host with GitHub Pages, your website will be published to a url in the form <code>https://username.github.io/reponame/</code>. You can certainly do this; for example Jake VanderPlas’s awesome blog Pythonic Perambulations lives at <a href="http://jakevdp.github.io">http://jakevdp.github.io</a>.</p>
-<p>But, like me, you might want to get your own custom domain by buying, or really renting, one from a registrar. I use <a href="https://www.namecheap.com">Namecheap</a>. If you decide to go for a custom domain, refer to <a href="https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages">GitHub’s documentation on custom domains</a>. You’ll also need to point your domain registrar to the IP address where GitHub Pages is hosting your website. For an example of how to do this at Namecheap, see <a href="https://www.namecheap.com">Namecheap’s documentation about GitHub Pages</a></p>
-<p>Whether you decide to use the standard <code>github.io</code> domain or your own custom domain, be sure to set the <code>site-url</code> key in your <code>_quarto.yml</code> file to ensure other quarto functionality works correctly. For example</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>_quarto.yml</strong></pre>
-</div>
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">website:</span></span>
-<span id="cb21-2">  <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">site-url:</span> https://example.com/</span></code></pre></div>
-</div>
-<p>Edit: I found that after upgrading to quarto 1.3, using <code>quarto publish</code> to publish from the <code>gh-pages</code> branch obliterates the <code>CNAME</code> file that is created when you set a custom domain in your repository settings &gt; Pages &gt; Custom Domain. That breaks the mapping from your custom domain to your published website. See this <a href="https://github.com/quarto-dev/quarto-cli/discussions/3249">disscussion thread</a> for details. The fix is to manually create a <code>CNAME</code> file in the root of your project, and include it in the rendered website using the <code>resources</code> option under the <code>project</code> key in <code>_quarto.yml</code>. The <code>CNAME</code> file should just contain your custom domain, excluding any <code>https://</code>.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>CNAME</strong></pre>
-</div>
-<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">example.com</span></span></code></pre></div>
-</div>
-<p>With the <code>CNAME</code> file in the root of your quarto project, you can then include it in the rendered output.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>_quarto.yml</strong></pre>
-</div>
-<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">project:</span></span>
-<span id="cb23-2">  <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">resources:</span></span>
-<span id="cb23-3">    <span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">-</span> CNAME</span></code></pre></div>
-</div>
-</section>
-</section>
-<section id="keep-in-touch-with-your-readers" class="level2">
-<h2 class="anchored" data-anchor-id="keep-in-touch-with-your-readers">Keep in touch with your readers</h2>
-<section id="rss-feed" class="level3">
-<h3 class="anchored" data-anchor-id="rss-feed">RSS Feed</h3>
-<p>The RSS feed is handy for syndicating your posts to feed readers, other websites, and to your email subscribers. As described in <a href="https://quarto.org/docs/websites/website-blog.html#rss-feed">quarto’s documentation on RSS feeds</a>, you can automatically generate an RSS feed for your blog by first setting the value of <code>site-url</code> under the <code>website</code> key in <code>_quarto.yml</code>, and then setting <code>feed: true</code> under the <code>listing</code> key in the frontmatter of <code>index.qmd</code>. This will generate an RSS feed in the root of your website called <code>index.xml</code>. Once you have an RSS feed, go ahead and submit it to <a href="https://python-bloggers.com">Python-Bloggers</a> to have your work syndicated to a wider audience and to strengthen our little community of independent data science blogs.</p>
-</section>
-<section id="email-subscriptions" class="level3">
-<h3 class="anchored" data-anchor-id="email-subscriptions">Email Subscriptions</h3>
-<p>The idea here is to have a form field on your website where readers can input their email address to be added to your mailing list. <a href="https://quarto.org/docs/websites/website-blog.html#subscriptions">Quarto’s documentation on subscriptions</a> describes how to set up a subscribe box on your blog using MailChimp, so we won’t repeat it here. Once you have some subscribers, you can send them updates whenever you write a new post. You could do this manually or, in my case, set up an <a href="https://mailchimp.com/help/share-your-blog-posts-with-mailchimp/">automation through MailChimp</a> which uses your RSS feed to send out email updates to the list about new posts.</p>
-</section>
-<section id="comments" class="level3">
-<h3 class="anchored" data-anchor-id="comments">Comments</h3>
-<p>Quarto has build-in support for three different comment systems: hypothesis, utterances, and giscus. The good news is that these are all free to use, easy to set up, and AFAIK do not engage in any sketchy tracking activities. The bad news is that none of them are ideal because they all require the user to create an account and login to leave a comment. We want to encourage readers to comment, so we don’t want them to have to create accounts or deal with passwords or pick all the squares with bicycles or any such nonsense, just to leave a little comment. To that end, I’ve actually been working on self-hosted login-free comments for this blog using <a href="https://isso-comments.de">isso</a>, but it’s a bit more involved than these built-in solutions, so we’ll have to discuss it at length in a future post.</p>
-<p>If you prefer an easy, out-of-the-box solution, I can recommend utterances, which uses GitHub issues to store comments for each post. I used utterances for comments on the first jekyll-based incarnation of this blog; you can still see the utterances comments on posts before this one. Go check out the <a href="https://quarto.org/docs/reference/projects/websites.html#comments">Quarto documentation on comments</a> to see how to set up utterances in your project.</p>
-</section>
-<section id="analytics" class="level3">
-<h3 class="anchored" data-anchor-id="analytics">Analytics</h3>
-<p>As a data enthusiast, you’ll likely enjoy collecting some data about page views and visitors to your site. You might be tempted to use Google Analytics to do this; indeed quarto makes it very easy to just add a line to your <code>_quarto.yml</code> file to set it up. Unfortunately, in this case, going with the easy and free solution means supporting <a href="https://en.wikipedia.org/wiki/Privacy_concerns_regarding_Google">Google’s dubious corporate surveillance activities</a>. Be a conscientious internet citizen and avoid using Google Analytics on your blog. Fortunately, there are numerous privacy-friendly alternatives to Google Analytics. For this blog I’m self-hosting <a href="https://umami.is">umami analytics</a>, which might warrant its own post in the future.</p>
-</section>
-</section>
-<section id="more-humbly-suggested-best-practices" class="level2">
-<h2 class="anchored" data-anchor-id="more-humbly-suggested-best-practices">More humbly suggested best practices</h2>
-<section id="using-conda-environments-for-reproducibility" class="level3">
-<h3 class="anchored" data-anchor-id="using-conda-environments-for-reproducibility">Using conda environments for reproducibility</h3>
-<p>As you know, it’s a good practice to use an environment manager to keep track of packages, their versions, and other dependencies for software in a data science project. The same applies to blog posts; especially if you’re using unusual or bleeding-edge packages in a post. This will help us out a lot when we have to go back and re-run a notebook a couple years later to regenerate the output. Here we’ll use <a href="https://docs.conda.io/projects/conda/en/latest/index.html">conda</a> as our environment manager.</p>
-<p>To be clear, I don’t bother doing this if I’m just using fairly stable functionality in standard packages like pandas, numpy, and matplotlib, but we’ll do it here for illustration. From a terminal sitting inside our post subdirectory at <code>posts/new-post</code>, create a new conda environment with the packages you’re using in the post.</p>
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb24-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">conda</span> create <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-p</span> ./venv jupyter numpy matplotlib</span></code></pre></div>
-<p>Note the <code>-p</code> flag which tells conda to save the environment to <code>./venv</code> in the current working directory. This will save all the installed packages here in the post directory instead of in your system-wide location for conda environments. Note also that you’ll want to avoid checking anything in the <code>venv</code> directory into source control, so add <code>venv</code> to the <code>.gitignore</code> file at the root of the quarto project to ignore all <code>venv</code> directories throughout your quarto project.</p>
-<p>Now whenever you work on this post, you’ll navigate to the post subdirectory with a terminal and activate the conda environment.</p>
-<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb25-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">conda</span> activate ./venv</span></code></pre></div>
-<p>Then you can fire up your jupyter notebook from the command line, and it will use the active conda environment.</p>
-<p>Since we don’t want to check the <code>venv</code> directory with all its installed libraries into source control, we need to create an <code>environment.yml</code> file from which the environment can later be reproduced. With the local conda environment active, run the following.</p>
-<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb26-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">conda</span> env export <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">--from-history</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&gt;</span> environment.yml</span></code></pre></div>
-<p>The <code>--from-history</code> flag tells conda to skip adding a bunch of system specific stuff that will gunk up your environment yaml file and make it harder to use for cross-platform reproducibility. This <code>environment.yml</code> file is the only environment management artifact that you need to check into git.</p>
-<p>Later if you need to recreate the environment from the <code>environment.yml</code> file, you can use the following command.</p>
-<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb27-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">conda</span> env create <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-f</span> environment.yml <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-p</span> ./venv<span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">`</span></span></code></pre></div>
-</section>
-<section id="image-file-best-practices" class="level3">
-<h3 class="anchored" data-anchor-id="image-file-best-practices">Image file best practices</h3>
-<p>Let’s talk about image file sizes. The key idea is that we want images to have just enough resolution to look good; any more than that and we’re just draging around larger-than-necessary files and wasting bandwidth and slowing down page load times.</p>
-<p>You can read all about <a href="https://www.foregroundweb.com/image-size/">choosing optimal image sizes</a>, but the TLDR is that images should be just large enough (in pixels) to fill the containers they occupy on the page. In our quarto blog, the two most common kinds of images are inline images we put in the body of posts and image thumbnails that show up as the associated image for a post, e.g.&nbsp;in the listing on our homepage. The inline image container seems to be about 800 pixels wide in my browser and the thumbnails are smaller, so adding some margin of error, I decided to go for 1000x750 for inline images and 500x375 for the thumbnails.</p>
-<p>I use a command line tool called <a href="https://imagemagick.org">Image Magick</a> to resize image files. Go ahead and <a href="https://formulae.brew.sh/formula/imagemagick">install image magick with homebrew</a>, and let’s add some images to our new post.</p>
-<p>For this example I’ll use a nice shot of the <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Why_London_Underground_is_nicknamed_The_Tube.jpg/1920px-Why_London_Underground_is_nicknamed_The_Tube.jpg">London Underground</a> from Wikipedia. Save your image as <code>image.jpg</code>. Then use image magick to create two new resized images for inline and thumbnail use.</p>
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb28-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">convert</span> image.jpg <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-resize</span> 1000x1000 main.jpg </span>
-<span id="cb28-2"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">convert</span> image.jpg <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-resize</span> 500x500 thumbnail.jpg </span></code></pre></div>
-<p>These commands do not change the aspect ratio of the image; they just reduce the size so that the image fits within the size specified.</p>
-<p>Now move both of your new images into the post subdirectory at <code>posts/new-post/</code>. To specify the thumbnail image, set the <code>image</code> key in the post’s front matter. Be sure to also add an alt tag description of the image using the <code>image-alt</code> key to keep it accessible for screen reader users. Our post’s frontmatter now looks like this.</p>
-<pre><code>---
-title: New Post
-date: 2023-07-12
-description: A nice new post
-categories: [nonsense, code]
-image: thumbnail.jpg
-image-alt: "A London Underground train emerging from a tunnel"
----</code></pre>
-<p>To include an image within the body of a post, use markdown in the post to include the image. I added a markdown cell just under the front matter containing the following.</p>
-<pre><code>![A London Underground train emerging from a tunnel](main.jpg "")</code></pre>
-<p>In your preview browser window, you can see we have the thumbnail for our new post on the homepage listing.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/homepage-with-new-post-thumbnail.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">A screenshot of the homepage showing the new post’s thumbnail image</figcaption>
-</figure>
-</div>
-<p>And we also have the inline image appearing in the body of the post.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/new-post-with-inline-image.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">A screenshot of the new post showing the image included in the body of the post</figcaption>
-</figure>
-</div>
-<p>You can take a look at <a href="https://github.com/mcb00/rr-blog">the source code for this blog</a> to see some examples of including images in posts.</p>
-</section>
-</section>
-<section id="seo" class="level2">
-<h2 class="anchored" data-anchor-id="seo">SEO</h2>
-<p>SEO is a huge topic, but here we’ll just focus on a few fundamental technical aspects that we want to be sure to get right. This boils down to registering with the top search engines by market share and ensuring that we’re providing them with the information they need to properly index our pages.</p>
-<p>I checked the <a href="https://www.statista.com/statistics/216573/worldwide-market-share-of-search-engines/#main-content">top search engines by global market share</a> and as of 2023 it looks like Google has about 85%, Bing has about 8%, and the others have 2% or less each. So let’s focus on setting our site up to work well with Google search and Bing to get over 90% coverage.</p>
-<section id="google-search-console-and-bing-webmaster-tools" class="level3">
-<h3 class="anchored" data-anchor-id="google-search-console-and-bing-webmaster-tools">Google Search Console and Bing Webmaster Tools</h3>
-<p><a href="https://search.google.com/search-console/about">Google Search Console</a> is a tool for web admins to help analyze search traffic and identify any technical issues that might prevent pages from appearing or ranking well in search. Go ahead and set up an account and register your blog in search console. You can refer to <a href="https://developers.google.com/search/docs/monitor-debug/search-console-start">Google’s documentation on search console</a> to guide you through setup and configuration.</p>
-<p>Once you get set up on GSC, you can also create an account for <a href="https://www.bing.com/webmasters/about">Bing Webmaster Tools</a>. Do this after setting up GSC because there is an option to import your information from your GSC account.</p>
-<p>Once you’re set up with GSC and BWT, you’ll get email alerts anytime they crawl your site and detect any indexing problems. When that happens, track down the issues and fix them so your pages can appear in organic searches.</p>
-</section>
-<section id="sitemap" class="level3">
-<h3 class="anchored" data-anchor-id="sitemap">Sitemap</h3>
-<p>A sitemap is an xml document that lists all the pages on your website. It’s a map for the search engine bots that crawl the web looking for new pages to index. Quarto will automatically generate a sitemap called <code>sitemap.xml</code> in the root of your website, as long as you’ve filled out the <code>site-url</code> key in <code>_quarto.yml</code>. You can submit your website for indexing by providing your sitemap in Google Search Console and Bing Webmaster Tools.</p>
-</section>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>Boy howdy, that was a lot, but at this point you should have a fully functioning blog, built with a minimalist, data-science-friendly tech stack consisting of quarto, jupyter, and GitHub. If you do create a blog using quarto, drop a link to it in the comments, and we can all check it out and celebrate your creation!</p>
-
-
-</section>
-
- ]]></description>
-  <category>python</category>
-  <category>tutorial</category>
-  <category>blogging</category>
-  <guid>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/index.html</guid>
-  <pubDate>Wed, 06 Sep 2023 07:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/thumbnail.png" medium="image" type="image/png" height="108" width="144"/>
 </item>
 </channel>
 </rss>
