@@ -17,7 +17,317 @@
 <width>144</width>
 </image>
 <generator>quarto-1.3.433</generator>
-<lastBuildDate>Sun, 04 Aug 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 14 Dec 2024 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Analyzing After Tax Retirement Income: Roth vs. Traditional 401(k)</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/traditional-vs-roth-401k/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>Today we’re taking a break from our typical hard hitting algorithm deep dives for a quick foray into the world of personal finance. We’ll take on a question I recently encountered while setting up my retirement account with my new employer—which is more efficient, the traditional 401(k) or the Roth 401(k)? US-based readers will recognize these as the two main types of employer-sponsored retirement accounts. When I searched for traditional vs Roth 401(k), the articles I found gave only very hand-wavy guidance on which is better in a given situation. So, today I’ll share my quantitative analysis of which account type provides superior performance for a given set of personal circumstances. We’ll implement the analysis in python, so you can run the numbers for your own situation and determine which employer-sponsored account type is better for you.</p>
+<section id="traditional-401k-vs-roth-401k" class="level2">
+<h2 class="anchored" data-anchor-id="traditional-401k-vs-roth-401k">Traditional 401(k) vs Roth 401(k)</h2>
+<p>I’ll let JLCollins explain the <a href="https://jlcollinsnh.com/2015/06/02/stocks-part-viii-the-401k-403b-tsp-ira-roth-buckets/">background on 401(k)s</a>; read that post first if you’re not already familiar with the concepts of taxable accounts, IRAs, 401(k)s, and the basic rules of Roth vs traditional. The key distinction is * In a traditional 401(k), money you contribute now is deducted from your taxable income, meaning you’ll pay less in income tax now. During retirement however, withdrawals from the account will count toward your taxable income, so you’ll pay tax then. * In a Roth 401(k), money you contribute now does count toward your taxable income, meaning you’ll pay income tax on any contributions now. During retirement however, withdrawals do not count toward your taxable income and are therefore tax free.</p>
+<p>Essentially you can either pay tax now (Roth) or pay tax later (traditional). The hand-wavy advice points out that which account is better for you depends on your income tax rate now versus your income tax rate during retirement. High tax rate now and low tax rate during retirement could favor traditional, while low tax rate now and high tax rate during retirement could favor Roth. Let’s put some numbers on this advice.</p>
+<p>I’ll assume that you’re following the <a href="https://www.mrmoneymustache.com/2011/04/10/post-4-what-am-i-supposed-to-do-with-all-this-money/">sage advice of Mr.&nbsp;Money Mustache</a> and (after paying off any high-interest debt) maxing out your 401(k) contribution for the year. In 2024, the IRS has set a maximum combined contribution of $23,000; i.e.&nbsp;the sum of your Roth and traditional contributions cannot exceed this limit. Also, once you contribute to these accounts, you may not begin withdrawals (without penalty) until the age of 59.5.</p>
+</section>
+<section id="analysis-formulation" class="level2">
+<h2 class="anchored" data-anchor-id="analysis-formulation">Analysis Formulation</h2>
+<p>Let’s state the question precisely—which account type will yield me the most money during retirement after withdrawal and after all taxes are paid? Let’s think through the Roth vs traditional scenarios, setting aside the same amount of money today and liquidating the entire account at retirement; we’ll compare how much money we have at retirement after liquidating and settling any tax obligations.</p>
+<p><strong>Roth</strong>: I contribute <code>contribution = 23_000</code> now, plus I pay income tax on this contribution in the amount of <code>current_income_tax_rate * contribution</code>. Over the years from now to retirement <code>retirement_age - current_age</code>, my contribution grows at some average long term yearly rate <code>investment_growth_rate</code>. At retirement, I liquidate the entire account, paying no income tax on the proceeds.</p>
+<p><strong>Traditional</strong>: I contribute <code>contribution = 23_000</code> now. For fair comparison with the Roth, I invest an additional amount <code>current_income_tax_rate * contribution</code> (the extra income tax I would have paid had I chosen the Roth) in a normal taxable investment account as well. Over the time from now to retirement, the 401(k) and the taxable account both grow at the average long term rate <code>investment_growth_rate</code>. However, in the taxable account, I’ll also need to pay income tax every year on any dividends that I earn; the S&amp;P500 has recently paid out 1.5-2% in dividends each year, let’s call it <code>dividend_rate</code>. At retirement, I liquidate both accounts, paying income tax on the proceeds from the 401(k) at the rate of <code>retirement_income_tax_rate</code> and paying capital gains tax on the proceeds from the taxable account at the rate of <code>retirement_capital_gains_tax_rate</code>.</p>
+<p>Let’s code up a function that takes in all our parameters and returns the total liquidation value after taxes of the Roth versus traditional 401(k)s as described above.</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np </span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd </span>
+<span id="cb1-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> plt </span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> get_401k_liquidation_value(</span>
+<span id="cb2-2">    current_age <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">37</span>,</span>
+<span id="cb2-3">    current_income_tax_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.35</span>,</span>
+<span id="cb2-4">    contribution <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">23_000</span>,</span>
+<span id="cb2-5">    retirement_age <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">59.5</span>,</span>
+<span id="cb2-6">     investment_growth_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.07</span>,</span>
+<span id="cb2-7">     dividend_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.02</span>,</span>
+<span id="cb2-8">    retirement_income_tax_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.24</span>,</span>
+<span id="cb2-9">    retirement_capital_gains_tax_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.15</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 0%, 15%, 20%</span></span>
+<span id="cb2-10">):</span>
+<span id="cb2-11"></span>
+<span id="cb2-12">    investment_growth_factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> investment_growth_rate) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span> (retirement_age <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> current_age)</span>
+<span id="cb2-13">    dividend_income_tax_drag_factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> dividend_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> current_income_tax_rate) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span> (retirement_age <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> current_age)</span>
+<span id="cb2-14"></span>
+<span id="cb2-15">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Roth 401k</span></span>
+<span id="cb2-16">    roth_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> contribution </span>
+<span id="cb2-17">    roth_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*=</span> investment_growth_factor</span>
+<span id="cb2-18">    total_roth_401k_liquidation_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> roth_401k_value</span>
+<span id="cb2-19">    </span>
+<span id="cb2-20">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># traditional  401k</span></span>
+<span id="cb2-21">    traditional_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> contribution </span>
+<span id="cb2-22">    taxable_account_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> current_income_tax_rate <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> contribution </span>
+<span id="cb2-23">    traditional_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*=</span> investment_growth_factor</span>
+<span id="cb2-24">    taxable_account_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*=</span> investment_growth_factor <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> dividend_income_tax_drag_factor</span>
+<span id="cb2-25">    traditional_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*=</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> retirement_income_tax_rate)</span>
+<span id="cb2-26">    taxable_account_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*=</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> retirement_capital_gains_tax_rate)</span>
+<span id="cb2-27">    total_traditional_401k_liquidation_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> traditional_401k_value <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> taxable_account_value</span>
+<span id="cb2-28"></span>
+<span id="cb2-29">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> {</span>
+<span id="cb2-30">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'traditional'</span>: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">round</span>(total_traditional_401k_liquidation_value), </span>
+<span id="cb2-31">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'roth'</span>: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">round</span>(total_roth_401k_liquidation_value)</span>
+<span id="cb2-32">    }</span></code></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">get_401k_liquidation_value()</span></code></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>{'traditional': 106882, 'roth': 105405}</code></pre>
+</div>
+</div>
+<p>Somehow it’s not surprising that these two options seem to yield very similar after-tax performance—no arbitrage right?</p>
+<p>Let’s write a function to perturb some of our parameter values to see under what conditions one option dominates the other.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">def</span> plot_liquidation_value_by_parameter_values(param, grid_values, func<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>get_401k_liquidation_value):</span>
+<span id="cb5-2">    y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [func(<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">**</span>{param: x}) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">for</span> x <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">in</span> grid_values]</span>
+<span id="cb5-3">    df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame(y, index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>pd.Series(grid_values, name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>param))</span>
+<span id="cb5-4">    fig, ax <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> plt.subplots()</span>
+<span id="cb5-5">    df.plot(ax<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>ax)</span>
+<span id="cb5-6">    plt.ylabel(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'liquidation value'</span>)</span>
+<span id="cb5-7">    plt.title(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f'Liquidation Value at Retirement by </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>param<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span>)</span>
+<span id="cb5-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">return</span> fig, ax</span></code></pre></div>
+</div>
+<section id="income-tax-rate-at-retirement" class="level3">
+<h3 class="anchored" data-anchor-id="income-tax-rate-at-retirement">Income Tax Rate at Retirement</h3>
+<p>It seems that income tax rate at retirement is by far the most important determining factor in whether traditional or Roth 401(k) is a better option.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'retirement_income_tax_rate'</span>, np.linspace(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.38</span>, num<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://randomrealizations.com/posts/traditional-vs-roth-401k/401k_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>So given the other parameters I’ve set, Roth outperforms traditional when our income tax rate in retirement exceeds about 25%. <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets">According to the IRS</a> in 2023, an individual tax payer is in the 24% bracket if their income is between about $95k and $180k. So, how much income do you expect to pull in retirement? If we’re really building FIRE wealth, the kind indicated by Mr.&nbsp;Money Mustache and JLCollins, our income in retirement could easily exceed $180k, which would push us into the 32% bracket where Roth is more efficient than traditional.</p>
+</section>
+<section id="capital-gains-tax-rate-at-retirement" class="level3">
+<h3 class="anchored" data-anchor-id="capital-gains-tax-rate-at-retirement">Capital Gains Tax Rate at Retirement</h3>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'retirement_capital_gains_tax_rate'</span>, np.linspace(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.20</span>, num<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://randomrealizations.com/posts/traditional-vs-roth-401k/401k_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>In 2023, <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets">according to the IRS</a> as a single tax payer, if your income is between $44k and $492k, you’ll pay 15% capital gains. Over $492k you’ll jump up to 20% where Roth dominates traditional.</p>
+</section>
+<section id="retirement-age" class="level3">
+<h3 class="anchored" data-anchor-id="retirement-age">Retirement Age</h3>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'retirement_age'</span>, np.linspace(<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">59.5</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">75</span>, num<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="https://randomrealizations.com/posts/traditional-vs-roth-401k/401k_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>For retirement ages beyond 59.5, traditional’s edge over Roth grows slightly.</p>
+</section>
+</section>
+<section id="bottom-line" class="level2">
+<h2 class="anchored" data-anchor-id="bottom-line">Bottom Line</h2>
+<p>When I plugged in my actual parameters, I found that because I was only employed for 6 months last year, my current income tax rate pushed me into the regime where Roth performs better than traditional. However for this next year, I expect to be in a higher income tax bracket where traditional will be a better deal than Roth.</p>
+<p>That said, the most important factor is your income tax rate at the time of withdrawal during retirement, which is based on your taxable income at that time. But how, I hear you asking, am I supposed to know what to plug in for my post-retirement income? That quantity is unknown. This illuminates the fundamental limitation of this kind of analysis—what to do about uncertain inputs to the calculation? That’s a question that we might take on in a future post, so stay tuned!</p>
+</section>
+
+ ]]></description>
+  <category>personal finance</category>
+  <guid>https://randomrealizations.com/posts/traditional-vs-roth-401k/index.html</guid>
+  <pubDate>Sat, 14 Dec 2024 08:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/enso-thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>SHAP from Scratch</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -4212,1080 +4522,6 @@ font-style: inherit;">6</span>)</span>
   <guid>https://randomrealizations.com/posts/gradient-boosting-multi-class-classification-from-scratch/index.html</guid>
   <pubDate>Sun, 15 Oct 2023 07:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/gradient-boosting-multi-class-classification-from-scratch/multi-class-classification-from-scratch.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>XGBoost for Regression in Python</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/xgboost-for-regression-in-python/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>In this post I’m going to show you my process for solving regression problems with XGBoost in python, using either the native <code>xgboost</code> API or the scikit-learn interface. This is a powerful methodology that can produce world class results in a short time with minimal thought or effort. While we’ll be working on an old Kagle competition for predicting the sale prices of bulldozers and other heavy machinery, you can use this flow to solve whatever tabular data regression problem you’re working on.</p>
-<p>This post serves as the explanation and documentation for the XGBoost regression jupyter notebook from my <a href="https://github.com/mcb00/ds-templates">ds-templates repo</a> on GitHub, so go ahead and download the notebook and follow along with your own data.</p>
-<p>If you’re not already comfortable with the ideas behind gradient boosting and XGBoost, you’ll find it helpful to read some of my previous posts to get up to speed. I’d start with this <a href="../../posts/gradient-boosting-machine-from-scratch/">introduction to gradient boosting</a>, and then read this <a href="../../posts/xgboost-explained/">explanation of how XGBoost works</a>.</p>
-<p>Let’s get into it! 🚀</p>
-<section id="install-and-import-the-xgboost-library" class="level2">
-<h2 class="anchored" data-anchor-id="install-and-import-the-xgboost-library">Install and import the <code>xgboost</code> library</h2>
-<p>If you don’t already have it, go ahead and <a href="https://anaconda.org/conda-forge/xgboost">use conda to install the xgboost library</a>, e.g.</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode .zsh code-with-copy"><code class="sourceCode zsh"><span id="cb1-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">$</span> conda install <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-c</span> conda-forge xgboost</span></code></pre></div>
-<p>Then import it along with the usual suspects.</p>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np</span>
-<span id="cb2-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> pd</span>
-<span id="cb2-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> plt</span>
-<span id="cb2-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> xgboost <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> xgb</span></code></pre></div>
-</div>
-</section>
-<section id="read-dataset-into-python" class="level2">
-<h2 class="anchored" data-anchor-id="read-dataset-into-python">Read dataset into python</h2>
-<p>In this example we’ll work on the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/overview">Kagle Bluebook for Bulldozers</a> competition, which asks us to build a regression model to predict the sale price of heavy equipment. Amazingly, you can solve your own regression problem by swapping this data out with your organization’s data before proceeding with the tutorial.</p>
-<p>Go ahead and download the <code>Train.zip</code> file from Kagle and extract it into <code>Train.csv</code>. Then read the data into a pandas dataframe.</p>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Train.csv'</span>, parse_dates<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>])<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-</div>
-<p>Notice I cheated a little bit, checking the columns ahead of time and telling pandas to treat the <code>saledate</code> column as a date. In general it will make life easier to read in any date-like columns as dates.</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">df.info()</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
-RangeIndex: 401125 entries, 0 to 401124
-Data columns (total 53 columns):
- #   Column                    Non-Null Count   Dtype         
----  ------                    --------------   -----         
- 0   SalesID                   401125 non-null  int64         
- 1   SalePrice                 401125 non-null  int64         
- 2   MachineID                 401125 non-null  int64         
- 3   ModelID                   401125 non-null  int64         
- 4   datasource                401125 non-null  int64         
- 5   auctioneerID              380989 non-null  float64       
- 6   YearMade                  401125 non-null  int64         
- 7   MachineHoursCurrentMeter  142765 non-null  float64       
- 8   UsageBand                 69639 non-null   object        
- 9   saledate                  401125 non-null  datetime64[ns]
- 10  fiModelDesc               401125 non-null  object        
- 11  fiBaseModel               401125 non-null  object        
- 12  fiSecondaryDesc           263934 non-null  object        
- 13  fiModelSeries             56908 non-null   object        
- 14  fiModelDescriptor         71919 non-null   object        
- 15  ProductSize               190350 non-null  object        
- 16  fiProductClassDesc        401125 non-null  object        
- 17  state                     401125 non-null  object        
- 18  ProductGroup              401125 non-null  object        
- 19  ProductGroupDesc          401125 non-null  object        
- 20  Drive_System              104361 non-null  object        
- 21  Enclosure                 400800 non-null  object        
- 22  Forks                     192077 non-null  object        
- 23  Pad_Type                  79134 non-null   object        
- 24  Ride_Control              148606 non-null  object        
- 25  Stick                     79134 non-null   object        
- 26  Transmission              183230 non-null  object        
- 27  Turbocharged              79134 non-null   object        
- 28  Blade_Extension           25219 non-null   object        
- 29  Blade_Width               25219 non-null   object        
- 30  Enclosure_Type            25219 non-null   object        
- 31  Engine_Horsepower         25219 non-null   object        
- 32  Hydraulics                320570 non-null  object        
- 33  Pushblock                 25219 non-null   object        
- 34  Ripper                    104137 non-null  object        
- 35  Scarifier                 25230 non-null   object        
- 36  Tip_Control               25219 non-null   object        
- 37  Tire_Size                 94718 non-null   object        
- 38  Coupler                   213952 non-null  object        
- 39  Coupler_System            43458 non-null   object        
- 40  Grouser_Tracks            43362 non-null   object        
- 41  Hydraulics_Flow           43362 non-null   object        
- 42  Track_Type                99153 non-null   object        
- 43  Undercarriage_Pad_Width   99872 non-null   object        
- 44  Stick_Length              99218 non-null   object        
- 45  Thumb                     99288 non-null   object        
- 46  Pattern_Changer           99218 non-null   object        
- 47  Grouser_Type              99153 non-null   object        
- 48  Backhoe_Mounting          78672 non-null   object        
- 49  Blade_Type                79833 non-null   object        
- 50  Travel_Controls           79834 non-null   object        
- 51  Differential_Type         69411 non-null   object        
- 52  Steering_Controls         69369 non-null   object        
-dtypes: datetime64[ns](1), float64(2), int64(6), object(44)
-memory usage: 162.2+ MB</code></pre>
-</div>
-</div>
-</section>
-<section id="prepare-raw-data-for-xgboost" class="level2">
-<h2 class="anchored" data-anchor-id="prepare-raw-data-for-xgboost">Prepare raw data for XGBoost</h2>
-<p>When faced with a new tabular dataset for modeling, we have two format considerations: data types and missingness. From the call to <code>df.info()</code> above, we can see we have both mixed types and missing values.</p>
-<p>When it comes to missing values, some models like the gradient booster or random forest in scikit-learn require purely non-missing inputs. One of the great strengths of XGBoost is that it relaxes this requirement, allowing us to pass in missing feature values, so we don’t have to worry about them.</p>
-<p>Regarding data types, all ML models for tabular data require inputs to be numeric, either integers or floats, so we’re going to have to deal with those <code>object</code> columns.</p>
-<section id="encode-string-features" class="level3">
-<h3 class="anchored" data-anchor-id="encode-string-features">Encode string features</h3>
-<p>The simplest way to encode string variables is to map each unique string value to an integer; this is called <em>integer encoding</em>.</p>
-<p>We can easily accomplish this by using the <a href="https://pandas.pydata.org/docs/user_guide/categorical.html">categorical data type in pandas</a>. The category type is a bit like the factor type in R; pandas stores the underlying data as integers, and it keeps a mapping from the integers back to the original string values. XGBoost is able to access the numeric data underlying the categorical features for model training and prediction. This is a nice way to encode string features because it’s easy to implement and it preserves the original category levels in the data frame. If you prefer to generate your own integer mappings, you can also do it with the scikit-learn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OrdinalEncoder.html">OrdinalEncoder</a>.</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> encode_string_features(df):</span>
-<span id="cb6-2">    out_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df.copy()</span>
-<span id="cb6-3">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">for</span> feature, feature_type <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> df.dtypes.items():</span>
-<span id="cb6-4">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> feature_type <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'object'</span>:</span>
-<span id="cb6-5">            out_df[feature] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> out_df[feature].astype(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'category'</span>)</span>
-<span id="cb6-6">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> out_df</span>
-<span id="cb6-7"></span>
-<span id="cb6-8">df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> encode_string_features(df)</span></code></pre></div>
-</div>
-</section>
-<section id="encode-date-and-timestamp-features" class="level3">
-<h3 class="anchored" data-anchor-id="encode-date-and-timestamp-features">Encode date and timestamp features</h3>
-<p>While dates feel sort of numeric, they are not quite numbers, so we need to transform them into numeric columns that XGBoost can understand. Unfortunately, encoding timestamps isn’t as straightforward as encoding strings, so we actually might need to engage in a little bit of feature engineering. A single date has many different attributes, e.g.&nbsp;days since epoch, year, quarter, month, day, day of year, day of week, is holiday, etc. Often a simple time index is the most useful information in a date column, so here we’ll just start by adding a feature that gives the number of days since some epoch date.</p>
-<div class="cell" data-execution_count="77">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate_days_since_epoch'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> (</span>
-<span id="cb7-2">    df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> pd.Timestamp(year<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1970</span>, month<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, day<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span>
-<span id="cb7-3">    ).dt.days</span></code></pre></div>
-</div>
-</section>
-<section id="transform-the-target-if-necessary" class="level3">
-<h3 class="anchored" data-anchor-id="transform-the-target-if-necessary">Transform the target if necessary</h3>
-<p>In the interest of speed and efficiency, we didn’t bother doing any EDA with the feature data. Part of my justification for this is that trees are incredibly robust to outliers, colinearity, missingness, and other assorted nonsense in the feature data. However, they are not necessarily robust to nonsense in the target variable, so it’s worth having a look at it before proceeding any further.</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">df.SalePrice.hist()<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> plt.xlabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'SalePrice'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="histogram of sale price showing right-skewed data"></p>
-</div>
-</div>
-<p>Often when predicting prices it makes sense to use log price, especially when they span multiple orders of magnitude or have a strong right skew. These data look pretty friendly, lacking outliers and exhibiting only a mild positive skew; we could probably get away without doing any transformation. But checking the evaluation metric used to score the Kagle competition, we see they’re using root mean squared log error. That’s equivalent to using RMSE on log-transformed target data, so let’s go ahead and work with log prices.</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1">df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'logSalePrice'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.log1p(df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'SalePrice'</span>])</span>
-<span id="cb9-2">df.logSalePrice.hist()<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> plt.xlabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'logSalePrice'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-display">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="histogram of log sale price showing a more symetric distribution"></p>
-</div>
-</div>
-</section>
-</section>
-<section id="train-and-evaluate-the-xgboost-regression-model" class="level2">
-<h2 class="anchored" data-anchor-id="train-and-evaluate-the-xgboost-regression-model">Train and Evaluate the XGBoost regression model</h2>
-<p>Having prepared our dataset, we are now ready to train an XGBoost model. Let’s walk through the flow step-by-step.</p>
-<section id="split-the-data-into-training-and-validation-sets" class="level3">
-<h3 class="anchored" data-anchor-id="split-the-data-into-training-and-validation-sets">Split the data into training and validation sets</h3>
-<p>First we split the dataset into a training set and a validation set. Of course since we’re going to evaluate against the validation set a number of times as we iterate, it’s best practice to keep a separate test set reserved to check our final model to ensure it generalizes well. Assuming that final test set is hidden away, we can use the rest of the data for training and validation.</p>
-<p>There are two main ways we might want to select the validation set. If there isn’t a temporal ordering of the observations, we might be able to randomly sample. In practice, it’s common that observations have a temporal ordering, and that models are trained on observations up to a certain time and used to predict on observations occuring after that time. Since this data is temporal, we don’t want to split randomly; instead we’ll split on observation date, reserving the latest observations for the validation set.</p>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># Temporal Validation Set</span></span>
-<span id="cb10-2"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> train_test_split_temporal(df, datetime_column, n_test):</span>
-<span id="cb10-3">    idx_sort <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.argsort(df[datetime_column])</span>
-<span id="cb10-4">    idx_train, idx_test <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> idx_sort[:<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>n_valid], idx_sort[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>n_valid:]</span>
-<span id="cb10-5">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">return</span> df.iloc[idx_train, :], df.iloc[idx_test, :]</span></code></pre></div>
-</div>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">n_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12000</span></span>
-<span id="cb11-2"></span>
-<span id="cb11-3">train_df, valid_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> train_test_split_temporal(df, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>, n_valid)</span>
-<span id="cb11-4">train_df.shape, valid_df.shape</span></code></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="9">
-<pre><code>((389125, 55), (12000, 55))</code></pre>
-</div>
-</div>
-</section>
-<section id="specify-target-and-feature-columns" class="level3">
-<h3 class="anchored" data-anchor-id="specify-target-and-feature-columns">Specify target and feature columns</h3>
-<p>Next we’ll put together a list of our features and define the target column. I like to have an actual list defined in the code so it’s easy to explicitly see everything we’re puting into the model and easier to add or remove features as we iterate. Just run something like <code>list(df.columns)</code> in a cel to get a copy-pasteable list of columns, then edit it down to the full list of features, i.e.&nbsp;remove the target, date columns, and other non-feature columns..</p>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#  list(df.columns)</span></span></code></pre></div>
-</div>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [</span>
-<span id="cb14-2">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'SalesID'</span>,</span>
-<span id="cb14-3">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'MachineID'</span>,</span>
-<span id="cb14-4">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ModelID'</span>,</span>
-<span id="cb14-5">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'datasource'</span>,</span>
-<span id="cb14-6">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'auctioneerID'</span>,</span>
-<span id="cb14-7">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'YearMade'</span>,</span>
-<span id="cb14-8">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'MachineHoursCurrentMeter'</span>,</span>
-<span id="cb14-9">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'UsageBand'</span>,</span>
-<span id="cb14-10">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelDesc'</span>,</span>
-<span id="cb14-11">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiBaseModel'</span>,</span>
-<span id="cb14-12">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiSecondaryDesc'</span>,</span>
-<span id="cb14-13">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelSeries'</span>,</span>
-<span id="cb14-14">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelDescriptor'</span>,</span>
-<span id="cb14-15">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductSize'</span>,</span>
-<span id="cb14-16">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiProductClassDesc'</span>,</span>
-<span id="cb14-17">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'state'</span>,</span>
-<span id="cb14-18">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductGroup'</span>,</span>
-<span id="cb14-19">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductGroupDesc'</span>,</span>
-<span id="cb14-20">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Drive_System'</span>,</span>
-<span id="cb14-21">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Enclosure'</span>,</span>
-<span id="cb14-22">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Forks'</span>,</span>
-<span id="cb14-23">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pad_Type'</span>,</span>
-<span id="cb14-24">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Ride_Control'</span>,</span>
-<span id="cb14-25">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stick'</span>,</span>
-<span id="cb14-26">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Transmission'</span>,</span>
-<span id="cb14-27">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Turbocharged'</span>,</span>
-<span id="cb14-28">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Extension'</span>,</span>
-<span id="cb14-29">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Width'</span>,</span>
-<span id="cb14-30">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Enclosure_Type'</span>,</span>
-<span id="cb14-31">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Engine_Horsepower'</span>,</span>
-<span id="cb14-32">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Hydraulics'</span>,</span>
-<span id="cb14-33">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pushblock'</span>,</span>
-<span id="cb14-34">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Ripper'</span>,</span>
-<span id="cb14-35">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Scarifier'</span>,</span>
-<span id="cb14-36">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Tip_Control'</span>,</span>
-<span id="cb14-37">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Tire_Size'</span>,</span>
-<span id="cb14-38">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Coupler'</span>,</span>
-<span id="cb14-39">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Coupler_System'</span>,</span>
-<span id="cb14-40">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Grouser_Tracks'</span>,</span>
-<span id="cb14-41">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Hydraulics_Flow'</span>,</span>
-<span id="cb14-42">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Track_Type'</span>,</span>
-<span id="cb14-43">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Undercarriage_Pad_Width'</span>,</span>
-<span id="cb14-44">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stick_Length'</span>,</span>
-<span id="cb14-45">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Thumb'</span>,</span>
-<span id="cb14-46">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pattern_Changer'</span>,</span>
-<span id="cb14-47">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Grouser_Type'</span>,</span>
-<span id="cb14-48">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Backhoe_Mounting'</span>,</span>
-<span id="cb14-49">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Type'</span>,</span>
-<span id="cb14-50">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Travel_Controls'</span>,</span>
-<span id="cb14-51">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Differential_Type'</span>,</span>
-<span id="cb14-52">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Steering_Controls'</span>,</span>
-<span id="cb14-53">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate_days_since_epoch'</span></span>
-<span id="cb14-54"> ]</span>
-<span id="cb14-55"></span>
-<span id="cb14-56">target <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'logSalePrice'</span></span></code></pre></div>
-</div>
-</section>
-<section id="create-dmatrix-data-objects" class="level3">
-<h3 class="anchored" data-anchor-id="create-dmatrix-data-objects">Create <code>DMatrix</code> data objects</h3>
-<p>XGBoost uses a data type called dense matrix for efficient training and prediction, so next we need to create <code>DMatrix</code> objects for our training and validation datasets. Remember how we decided to encode our string columns by casting them as pandas categorical types? For this to work, we need to set the <code>enable_categoricals</code> argument to <code>True</code>.</p>
-<div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1">dtrain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>train_df[features], label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>train_df[target], </span>
-<span id="cb15-2">                     enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb15-3">dvalid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>valid_df[features], label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>valid_df[target], </span>
-<span id="cb15-4">                     enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span></code></pre></div>
-</div>
-</section>
-<section id="set-the-xgboost-parameters" class="level3">
-<h3 class="anchored" data-anchor-id="set-the-xgboost-parameters">Set the XGBoost parameters</h3>
-<p>XGBoost has <a href="https://xgboost.readthedocs.io/en/latest/parameter.html">numerous hyperparameters</a>. Fortunately, just a handful of them tend to be the most influential; furthermore, the default values are not bad in most situations. I like to start out with a dictionary containing the default values for the parameters I’m most likely to adjust later, with one exception. I dislike the default value of <code>auto</code> for the <code>tree_method</code> parameter, which tells XGBoost to choose a tree method on it’s own. I’ve been burned by this ambiguity in the past, so now I prefer to set it to <code>approx</code>. For training there is one required boosting parameter called <code>num_boost_round</code> which I set to 50 as a starting point.</p>
-<div class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># default values for important parameters</span></span>
-<span id="cb16-2">params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {</span>
-<span id="cb16-3">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'approx'</span>,</span>
-<span id="cb16-4">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>: <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span>,</span>
-<span id="cb16-5">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">6</span>,</span>
-<span id="cb16-6">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>,</span>
-<span id="cb16-7">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>,</span>
-<span id="cb16-8">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>: <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>,</span>
-<span id="cb16-9">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg:squarederror'</span>,</span>
-<span id="cb16-10">}</span>
-<span id="cb16-11">num_boost_round <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span></span></code></pre></div>
-</div>
-</section>
-<section id="train-the-xgboost-model" class="level3">
-<h3 class="anchored" data-anchor-id="train-the-xgboost-model">Train the XGBoost model</h3>
-<p>The <code>xgb.train()</code> function takes our training dataset and parameters, and it returns a trained XGBoost model, which is an object of class <code>xgb.core.Booster</code>. Check out the <a href="https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.training">documentation on the learning API</a> to see all the training options. During training, I like to have XGBoost print out the evaluation metric on the train and validation set after every few boosting rounds and again at the end of training; that can be done by setting <code>evals</code> and <code>verbose_eval</code>.</p>
-<div class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrain, num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>num_boost_round,</span>
-<span id="cb17-2">                  evals<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>)],</span>
-<span id="cb17-3">                  verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[0] train-rmse:6.74240  valid-rmse:6.80825
-[10]    train-rmse:0.31071  valid-rmse:0.34532
-[20]    train-rmse:0.21950  valid-rmse:0.24364
-[30]    train-rmse:0.20878  valid-rmse:0.23669
-[40]    train-rmse:0.20164  valid-rmse:0.23254
-[49]    train-rmse:0.19705  valid-rmse:0.23125</code></pre>
-</div>
-</div>
-</section>
-<section id="train-the-xgboost-model-using-the-sklearn-interface" class="level3">
-<h3 class="anchored" data-anchor-id="train-the-xgboost-model-using-the-sklearn-interface">Train the XGBoost model using the sklearn interface</h3>
-<p>If you prefer scikit-learn-like syntax, you can use the <a href="https://xgboost.readthedocs.io/en/latest/python/sklearn_estimator.html">sklearn estimator interface</a> to create and train XGBoost models. The <code>XGBRegressor</code> class, which is available in the <code>xgboost</code> library that we already imported, constructs an <code>XGBRegressor</code> object with <code>fit</code> and <code>predict</code> methods like you’re used to using in scikit-learn. The <code>fit</code> and <code>predict</code> methods take pandas dataframes, so you don’t need to create <code>DMatrix</code> data objects yourself; however, since these methods still have to transform input data into <code>DMatrix</code> objects internally, training and prediction seem to be slower via the sklearn interface.</p>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># scikit-learn interface</span></span>
-<span id="cb19-2">reg <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.XGBRegressor(n_estimators<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>num_boost_round, enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span>params)</span>
-<span id="cb19-3">reg.fit(train_df[features], train_df[target], </span>
-<span id="cb19-4">        eval_set<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(train_df[features], train_df[target]), (valid_df[features], valid_df[target])], </span>
-<span id="cb19-5">        verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[0] validation_0-rmse:6.74240   validation_1-rmse:6.80825
-[10]    validation_0-rmse:0.31071   validation_1-rmse:0.34532
-[20]    validation_0-rmse:0.21950   validation_1-rmse:0.24364
-[30]    validation_0-rmse:0.20878   validation_1-rmse:0.23669
-[40]    validation_0-rmse:0.20164   validation_1-rmse:0.23254
-[49]    validation_0-rmse:0.19705   validation_1-rmse:0.23125</code></pre>
-</div>
-</div>
-<p>Since not all features of XGBoost are available through the scikit-learn estimator interface, you might want to get the native <code>xgb.core.Booster</code> object back out of the sklearn wrapper.</p>
-<div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1">booster <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> reg.get_booster()</span></code></pre></div>
-</div>
-</section>
-<section id="evaluate-the-xgboost-model-and-check-for-overfitting" class="level3">
-<h3 class="anchored" data-anchor-id="evaluate-the-xgboost-model-and-check-for-overfitting">Evaluate the XGBoost model and check for overfitting</h3>
-<p>We get the model evaluation metrics on the training and validation sets printed to stdout when we use the <code>evals</code> argument to the training API. Typically I just look at those printed metrics, but sometimes it’s helpful to retain them in a variable for further inspection via, e.g.&nbsp;plotting. To do that we need to train again, passing an empty dictionary to the <code>evals_result</code> argument. In the objective curves, I’m looking for signs of overfitting, which could include validation scores staying the same or getting worse over later iterations or huge gaps between training and validation scores.</p>
-<div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">evals_result <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {}</span>
-<span id="cb22-2">model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrain, num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>num_boost_round,</span>
-<span id="cb22-3">                  evals<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>)],</span>
-<span id="cb22-4">                  verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>,</span>
-<span id="cb22-5">                  evals_result<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>evals_result)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[0] train-rmse:6.74240  valid-rmse:6.80825
-[10]    train-rmse:0.31071  valid-rmse:0.34532
-[20]    train-rmse:0.21950  valid-rmse:0.24364
-[30]    train-rmse:0.20878  valid-rmse:0.23669
-[40]    train-rmse:0.20164  valid-rmse:0.23254
-[49]    train-rmse:0.19705  valid-rmse:0.23125</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1">pd.DataFrame({</span>
-<span id="cb24-2">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>: evals_result[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>],</span>
-<span id="cb24-3">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>: evals_result[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>]</span>
-<span id="cb24-4">}).plot()<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> plt.xlabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'boosting round'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> plt.ylabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'objective'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img" alt="line plot showing objective function versus training iteration for training and validation sets"></p>
-<figcaption class="figure-caption">These objective curves look pretty good–no obvious signs of trouble.</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>While we could just look at the validation RMSE in the printed output from model training, let’s go ahead and compute it by hand, just to be sure.</p>
-<div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.metrics <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> mean_squared_error</span>
-<span id="cb25-2"></span>
-<span id="cb25-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># squared=False returns RMSE</span></span>
-<span id="cb25-4">mean_squared_error(y_true<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dvalid.get_label(), </span>
-<span id="cb25-5">                   y_pred<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>model.predict(dvalid), </span>
-<span id="cb25-6">                   squared<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="19">
-<pre><code>0.23124987</code></pre>
-</div>
-</div>
-<p>So, how good is that RMSLE of 0.231? Well, checking the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/leaderboard">Kagle leaderboard</a> for this competition, we would have come in around 5th out of 474. That’s not bad for 10 minutes of work doing the bare minimum necessary to transform the raw data into a format consumable by XGBoost and then training a model using default hyperparameter values. To improve our model from here we would want to explore some feature engineering and some hyperparameter tuning, which we’ll save for another post.</p>
-<blockquote class="blockquote">
-<p>Wait, why was that so easy? Since XGBoost made it’s big Kagle debut in the <a href="https://www.kaggle.com/c/higgs-boson">2014 Higgs Boson competition</a>, presumably no one in this 2013 competition was using it yet. A second potential reason is that we’re using a different validation set from that used for the final leaderboard (which is long closed), but our score is likely still a decent approximation for how we would have done in the competition.</p>
-</blockquote>
-</section>
-</section>
-<section id="xgboost-model-interpretation" class="level2">
-<h2 class="anchored" data-anchor-id="xgboost-model-interpretation">XGBoost Model Interpretation</h2>
-<p>Next let’s have a look at how to apply a couple of the most common model interpretation techniques, feature importance and partial dependence, to XGBoost.</p>
-<blockquote class="blockquote">
-<p>Remember we have two trained models floating around: one called <code>model</code> of class <code>xgb.core.Booster</code> which is compatible with xgboost library utilities and another called <code>reg</code> of class <code>XGBRegressor</code> which is compatible with scikit-learn utilities. We need to be sure to use the model that’s compatible with whatever utility we’re using.</p>
-</blockquote>
-<blockquote class="blockquote">
-<p>While these interpretation tools are still very common, there’s a newer, more comprehensive, and self-consistent model interpretation framework called <a href="https://shap.readthedocs.io/en/latest/">SHAP</a> that’s worth checking out.</p>
-</blockquote>
-<section id="feature-importance-for-xgboost" class="level3">
-<h3 class="anchored" data-anchor-id="feature-importance-for-xgboost">Feature Importance for XGBoost</h3>
-<p>While XGBoost automatically computes feature importance by three different metrics during training, you should only use them with great care and skepticism. The three metrics are</p>
-<ul>
-<li><strong>weight</strong>: the number of splits that use the feature</li>
-<li><strong>gain</strong>: the average gain in the objective function from splits which use the feature</li>
-<li><strong>cover</strong>: the average number of training samples affected by splits that use the feature</li>
-</ul>
-<p>The first problem with these metrics is that they are computed using only the training dataset, which means they don’t reflect how useful a feature is when predicting on out-of-sample data. If your model is overfit on some nonsense feature, it will still have a high importance. Secondly, I think they are difficult to interpret; all three are specific to decision trees and reflect domain-irrelevant idiosyncrasies like whether a feature is used nearer the root or the leaves of a tree. Anyway let’s see what these metrics have to say about our features.</p>
-<div class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1">fig, (ax1, ax2, ax3) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> plt.subplots(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, figsize<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">8</span>))</span>
-<span id="cb27-2">xgb.plot_importance(model, importance_type<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'weight'</span>, title<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'importance_type=weight'</span>, </span>
-<span id="cb27-3">                    max_num_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>, show_values<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>, ax<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>ax1, )</span>
-<span id="cb27-4">xgb.plot_importance(model, importance_type<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'cover'</span>, title<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'importance_type=cover'</span>, </span>
-<span id="cb27-5">                    max_num_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>, show_values<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>, ax<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>ax2)</span>
-<span id="cb27-6">xgb.plot_importance(model, importance_type<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'gain'</span>, title<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'importance_type=gain'</span>, </span>
-<span id="cb27-7">                    max_num_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>, show_values<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>, ax<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>ax3)</span>
-<span id="cb27-8">plt.tight_layout()</span></code></pre></div>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-21-output-1.png" class="img-fluid figure-img" alt="three horizontal bar plots showing feature importance for weight, cover, and gain metrics"></p>
-<figcaption class="figure-caption">top 10 features according to each built-in XGBoost feature importance metric</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>Wow, notice that the top 10 features by weight and by cover are completely different. This should forever cause you to feel skeptical whenever you see a feature importance plot.</p>
-<p>Luckily, there is a better way. IMHO, <a href="https://scikit-learn.org/stable/modules/permutation_importance.html">permutation feature importance</a> is better aligned with our intuition about what feature importance should mean. It tells us by how much the model performance decreases when the values of a particular feature are randomly shuffled during prediction. This effectively breaks the relationship between the feature and the target, thus revealing how much the model relies on that feature for prediction. It also has the benefit that it can be computed using either training data or out-of-sample data.</p>
-<div class="cell" data-execution_count="75">
-<div class="sourceCode cell-code" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.inspection <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> permutation_importance</span>
-<span id="cb28-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.metrics <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> make_scorer</span>
-<span id="cb28-3"></span>
-<span id="cb28-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># make a scorer for RMSE</span></span>
-<span id="cb28-5">scorer <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> make_scorer(mean_squared_error, squared<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>)</span>
-<span id="cb28-6">permu_imp <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> permutation_importance(reg, valid_df[features], valid_df[target], </span>
-<span id="cb28-7">                                   n_repeats<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">30</span>, random_state<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, scoring<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>scorer)</span></code></pre></div>
-</div>
-<div class="cell" data-execution_count="76">
-<div class="sourceCode cell-code" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1">importances_permutation <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pd.Series(<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> permu_imp[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'importances_mean'</span>], index<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>features)</span>
-<span id="cb29-2">importances_permutation.sort_values(ascending<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10</span>:].plot.barh()</span>
-<span id="cb29-3">plt.title(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Permutation Importance on Out-of-Sample Set'</span>)</span>
-<span id="cb29-4">plt.xlabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'drop in RMSE'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-24-output-1.png" class="img-fluid figure-img" alt="horizontal bar plot showing permutation feature importance"></p>
-<figcaption class="figure-caption">top 10 features by permutation importance on validation set</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>Now we can see which features the model relies on most for out-of-sample predictions. These are good candidate features to dig into with some EDA and conversations with any domain expert collaborators.</p>
-</section>
-</section>
-<section id="partial-dependence-plots-for-xgboost" class="level2">
-<h2 class="anchored" data-anchor-id="partial-dependence-plots-for-xgboost">Partial Dependence Plots for XGBoost</h2>
-<p>A <a href="https://scikit-learn.org/stable/modules/partial_dependence.html">partial dependence plot (PDP)</a> is a representation of the dependence between the target variable and one or more feature variables. We can loosely interpret it as showing how the expected value of the target changes across values of a particular feature, marginalizing over other features. I say “loosely” because it comes with caveats, a particularly serious one being that correlation among features tends to invalidate the above interpretation. Anyway, we can treat PDPs as useful heuristics for getting a sense of how a model thinks the target changes with feature values.</p>
-<div class="cell" data-execution_count="73">
-<div class="sourceCode cell-code" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.inspection <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> PartialDependenceDisplay</span>
-<span id="cb30-2"></span>
-<span id="cb30-3">PartialDependenceDisplay.from_estimator(reg, </span>
-<span id="cb30-4">                                        valid_df[features].query(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'YearMade &gt;= 1960'</span>), </span>
-<span id="cb30-5">                                        [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'YearMade'</span>])<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-25-output-1.png" class="img-fluid figure-img" alt="line plot showing partial dependence of logSalePrice on YearMade"></p>
-<figcaption class="figure-caption">PDP of target logSalePrice on feature YearMade</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>It looks like the log sale price tends to increase in a non-linear way with year made.</p>
-<div class="cell" data-execution_count="71">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># The PDPs for categorical features expect numeric data, not pandas categorical types,</span></span>
-<span id="cb31-2"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># so the sklearn API for partial dependence won't work directly with the dataframe we've been using.</span></span>
-<span id="cb31-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># The workaround is to create a new dataframe where categorical columns are encoded numerically,</span></span>
-<span id="cb31-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># retrain the XGBoost model using the sklearn interface, create the PDPs,</span></span>
-<span id="cb31-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># then add the category levels as the tick labels for the PDP.</span></span>
-<span id="cb31-6"></span>
-<span id="cb31-7"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">def</span> cat_pdp():</span>
-<span id="cb31-8">    cat_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Enclosure'</span></span>
-<span id="cb31-9">    modified_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df.copy()</span>
-<span id="cb31-10">    cat_codes <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> modified_df[cat_feature].cat.codes</span>
-<span id="cb31-11">    cat_labels <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">list</span>(modified_df[cat_feature].cat.categories)</span>
-<span id="cb31-12">    cat_labels <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'NaN'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> cat_labels <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">if</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">in</span> cat_codes.unique() <span class="cf" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">else</span> cat_labels</span>
-<span id="cb31-13">    modified_df[cat_feature] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> cat_codes</span>
-<span id="cb31-14"></span>
-<span id="cb31-15">    n_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12000</span></span>
-<span id="cb31-16">    train_df, valid_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> train_test_split_temporal(modified_df, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>, n_valid)</span>
-<span id="cb31-17">    train_df.shape, valid_df.shape</span>
-<span id="cb31-18"></span>
-<span id="cb31-19">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># scikit-learn interface</span></span>
-<span id="cb31-20">    reg <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.XGBRegressor(n_estimators<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>num_boost_round, enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">**</span>params)</span>
-<span id="cb31-21">    reg.fit(train_df[features], train_df[target], </span>
-<span id="cb31-22">            eval_set<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(train_df[features], train_df[target]), (valid_df[features], valid_df[target])], </span>
-<span id="cb31-23">            verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb31-24">    PartialDependenceDisplay.from_estimator(reg, valid_df[features], [cat_feature], categorical_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[cat_feature])</span>
-<span id="cb31-25">    plt.xticks(ticks<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>cat_codes.unique(), labels<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>cat_labels)</span>
-<span id="cb31-26">cat_pdp()</span></code></pre></div>
-</details>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-for-regression-in-python/index_files/figure-html/cell-26-output-1.png" class="img-fluid figure-img" alt="bar plot showing partial dependence of logSalePrice on Enclosure"></p>
-<figcaption class="figure-caption">PDP of target logSalePrice on categorical feature Enclosure</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>You can imagine how useful these model interpretation tools can be, both for understanding data and for improving your models.</p>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>There you have it, a simple flow for solving regression problems with XGBoost in python. Remember you can use the XGBoost regression notebook from my <a href="https://github.com/mcb00/ds-templates">ds-templates repo</a> to make it easy to follow this flow on your own problems. If you found this helpful, or if you have additional ideas about solving regression problems with XGBoost, let me know down in the comments.</p>
-</section>
-
- ]]></description>
-  <category>python</category>
-  <category>tutorial</category>
-  <category>gradient boosting</category>
-  <category>xgboost</category>
-  <guid>https://randomrealizations.com/posts/xgboost-for-regression-in-python/index.html</guid>
-  <pubDate>Mon, 18 Sep 2023 07:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/xgboost-for-regression-in-python/kigali-branches.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>
