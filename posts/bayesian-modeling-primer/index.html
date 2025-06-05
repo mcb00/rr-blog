@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.40">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matt Bowers">
+<meta name="dcterms.date" content="2025-06-04">
+<meta name="description" content="An intuitive introduction to the Bayesian statistical workflow including modeling, inference, and interpretation of results.">
+
+<title>Bayesian Modeling Primer – Random Realizations</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon-wbg.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-7bfda625c7ff35f40b8288d308b7c4dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" defer="" src="https://umami.randomrealizations.com/script.js" data-domains="randomrealizations.com" data-website-id="17844d61-f224-45c0-aa5f-2935c14dd5ac"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="Random Realizations">
+<meta property="og:description" content="A blog about data science, statistics, machine learning, and the scientific method">
+<meta property="og:image" content="https://randomrealizations.com/posts/bayesian-modeling-primer/hist.png">
+<meta property="og:site_name" content="Random Realizations">
+<meta property="og:image:alt" content="circle painted by hand in a single brush stroke">
+<meta property="og:image:height" content="446">
+<meta property="og:image:width" content="600">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Random Realizations</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../archive.html"> 
+<span class="menu-text">Archive</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Series</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-series">    
+        <li>
+    <a class="dropdown-item" href="../../gradient-boosting-series.html">
+ <span class="dropdown-text">Gradient Boosting Series</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Resources</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
+        <li>
+    <a class="dropdown-item" href="https://python-bloggers.com/">
+ <span class="dropdown-text">Python-Bloggers</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools tools-wide">
+    <a href="https://github.com/mcb00" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/mcbwrs" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<h5 style="font-weight:600; font-size:1rem">Subscribe</h5>
+
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_self">
+
+    <div class="form-group">
+      <!-- <label for="mce-EMAIL" class="form-label mt-4">Subscribe via email</label> -->
+      <input type="email" value="" name="EMAIL" class="form-control" id="mce-EMAIL" placeholder="enter your email" required="">
+    </div>
+    
+    <div style="margin-top: 10px;">
+    <button type="submit" class="btn btn-secondary btn-sm" data-umami-event="Subscribe">Submit</button>
+    
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+    
+
+
+<hr>
+</div></form>
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-rock-paper-scissors-pro" id="toc-the-rock-paper-scissors-pro" class="nav-link active" data-scroll-target="#the-rock-paper-scissors-pro">🪨📄✂️ The Rock Paper Scissors Pro</a></li>
+  <li><a href="#the-bayesian-workflow-in-3-steps" id="toc-the-bayesian-workflow-in-3-steps" class="nav-link" data-scroll-target="#the-bayesian-workflow-in-3-steps">🛠️ The Bayesian Workflow in 3 Steps</a></li>
+  <li><a href="#step-1.-modeling" id="toc-step-1.-modeling" class="nav-link" data-scroll-target="#step-1.-modeling">⚙️ Step 1. Modeling</a>
+  <ul class="collapse">
+  <li><a href="#modeling-the-data-generating-process" id="toc-modeling-the-data-generating-process" class="nav-link" data-scroll-target="#modeling-the-data-generating-process">Modeling the Data Generating Process</a></li>
+  <li><a href="#probability-as-relative-plausibility" id="toc-probability-as-relative-plausibility" class="nav-link" data-scroll-target="#probability-as-relative-plausibility">Probability as Relative Plausibility</a></li>
+  <li><a href="#priors" id="toc-priors" class="nav-link" data-scroll-target="#priors">Priors</a></li>
+  <li><a href="#implementing-the-generative-model" id="toc-implementing-the-generative-model" class="nav-link" data-scroll-target="#implementing-the-generative-model">Implementing the generative model</a></li>
+  <li><a href="#prior-predictive-check" id="toc-prior-predictive-check" class="nav-link" data-scroll-target="#prior-predictive-check">Prior Predictive Check</a></li>
+  </ul></li>
+  <li><a href="#step-2.-inference" id="toc-step-2.-inference" class="nav-link" data-scroll-target="#step-2.-inference">🧮 Step 2. Inference</a>
+  <ul class="collapse">
+  <li><a href="#the-goal-of-bayesian-inference" id="toc-the-goal-of-bayesian-inference" class="nav-link" data-scroll-target="#the-goal-of-bayesian-inference">The Goal of Bayesian Inference</a></li>
+  <li><a href="#analytical-formulation-of-bayesian-inference" id="toc-analytical-formulation-of-bayesian-inference" class="nav-link" data-scroll-target="#analytical-formulation-of-bayesian-inference">Analytical Formulation of Bayesian Inference</a></li>
+  <li><a href="#computing-the-posterior-using-grid-approximation" id="toc-computing-the-posterior-using-grid-approximation" class="nav-link" data-scroll-target="#computing-the-posterior-using-grid-approximation">Computing the Posterior using Grid Approximation</a></li>
+  <li><a href="#sampling-from-the-posterior" id="toc-sampling-from-the-posterior" class="nav-link" data-scroll-target="#sampling-from-the-posterior">Sampling from the Posterior</a></li>
+  </ul></li>
+  <li><a href="#step-3.-interpretation" id="toc-step-3.-interpretation" class="nav-link" data-scroll-target="#step-3.-interpretation">🔬 Step 3. Interpretation</a>
+  <ul class="collapse">
+  <li><a href="#posterior-predictive-distribution" id="toc-posterior-predictive-distribution" class="nav-link" data-scroll-target="#posterior-predictive-distribution">Posterior Predictive Distribution</a></li>
+  </ul></li>
+  <li><a href="#summary-of-the-bayesian-workflow" id="toc-summary-of-the-bayesian-workflow" class="nav-link" data-scroll-target="#summary-of-the-bayesian-workflow">Summary of the Bayesian Workflow</a>
+  <ul class="collapse">
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
+  <li><a href="#reader-exercises" id="toc-reader-exercises" class="nav-link" data-scroll-target="#reader-exercises">Reader Exercises</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Bayesian Modeling Primer</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">bayesian</div>
+    <div class="quarto-category">python</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    An intuitive introduction to the Bayesian statistical workflow including modeling, inference, and interpretation of results.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matt Bowers </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 4, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Well, dear reader, I know I haven’t been posting very much lately. That’s because I’ve been busy moving to a new city and working a new DS gig and learning some new things, including Bayesian modeling. In particular I’ve been reading Richard McElreath’s excellent book <a href="https://xcelab.net/rm/">Statistical Rethinking</a>, which I recommend to you as well. As a dedicated reader of this blog, I’m sure you’re perfectly capable of digesting a 600 page statistics textbook on your own, but just for fun, today I present to you my Bayesian statistics crash course.</p>
+<p>My primary goal is to illuminate the major steps in the Bayesian workflow, that way you have a mental framework where you can store and contextualize new pieces of information as you learn. My secondary goal is to give you an intuitive understanding of Bayesian modeling from two interconnected perspectives: a mathematical formulation based primarily in probability theory and a probabilistic programming approach based on writing code to generate random data. Each perspective supports the other, and they are both necessary to grasp the full picture. I will attempt to weave these two perspectives throughout the description of the workflow, which is motivated by a toy example we’ll use throughout the post.</p>
+<p>Let’s do this! ➡️</p>
+<section id="the-rock-paper-scissors-pro" class="level2">
+<h2 class="anchored" data-anchor-id="the-rock-paper-scissors-pro">🪨📄✂️ The Rock Paper Scissors Pro</h2>
+<p>I spent a summer as an intern at RAND Corporation during my PhD. It was a fascinating place full of fascinating characters. One of the researchers, Fritz R, liked to take each cohort of interns out for drinks at some point in the summer. After picking up our first round himself, Fritz offered to buy a second drink for any of the interns who could beat him in a rock paper scissors (RPS) match, warning us that he was “pretty good at it.”</p>
+<p>Let’s fact check his claim. We’d like to know something about his actual RPS win rate, but that is unobservable. We can’t observe it directly, but we could observe some match outcomes and make an inference about what his actual win rate might plausibly be.</p>
+<p>Let’s say that after facing off with the 10 interns, Fritz racks up the following match outcomes.</p>
+<div id="cell-3" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>observed_outcomes <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>He won 7 out of 10 matches—not bad. But is his performance the result of skill or simply a lucky round? We’re going to address this question using Bayesian statistical analysis.</p>
+</section>
+<section id="the-bayesian-workflow-in-3-steps" class="level2">
+<h2 class="anchored" data-anchor-id="the-bayesian-workflow-in-3-steps">🛠️ The Bayesian Workflow in 3 Steps</h2>
+<p>I consider the Bayesian workflow to have 3 major steps:</p>
+<ol type="1">
+<li><strong>Modeling</strong> - specify the data generating process as a generative model</li>
+<li><strong>Inference</strong> - use the model, the observed data, and some inference algorithm to infer the values of unknown model parameters</li>
+<li><strong>Interpretation</strong> - summarize and interpret the inferred model parameters to answer your analysis questions</li>
+</ol>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="modeling-inference-interpretation.png" title="." class="img-fluid figure-img"></p>
+<figcaption>The Bayesian Workflow: modeling, inference, interpretation.</figcaption>
+</figure>
+</div>
+</section>
+<section id="step-1.-modeling" class="level2">
+<h2 class="anchored" data-anchor-id="step-1.-modeling">⚙️ Step 1. Modeling</h2>
+<section id="modeling-the-data-generating-process" class="level3">
+<h3 class="anchored" data-anchor-id="modeling-the-data-generating-process">Modeling the Data Generating Process</h3>
+<p>In this step, we’re going to build a <em>generative model</em>, i.e.&nbsp;a model that can simulate data similar to our observed data. If you’re coming from ML, the key mental shift is to think about modeling the <em>data generating process (DGP)</em>, rather than curve-fitting the data itself. Practically this means our model is a set of random variables which relate to one another in some way and from which we can draw realizations… random realizations, that is. You can invent a DGP as follows:</p>
+<ol type="1">
+<li>Identify the key variables in the system.</li>
+<li>Define each variable as a draw from some probability distribution, or in terms of the other variables.</li>
+<li>Use unknown parameters as needed in the probability distributions or in the functional relationships among the key variables.</li>
+</ol>
+<p>In our RPS example, there is one key variable—Fritz’s match outcome. We can define the match outcome variable as a random draw from some distribution, e.g.&nbsp;a Bernoulli distribution. The Bernoulli distribution has one parameter—the success probability—which corresponds here to Fritz’s actual true win rate. Given some true win rate, we can simulate match outcomes by drawing realizations from the Bernoulli distribution.</p>
+<p><span class="math display">\[ y_i \sim \text{Bernoulli}(\theta) \]</span></p>
+<p>where <span class="math inline">\(y_i = 0\)</span> if Fritz loses to intern <span class="math inline">\(i\)</span> and <span class="math inline">\(y_i = 1\)</span> if he wins, and <span class="math inline">\(i=1,\dots,N\)</span> where <span class="math inline">\(N=10\)</span>. In this DGP, the parameter <span class="math inline">\(\theta\)</span> corresponds to Fritz’s true win rate.</p>
+<p>This is a good start, but we can’t simulate data from this model yet because <span class="math inline">\(\theta\)</span> has no particular value. So, what value should we use?</p>
+</section>
+<section id="probability-as-relative-plausibility" class="level3">
+<h3 class="anchored" data-anchor-id="probability-as-relative-plausibility">Probability as Relative Plausibility</h3>
+<p>One of the key ideas in Bayesian modeling is that we can represent the relative plausibility of potential values of any unobserved variable using a probability distribution. Highly plausible values get higher probability, and less plausible values get lower probability.</p>
+<p><em>It is this view of probability as a measure of relative plausibility that distinguishes Bayesian statistics from Frequentist statistics, which views probability as the relative frequency of events.</em></p>
+<p>We don’t know the true value of Fritz’s RPS win rate, but even before collecting any data, we might have some contextual knowledge about how the world works which can provide some prior information about the relative plausibility of its possible values. For me it’s easiest to think in terms of how surprising a given true value would be. I wouldn’t be surprised at all if his win rate was near 0.5, but I would be shocked if it was 0.9 or 0.1, hence 0.5 has higher relative plausibility than 0.9 or 0.1.</p>
+<p>Let’s represent the prior relative plausibility of values of Fritz’s RPS win rate with a probability distribution. Below are a few different probability distributions defined over the possible values <span class="math inline">\(0 \le \theta \le 1\)</span>.</p>
+<div id="cell-7" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> beta, bernoulli</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># set colors for later</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>prior_color <span class="op">=</span> <span class="st">"C0"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>post_color <span class="op">=</span> <span class="st">"C1"</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># prior beta parameters</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>parameters <span class="op">=</span> [</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">4</span>, <span class="dv">4</span>),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">7</span>, <span class="dv">7</span>),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">10</span>, <span class="dv">10</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the prior</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">100</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, (alpha, beta_val) <span class="kw">in</span> <span class="bu">enumerate</span>(parameters):</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> beta.pdf(x, alpha, beta_val)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    label <span class="op">=</span> <span class="ss">f'Beta($</span><span class="ch">\\</span><span class="ss">alpha$=</span><span class="sc">{</span>alpha<span class="sc">}</span><span class="ss">, $</span><span class="ch">\\</span><span class="ss">beta$=</span><span class="sc">{</span>beta_val<span class="sc">}</span><span class="ss">)'</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    plt.plot(x, y, label<span class="op">=</span>label)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"win rate (theta)"</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Probability Density"</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Relative Plausibility of RPS Win Rate'</span>)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img" alt="beta distribution priors"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Each of these PDFs has a mode at <span class="math inline">\(\theta=0.5\)</span> and decreases toward 0 and 1. They’re all aligned with the relative plausibilities we discussed earlier.</p>
+<p>You can check the relative plausibility between two possible values of <span class="math inline">\(\theta\)</span> implied by a given pdf by taking the ratio of the height of the pdf at one value of <span class="math inline">\(\theta\)</span> versus the height at another value of <span class="math inline">\(\theta\)</span>.</p>
+<p>For example, let’s compare <span class="math inline">\(\theta=0.5\)</span> to <span class="math inline">\(\theta=0.7\)</span> for a Beta(10, 10) prior.</p>
+<div id="cell-9" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>beta.pdf(<span class="fl">0.5</span>, <span class="dv">10</span>, <span class="dv">10</span>) <span class="op">/</span> beta.pdf(<span class="fl">0.7</span>, <span class="dv">10</span>, <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>np.float64(4.802710683776413)</code></pre>
+</div>
+</div>
+<p>The Beta(10, 10) distribution implies that a 0.5 win rate is about 5 times more plausible than a 0.7 win rate, which sounds, ahem, plausible.</p>
+</section>
+<section id="priors" class="level3">
+<h3 class="anchored" data-anchor-id="priors">Priors</h3>
+<p>We can include this prior information about the relative plausibility of values of <span class="math inline">\(\theta\)</span> in our model as follows.</p>
+<p><span class="math display">\[
+\theta \sim \text{Beta}(10, 10)
+\]</span> <span class="math display">\[
+y_i \sim \text{Bernoulli}(\theta)
+\]</span></p>
+<p>In Bayesian parlance, we call the probability distribution that represents the relative plausibilities of an unobserved parameter its <em>prior distribution</em>, or simply its <em>prior</em>. Notice that with the addition of the prior for <span class="math inline">\(\theta\)</span>, our model is now fully generative.</p>
+</section>
+<section id="implementing-the-generative-model" class="level3">
+<h3 class="anchored" data-anchor-id="implementing-the-generative-model">Implementing the generative model</h3>
+<p>Let’s implement the DGP using random variables from <code>scipy</code>.</p>
+<div id="cell-11" class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Implementing the DGP as a generative model</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> draw_from_prior(alpha_param, beta_param):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> beta.rvs(alpha_param, beta_param)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_one_outcome(theta, N):</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> bernoulli.rvs(theta, size<span class="op">=</span>N)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">"theta"</span>: theta, <span class="st">"y"</span>: y, <span class="st">"sum_y"</span>: np.<span class="bu">sum</span>(y)}</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_outcomes(n_outcomes, alpha_param, beta_param, N):</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame([</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        simulate_one_outcome(theta<span class="op">=</span>draw_from_prior(alpha_param, beta_param), N<span class="op">=</span>N)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_outcomes)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># set DGP parameters</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>alpha_param, beta_param <span class="op">=</span> <span class="dv">10</span>, <span class="dv">10</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate outcomes from the generative model</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>outcome_df <span class="op">=</span> simulate_outcomes(<span class="dv">1_000</span>, alpha_param, beta_param, N)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>outcome_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">theta</th>
+<th data-quarto-table-cell-role="th">y</th>
+<th data-quarto-table-cell-role="th">sum_y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.451620</td>
+<td>[0, 0, 1, 1, 1, 0, 0, 1, 0, 0]</td>
+<td>4</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.460305</td>
+<td>[0, 1, 1, 0, 1, 1, 1, 0, 1, 1]</td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0.555594</td>
+<td>[0, 0, 1, 1, 1, 1, 0, 1, 0, 0]</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0.518724</td>
+<td>[1, 0, 0, 0, 1, 1, 1, 0, 1, 0]</td>
+<td>5</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>0.569247</td>
+<td>[1, 0, 1, 1, 0, 1, 1, 1, 1, 1]</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Each time you run this simulation, you first draw a new value of <span class="math inline">\(\theta\)</span> from its prior, then that value is used in the Bernoulli distribution to draw an array of binary match win/loss observations. To help us summarize the match observations in each simulated outcome, we also compute the sum of the match values, i.e.&nbsp;the number of wins.</p>
+</section>
+<section id="prior-predictive-check" class="level3">
+<h3 class="anchored" data-anchor-id="prior-predictive-check">Prior Predictive Check</h3>
+<p>But how do we know that the prior we chose is reasonable? There are two places we can look: (1) at the parameter itself and (2) at the downstream variables it influences. We already looked at the parameter itself by inspecting its pdf and thinking about the relative plausibilities it implies. To look at its impact on the downstream variables, we can simply run simulations from the model and inspect the outcome data it produces. If we see it’s generating lots of highly implausible outcomes, then we know something isn’t right. This process is called a <em>prior predictive check</em>, because we’re checking the simulated outcomes (a.k.a. predictions) implied by the prior. Let’s run our model simulation 1000 times and have a look at the distribution of the number of wins out of 10 matches that it predicts, i.e.&nbsp;the sum of the <code>y</code> variable from each simulation.</p>
+<div id="cell-13" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>outcome_df.hist(<span class="st">"sum_y"</span>, bins<span class="op">=</span><span class="dv">50</span>, color<span class="op">=</span>prior_color)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'sum(y)'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'count'</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Prior Predictive Check'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img" alt="prior predictive check of number of match wins"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The histogram shows most of the simulations yield between 3 and 7 wins, with very few outcomes less than 3 or greater than 7. That seems pretty reasonable.</p>
+<p>Let’s look at what the prior predictive check might look like when things aren’t quite right.</p>
+<div id="cell-15" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>simulate_outcomes(<span class="dv">1_000</span>, alpha_param<span class="op">=</span><span class="fl">0.5</span>, beta_param<span class="op">=</span><span class="fl">0.5</span>, N<span class="op">=</span><span class="dv">10</span>).hist(<span class="st">"sum_y"</span>, bins<span class="op">=</span><span class="dv">50</span>, color<span class="op">=</span>prior_color)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'sum(y)'</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'count'</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Prior Predictive Check'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img" alt="prior predictive check of the win rate, with unexpected distribution shape"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In this simulation, many of the outcomes are close to 0 or 10 wins out of 10. From our prior knowledge about RPS, we know it would be possible but very unusual for someone to win either 0/10 or 10/10 matches. This tips us off that something isn’t right with our priors. At this point we would iterate on our priors until we find something reasonable like our Beta(10, 10).</p>
+<p>Once we’ve got our generative model and its priors nailed down, we’re ready to move from the modeling step to the inference step!</p>
+</section>
+</section>
+<section id="step-2.-inference" class="level2">
+<h2 class="anchored" data-anchor-id="step-2.-inference">🧮 Step 2. Inference</h2>
+<section id="the-goal-of-bayesian-inference" class="level3">
+<h3 class="anchored" data-anchor-id="the-goal-of-bayesian-inference">The Goal of Bayesian Inference</h3>
+<p>In the inference step, we use observed outcome data to infer the plausible values of the unobserved parameters. Whereas simulation passes information forward from parameters to outcomes, inference passes it backwards from observed outcomes to parameters. It’s analogous to model fitting or training in machine learning; it’s the part where we use data to learn about the model parameters. The specific output of inference is the updated relative plausibility of the unknown model parameters. Whereas we represent the prior relative plausibilities with the prior distribution, we represent the posterior relative plausibilities (after incorporating information from the data) with the <em>posterior distribution</em>, or simply, the <em>posterior</em>. Like the prior, our model’s posterior distribution is a probability density defined over the possible values of <span class="math inline">\(\theta\)</span>, where larger values indicate higher relative plausibility.</p>
+</section>
+<section id="analytical-formulation-of-bayesian-inference" class="level3">
+<h3 class="anchored" data-anchor-id="analytical-formulation-of-bayesian-inference">Analytical Formulation of Bayesian Inference</h3>
+<p>Let’s nail down the mathematical formulation of Bayesian inference. We have data <span class="math inline">\(y\)</span> and parameter(s) <span class="math inline">\(\theta\)</span>. These have a joint probability density <span class="math inline">\(p(\theta, y)\)</span>. This joint distribution of data and parameters is defined by our generative model of the system—simulating data from our DGP is equivalent to drawing realizations from the joint distribution <span class="math inline">\(p(\theta, y)\)</span>. Using the definition of conditional probability,, we can write the joint distribution as:</p>
+<p><span class="math display">\[p(\theta, y) = p(y|\theta)p(\theta) \]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(p(\theta, y)\)</span> is the <em>joint distribution</em> of parameter <span class="math inline">\(\theta\)</span> and data <span class="math inline">\(y\)</span></li>
+<li><span class="math inline">\(p(\theta)\)</span> is the <em>prior </em> distribution of the parameter <span class="math inline">\(\theta\)</span></li>
+<li><span class="math inline">\(p(y|\theta)\)</span> is the <em>likelihood</em>—the conditional distribution of observed data <span class="math inline">\(y\)</span> given parameter <span class="math inline">\(\theta\)</span>.</li>
+</ul>
+<p>When we do inference we are interested in the relative plausibility of unknown parameter <span class="math inline">\(\theta\)</span> given data <span class="math inline">\(y\)</span>, which we quantify as the conditional distribution of <span class="math inline">\(\theta\)</span> given <span class="math inline">\(y\)</span>. Using Baye’s Rule, we can write the posterior as</p>
+<p><span class="math display">\[ p(\theta | y) = \frac{ p(\theta, y) } { p(y) } = \frac { p(y|\theta)p(\theta)  } { p(y) }  \]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(p(\theta | y)\)</span> is the <em>posterior</em> distribution of the parameter <span class="math inline">\(\theta\)</span></li>
+<li><span class="math inline">\(p(y)\)</span> is the <em>marginal likelihood</em> of the data <span class="math inline">\(y\)</span> (to be explained soon)</li>
+</ul>
+<p>Technically, the joint distribution and the posterior are functions of <em>both</em> parameter <span class="math inline">\(\theta\)</span> and data <span class="math inline">\(y\)</span>. But in practice when we compute the posterior, we’ll have some actual observed data—say <span class="math inline">\(y_{\text{obs}}\)</span>—so that <span class="math inline">\(y\)</span> is actually fixed at <span class="math inline">\(y=y_{\text{obs}}\)</span>. Substituting the fixed value <span class="math inline">\(y_{\text{obs}}\)</span> in the posterior, we get</p>
+<p><span class="math display">\[ p(\theta | y_{\text{obs}}) = \frac{ p(\theta, y_{\text{obs}}) } { p(y_{\text{obs}}) } =  \frac { p(y_{\text{obs}}|\theta)p(\theta)  } {  \int p(\theta|y_{\text{obs}})p(\theta) d \theta  }  \]</span></p>
+<p>If we view <span class="math inline">\(y_{\text{obs}}\)</span> as fixed, then the posterior can be interpreted as just the slice of the joint distribution where <span class="math inline">\(y=y_{\text{obs}}\)</span>. To get a proper conditional probability distribution, we just need to divide the sliced joint density function by the area under <span class="math inline">\(p(\theta,y_{\text{obs}})\)</span> along the <span class="math inline">\(\theta\)</span> axis. And guess what? That’s exactly what the marginal likelihood is doing; <span class="math inline">\(p(y_{\text{obs}}) = \int p(\theta|y_{\text{obs}})p(\theta) d \theta\)</span> is just the area under the sliced joint density, and it’s there in the denominator to normalize the sliced joint density so that we get a proper conditional distribution for the posterior.</p>
+</section>
+<section id="computing-the-posterior-using-grid-approximation" class="level3">
+<h3 class="anchored" data-anchor-id="computing-the-posterior-using-grid-approximation">Computing the Posterior using Grid Approximation</h3>
+<p>Let’s compute the posterior using the formulas we cooked up in the previous section. Earlier when we wrote down our generative model, we already identified all the pieces we need:</p>
+<ul>
+<li><strong>the prior</strong>—since <span class="math inline">\(\theta \sim \text{Beta}(10, 10)\)</span>, <span class="math inline">\(p(\theta)\)</span> is the probability density function of a <span class="math inline">\(\text{Beta}(10,10)\)</span> random variable.</li>
+<li><strong>the likelihood</strong>—since <span class="math inline">\(y_i \sim \text{Bernoulli}(\theta)\)</span>, the likelihood is the probability mass function of a Bernoulli random variable with parameter <span class="math inline">\(\theta\)</span>… well, almost.</li>
+</ul>
+<p>The one remaining detail to iron out is that our observed data <span class="math inline">\(y_{\text{obs}}=[y_1,\dots,y_N]\)</span> consists of <span class="math inline">\(N=10\)</span> observations of the binary match outcomes. Our likelihood needs to reflect the conditional probability of the entire dataset given <span class="math inline">\(\theta\)</span>, not just a single observation. We know from probability theory that the joint probability of two independent events is the product of their individual probabilities. Therefore, assuming independence among our observations, the joint likelihood of the full dataset is the product of the likelihood of each observation.</p>
+<p><span class="math display">\[ p(y_{\text{obs}}|\theta) = p(y_1,\dots,y_N|\theta) =  \prod_{i=1}^N p(y_i|\theta) \]</span></p>
+<p>Let’s implement the prior, the likelihood, the joint distribution, and the posterior in python and plot out the prior and the posterior distribution of the parameter <span class="math inline">\(\theta\)</span>.</p>
+<div id="cell-18" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 0. Defining the observed data</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> np.array(observed_outcomes)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>sum_y_obs <span class="op">=</span> np.<span class="bu">sum</span>(y_obs)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Functions for Prior and Likelihood</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prior(theta):</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> beta.pdf(theta, alpha_param, beta_param)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> likelihood(theta, y):</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    product_of_likelihoods <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y_i <span class="kw">in</span> y:</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        product_of_likelihoods <span class="op">*=</span> bernoulli.pmf(y_i, p<span class="op">=</span>theta)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> product_of_likelihoods</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Function for Joint Density p(y, theta)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> joint_density(theta, y):</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> likelihood(theta, y) <span class="op">*</span> prior(theta)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Computing the Posterior by "Slicing" and Normalizing</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> posterior_from_joint_slice(theta_values, y_observed_data):</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="co"># compute grid of p(theta, y_obs) over values of theta and fixed y_obs</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    unnormalized_posterior_values <span class="op">=</span> np.array([</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        joint_density(theta, y_observed_data) <span class="cf">for</span> theta <span class="kw">in</span> theta_values</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># numerical integration  to get marginal likelihood p(y_obs</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    delta_theta <span class="op">=</span> theta_values[<span class="dv">1</span>] <span class="op">-</span> theta_values[<span class="dv">0</span>] </span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    marginal_likelihood_approx <span class="op">=</span> np.<span class="bu">sum</span>(unnormalized_posterior_values <span class="op">*</span> delta_theta)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># p(theta | y_obs) = p(theta, y_obs) / p(y_obs)</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    normalized_posterior_values <span class="op">=</span> unnormalized_posterior_values <span class="op">/</span> marginal_likelihood_approx</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> normalized_posterior_values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-19" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a grid of theta values</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>theta_grid <span class="op">=</span> np.linspace(<span class="fl">0.001</span>, <span class="fl">0.999</span>, <span class="dv">500</span>) </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate prior over the grid of theta values</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>prior_values <span class="op">=</span> np.array([prior(theta) <span class="cf">for</span> theta <span class="kw">in</span> theta_grid])</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate likelihood values over the grid of theta values and fixed y_obs</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>likelihood_values <span class="op">=</span> np.array([likelihood(theta, y_obs) <span class="cf">for</span> theta <span class="kw">in</span> theta_grid])</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the posterior over the grid of theta values and fixed y_obs</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>posterior_values <span class="op">=</span> posterior_from_joint_slice(theta_grid, y_obs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-20" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>plt.plot(theta_grid, prior_values, label<span class="op">=</span><span class="ss">f'Prior p(theta) ~ Beta(</span><span class="sc">{</span>alpha_param<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>beta_param<span class="sc">}</span><span class="ss">)'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span>prior_color)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>plt.plot(theta_grid, posterior_values, label<span class="op">=</span><span class="ss">f'Posterior p(theta|y_obs)'</span>, color<span class="op">=</span>post_color, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Bayesian Inference: Prior, Likelihood, and Posterior'</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r'$\theta$ (Probability of Match Win)'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Density'</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">':'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>plt.ylim(bottom<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img" alt="plot of prior and posterior computed with  grid approximation"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From the figure we can see that while the prior is centered at <span class="math inline">\(\theta=0.5\)</span>, the posterior is actually pulled slightly toward larger values of <span class="math inline">\(\theta\)</span> by the observed data, indicating increased relative plausibility on win rates greater than 0.5.</p>
+<p>It’s nice to see that the math works and that we can successfully implement it in code, but grid approximation is a pedagogical endeavor. In practice, when models start to get complicated, we’ll need a more flexible approach for finding the posterior.</p>
+</section>
+<section id="sampling-from-the-posterior" class="level3">
+<h3 class="anchored" data-anchor-id="sampling-from-the-posterior">Sampling from the Posterior</h3>
+<p>It turns out that we can do inference using our generative model and our observed data without having to compute the likelihood directly. But while the forward problem of simulating data from the model is quite straightforward, it’s less obvious how to approach the inverse problem of doing inference. There is no silver bullet here. In fact there are tons of different algorithms for doing inference on probabilistic models, but luckily, since virtually all the important inference algorithms use sampling-based approaches, e.g.&nbsp;Hamiltonian Monte Carlo, Metropolis-Hastings, and Variational Inference, no matter which algorithm we use under the hood, we’ll end up with the same kind of output at the end—samples of the unknown parameters which have been drawn from the posterior.</p>
+<p>To get some intuition for how we can do inference by sampling from the generative model,, we’re going to implement a very simple inference algorithm called <em>rejection sampling</em>. The key idea is based on the insight we discussed earlier that the posterior is essentially a slice through the joint distribution where the data is fixed to what we actually observed. Since simulating from the generative model is equivalent to drawing samples from the joint distribution, isolating simulation outcomes where the simmulated data is equal to the observed data is equivalent to sampling from the joint distribution along the slice, and hence equivalent to sampling from the posterior.</p>
+<p>The algorithm for doing Bayesian inference via rejection sampling is as follows</p>
+<ol type="1">
+<li>Generate a sample <span class="math inline">\((\theta^*,y^*)\)</span> from the generative model.</li>
+<li>Keep the sample if <span class="math inline">\(y^*=y_{\text{obs}}\)</span>, otherwise discard it.</li>
+<li>Repeat 1 and 2 until the desired number of retained samples is collected.</li>
+<li>The retained samples of <span class="math inline">\(\theta\)</span> can be interpreted as samples from the posterior.</li>
+</ol>
+<p>Let’s do this in python. In our example, the order of the wins and losses over the <span class="math inline">\(N=10\)</span> match observations doesn’t matter, so we’ll focus on the number of wins. Since <span class="math inline">\(\sum_iy_i=7\)</span> in our observed data, we’ll isolate the simulation outcomes where <code>sum_y</code> equals 7.</p>
+<div id="cell-22" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>outcome_df.query(<span class="st">'sum_y != @sum_y_obs'</span>).plot(x<span class="op">=</span><span class="st">"sum_y"</span>, y<span class="op">=</span><span class="st">"theta"</span>, kind<span class="op">=</span><span class="st">"scatter"</span>, color<span class="op">=</span><span class="st">"black"</span>, alpha<span class="op">=</span><span class="fl">0.2</span>, label<span class="op">=</span><span class="st">"outcomes where $y^* </span><span class="ch">\\</span><span class="st">ne y_{</span><span class="ch">\\</span><span class="st">text</span><span class="sc">{obs}</span><span class="st">}$"</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>outcome_df.query(<span class="st">'sum_y == @sum_y_obs'</span>).plot(x<span class="op">=</span><span class="st">"sum_y"</span>, y<span class="op">=</span><span class="st">"theta"</span>, kind<span class="op">=</span><span class="st">"scatter"</span>, color<span class="op">=</span>post_color, alpha<span class="op">=</span><span class="fl">0.4</span>, label<span class="op">=</span><span class="st">"outcomes where $y^* = y_{</span><span class="ch">\\</span><span class="st">text</span><span class="sc">{obs}</span><span class="st">}$"</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>ax.axvline(x<span class="op">=</span>sum_y_obs<span class="op">-</span><span class="fl">0.25</span>, color<span class="op">=</span><span class="st">"black"</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>ax.axvline(x<span class="op">=</span>sum_y_obs<span class="op">+</span><span class="fl">0.25</span>, color<span class="op">=</span><span class="st">"black"</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Samples from the Generative Model"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img" alt="scatter plot of samples from joint distribution with posterior slice highlighted"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Boom! By isolating the outcomes where <span class="math inline">\(y=y_{\text{obs}}\)</span>, we effectively have samples from the posterior. Let’s draw a larger number of samples so we get an adequate sample from the posterior.</p>
+<div id="cell-24" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># drawing a large number of samples and isolating outcomes where y = y_obs</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>rejection_sampling_outcome_df <span class="op">=</span> simulate_outcomes(<span class="dv">10_000</span>, alpha_param, beta_param, N).query(<span class="st">'sum_y == @sum_y_obs'</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># posterior samples from rejection sampling</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>posterior_samples <span class="op">=</span> rejection_sampling_outcome_df[<span class="st">"theta"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-25" class="cell" data-execution_count="14">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>posterior_samples.hist(bins<span class="op">=</span><span class="dv">30</span>, color<span class="op">=</span>post_color)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"theta"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Samples from the Posterior"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img" alt="histogram of posterior"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now let’s put all the pieces together.</p>
+<div id="cell-27" class="cell" data-execution_count="15">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>prior_samples <span class="op">=</span> outcome_df[<span class="st">"theta"</span>]</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>prior_samples.hist(density<span class="op">=</span><span class="va">True</span>, bins<span class="op">=</span><span class="dv">30</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, color<span class="op">=</span>prior_color, label<span class="op">=</span><span class="st">"prior samples"</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>posterior_samples.hist(density<span class="op">=</span><span class="va">True</span>, bins<span class="op">=</span><span class="dv">30</span>, alpha<span class="op">=</span><span class="fl">0.7</span>, color<span class="op">=</span>post_color, label<span class="op">=</span><span class="st">"posterior samples"</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>ax.plot(theta_grid, prior_values, label<span class="op">=</span><span class="ss">f'Prior p(theta) ~ Beta(</span><span class="sc">{</span>alpha_param<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>beta_param<span class="sc">}</span><span class="ss">)'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, color<span class="op">=</span>prior_color)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>ax.plot(theta_grid, posterior_values, label<span class="op">=</span><span class="ss">f'Posterior p(theta|y_obs)'</span>, color<span class="op">=</span>post_color, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Bayesian Inference: Prior and Posterior'</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r'$\theta$ (Probability of Match Win)'</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Density'</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">':'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>plt.xlim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>plt.ylim(bottom<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img" alt="plot of prior and posterior as line plot from grid approximation and histogram from sampling"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In this figure we have:</p>
+<ol type="1">
+<li>the functional form of the prior</li>
+<li>the functional form of the posterior from grid approximation</li>
+<li>samples from the prior drawn directly from the generative model</li>
+<li>and samples of the posterior obtained by applying rejection sampling to the generative model.</li>
+</ol>
+<p>Great! Our sampling algorithms are generating samples from the prior and the posterior which are consistent with the functional forms we computed earlier!</p>
+<p>While we used rejection sampling here, regardless of what sampling algorithm we choose, we’ll end up with the same thing after inference—a set of samples from the posterior distribution for each unknown parameter. Once we have those samples, we’re ready to move to the interpretation and analysis step.</p>
+</section>
+</section>
+<section id="step-3.-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="step-3.-interpretation">🔬 Step 3. Interpretation</h2>
+<p>So how do we get insight into our analysis questions from this <code>posterior_samples</code> array? Well we’ve got samples from the posterior distribution of <span class="math inline">\(\theta\)</span> which represents our updated beliefs about the relative plausibility of different values of Fritz’s actual underlying RPS win rate. We can use them just like any other dataset to answer questions about his win rate.</p>
+<p>Let’s start with getting a point estimate of his true win rate. We can simply take the mean of the samples.</p>
+<div id="cell-31" class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'point estimate of theta: </span><span class="sc">{</span>np<span class="sc">.</span>mean(posterior_samples)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>point estimate of theta: 0.5655783348185507</code></pre>
+</div>
+</div>
+<p>To get a confidence interval, often called a <em>credible interval</em> in the Bayesian context, we can just pull the quantiles of the posterior distribution. Note there are fancier ways to do this, e.g.&nbsp;computing highest posterior density intervals (HPDIs), but conceptually we’re basically just looking at the quantiles of the sample.</p>
+<div id="cell-33" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'89% credible interval of theta:: </span><span class="sc">{</span>np<span class="sc">.</span>quantile(posterior_samples, [<span class="fl">0.055</span>, <span class="fl">0.945</span>])<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>89% credible interval of theta:: [0.42005907 0.70367915]</code></pre>
+</div>
+</div>
+<p>What’s the probability that Fritz’s win rate is actually really good, say greater than 75%? We can just check the samples directly for the proportion greater than 0.75.</p>
+<div id="cell-35" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'P[theta &gt; 0.75]: </span><span class="sc">{</span>np<span class="sc">.</span>mean(posterior_samples <span class="op">&gt;</span> <span class="fl">0.75</span>)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>P[theta &gt; 0.75]: 0.011933174224343675</code></pre>
+</div>
+</div>
+<p>This means our analysis implies theres only a 1.5% chance that his true win rate is larger than 75%.</p>
+<p>Now that we’ve taken a look at interpreting the posterior samples to get some insight into the unknown parameter <span class="math inline">\(\theta\)</span> representing Fritz’s actual RPS win rate, we can take it one step further and make some predictions.</p>
+<section id="posterior-predictive-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="posterior-predictive-distribution">Posterior Predictive Distribution</h3>
+<p>We have one more character to meet in this cast of Bayesian players—the <em>posterior predictive</em> distribution.</p>
+<p><span class="math inline">\(p(y_{\text{new}}|y_{\text{obs}})\)</span></p>
+<p>It represents the most plausible distribution of <em>new</em> data <span class="math inline">\(y_{\text{new}}\)</span> given that we observed data $y_{}, i.e.&nbsp;based on the posterior rather than the prior. Mathematically it is obtained by integrating the product of the likelihood for the new data and the posterior distribution over the parameter space.</p>
+<p><span class="math display">\[p(y_{\text{new}}|y_{\text{obs}}) = \int p(y_{\text{new}}|\theta) p(\theta|y_{\text{obs}}) d\theta\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(p(y_{\text{new}}|\theta)\)</span> is the likelihood of the new data, assuming a specific parameter value <span class="math inline">\(\theta\)</span>. It’s the same likelihood function we used before, evaluated on <span class="math inline">\(y_{\text{new}}\)</span>.</li>
+<li><span class="math inline">\(p(\theta|y_{\text{obs}})\)</span> is just the posterior distribution</li>
+<li>the integral <span class="math inline">\(\int \dots d \theta\)</span> effectively “averages” the likelihood of the new data over all possible values of <span class="math inline">\(\theta\)</span>, weighted by how plausible each value is according to the posterior.</li>
+</ul>
+<p>In terms of the DGP, we can generate samples from the posterior predictive by</p>
+<ol type="1">
+<li>Drawing a sample of <span class="math inline">\(\theta\)</span> from the posterior distribution.</li>
+<li>Using this value of <span class="math inline">\(\theta\)</span> to generate a value of <span class="math inline">\(y\)</span> from the generative model.</li>
+</ol>
+<p>Let’s implement this in python.</p>
+<div id="cell-37" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_posterior_predictive(posterior_samples, N):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame([</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>        simulate_one_outcome(theta<span class="op">=</span>theta, N<span class="op">=</span>N)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> theta <span class="kw">in</span> posterior_samples</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>posterior_predictive_df <span class="op">=</span> simulate_posterior_predictive(posterior_samples, N)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here again, we can inspect the distribution using any familiar techniques for working with samples of data. Here’s a histogram of the posterior predictive.</p>
+<div id="cell-39" class="cell" data-execution_count="21">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>posterior_predictive_df[<span class="st">"sum_y"</span>].hist(density<span class="op">=</span><span class="va">True</span>, bins<span class="op">=</span><span class="dv">50</span>, color<span class="op">=</span>post_color)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Posterior Predictive Distribution"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"sum(y)"</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"probability mass"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bayes_files/figure-html/cell-20-output-1.png" class="img-fluid figure-img" alt="posterior predictive of number of wins"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can use this for forecasting, e.g.&nbsp;what’s the probability that Fritz wins at least 7 games in his next round?</p>
+<div id="cell-41" class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Probability of winning &gt;= 7 in next round: </span><span class="sc">{</span>np<span class="sc">.</span>mean(posterior_predictive_df[<span class="st">"sum_y"</span>] <span class="op">&gt;=</span> <span class="dv">7</span>)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability of winning &gt;= 7 in next round: 0.32537788385043753</code></pre>
+</div>
+</div>
+<p>Here’s where things can get interesting. In addition to forecasting the outcome itself, we can also compute the probabilities of events that depend on the outcome. For example, let’s say Fritz has only $50 left in his wallet, and he wants to know the probability that he can cover his bill after the next round. Let’s assume each drink costs $12. We can compute that probability as follows.</p>
+<div id="cell-43" class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># probability that Fritz's next round bill is less than or equal to $50</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>cost_per_drink <span class="op">=</span> <span class="fl">12.0</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>posterior_predictive_df <span class="op">=</span> (</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    posterior_predictive_df</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    .assign(losses <span class="op">=</span> <span class="kw">lambda</span> x: N <span class="op">-</span> x.sum_y)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    .assign(bill <span class="op">=</span> <span class="kw">lambda</span> x: cost_per_drink <span class="op">*</span> x.losses)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Probability next round bill &lt;= $50: </span><span class="sc">{</span>np<span class="sc">.</span>mean(posterior_predictive_df[<span class="st">"bill"</span>] <span class="op">&lt;=</span> <span class="dv">50</span>)<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability next round bill &lt;= $50: 0.5369928400954654</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="summary-of-the-bayesian-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="summary-of-the-bayesian-workflow">Summary of the Bayesian Workflow</h2>
+<p>Wow, we covered a lot of ground today. Let’s summarize the key points.</p>
+<p>The Bayesian Analysis Workflow has three major steps:</p>
+<ol type="1">
+<li>Modeling
+<ul>
+<li>We build a <em>generative model</em> that describes the relationships among key variables and unknown parameters to represent the data generating process.</li>
+<li>We encode our prior knowledge about the relative plausibility of different parameter values in the <em>prior distribution</em> of the parameters.</li>
+<li>We can use <em>prior predictive checks</em> to simulate outcome data from the generative model to sanity check our modeling assumptions.</li>
+</ul></li>
+<li>Inference
+<ul>
+<li>Based on our modeling assumptions, we can use observed data to infer the <em>posterior distribution</em>, which quantifies the relative plausibility of different values of the unknown parameters after observing data.</li>
+<li>We can view simulations from the generative model as sampling from the joint distribution of data and parameters, and we can view the posterior as the result of conditioning the joint distribution on the data we actually observed.</li>
+<li>We can do inference by using sampling-based inference algorithms like rejection sampling, which uses logic on top of our generative model to isolate samples from the posterior distribution.</li>
+</ul></li>
+<li>Interpretation
+<ul>
+<li>After inference we can use data analysis tools to summarize the samples from the posterior distribution to compute point estimates, intervals, and probabilities of interest.</li>
+<li>If we simulate data from our generative model using the posterior rather than the prior, we get samples from the <em>posterior predictive </em>distribution, which predicts future outcomes given observed data.</li>
+<li>Again, we can analyze these posterior predictive samples to compute point estimates, intervals, or probabilities of future outcomes.</li>
+</ul></li>
+</ol>
+<p>Phew! Hopefully that’s a helpful introduction to the Bayesian workflow and the major ideas behind it. The techniques we looked at here are mostly for pedagogical purposes; if you want to apply Bayesian methods to practical problems, you’ll want to use a probabilistic programming language like PyMC, pyro, or stan. Maybe we’ll get into some of those tools in future posts. See you then!</p>
+<section id="resources" class="level3">
+<h3 class="anchored" data-anchor-id="resources">Resources</h3>
+<ul>
+<li><a href="https://xcelab.net/rm/">Statistical Rethinking</a> - This page links to where you can obtain the book and also to a number of repos where folks have ported the R and Stan code examples to python libraries like PyMC and pyro.</li>
+</ul>
+</section>
+<section id="reader-exercises" class="level3">
+<h3 class="anchored" data-anchor-id="reader-exercises">Reader Exercises</h3>
+<p>You didn’t think you’d get away without homework did you? Here are a couple suggestions for exercises.</p>
+<ul>
+<li>compute the posterior predictive distribution <span class="math inline">\(p(y_{\text{new}}|y_{\text{obs}})\)</span> for the RPS example using grid approximation.</li>
+<li>Suppose that each RPS match was played as best out of three. Rewrite the generative model to generate both sub-match and match outcomes. Do inference with rejection sampling. Use your model to find the probability that Fritz wins his next match by winning two submatches in a row.</li>
+</ul>
+</section>
+</section>
+
+</main> <!-- /main -->
+<hr>
+
+<!-- <div style="max-width: 80%;"> -->
+<h3>Comments</h3>
+<script data-isso="https://isso.randomrealizations.com/" src="https://isso.randomrealizations.com/js/embed.min.js">
+</script>
+<section id="isso-thread"></section>
+<!-- </div> -->
+
+<hr>
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/randomrealizations\.com\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

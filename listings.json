@@ -18,6 +18,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/bayesian-modeling-primer/index.html",
       "/posts/traditional-vs-roth-401k/index.html",
       "/posts/shap-from-scratch/index.html",
       "/posts/xgboost-parameter-tuning-with-optuna/index.html",
@@ -42,6 +43,7 @@
   {
     "listing": "/archive.html",
     "items": [
+      "/posts/bayesian-modeling-primer/index.html",
       "/posts/traditional-vs-roth-401k/index.html",
       "/posts/shap-from-scratch/index.html",
       "/posts/xgboost-parameter-tuning-with-optuna/index.html",

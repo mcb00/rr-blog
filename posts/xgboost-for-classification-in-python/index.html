@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.6.40">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2023-11-28">
 <meta name="description" content="A step-bystep tutorial on binary and multi-class classification with XGBoost in python using sklearn and the xgboost library">
 
-<title>Random Realizations – XGBoost for Binary and Multi-Class Classification in Python</title>
+<title>XGBoost for Binary and Multi-Class Classification in Python – Random Realizations</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -25,7 +25,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -36,7 +36,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -73,17 +73,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-7bfda625c7ff35f40b8288d308b7c4dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -92,6 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -99,24 +106,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <script async="" defer="" src="https://umami.randomrealizations.com/script.js" data-domains="randomrealizations.com" data-website-id="17844d61-f224-45c0-aa5f-2935c14dd5ac"></script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 <meta property="og:title" content="Random Realizations">
 <meta property="og:description" content="A blog about data science, statistics, machine learning, and the scientific method">
-<meta property="og:image" content="https://randomrealizations.com/posts/xgboost-for-classification-in-python/opengraph.png">
-<meta property="og:site-name" content="Random Realizations">
-<link rel="canonical" href="https://randomrealizations.com/posts/xgboost-for-classification-in-python/" />
+<meta property="og:image" content="https://randomrealizations.com/posts/xgboost-for-classification-in-python/xgboost-classification-thumbnail.jpg">
+<meta property="og:site_name" content="Random Realizations">
+<meta property="og:image:alt" content="circle painted by hand in a single brush stroke">
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a href="../../index.html" class="navbar-brand navbar-brand-logo">
     <img src="../../logo.png" alt="" class="navbar-logo">
     </a>
@@ -125,48 +159,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../about.html" rel="" target="">
- <span class="menu-text">About</span></a>
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../archive.html" rel="" target="">
- <span class="menu-text">Archive</span></a>
+    <a class="nav-link" href="../../archive.html"> 
+<span class="menu-text">Archive</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Series</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-series">    
         <li>
-    <a class="dropdown-item" href="../../gradient-boosting-series.html" rel="" target="">
+    <a class="dropdown-item" href="../../gradient-boosting-series.html">
  <span class="dropdown-text">Gradient Boosting Series</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Resources</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="https://python-bloggers.com/" rel="" target="">
+    <a class="dropdown-item" href="https://python-bloggers.com/">
  <span class="dropdown-text">Python-Bloggers</span></a>
   </li>  
     </ul>
   </li>
 </ul>
-            <div class="quarto-navbar-tools tools-wide">
-    <a href="https://github.com/mcb00" rel="" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
-    <a href="https://twitter.com/mcbwrs" rel="" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
-    <a href="https://www.linkedin.com/in/matt-bowers" rel="" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
-</div>
           </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools tools-wide">
+    <a href="https://github.com/mcb00" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/mcbwrs" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -265,13 +299,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header>
+
 
 <p>Today we continue the <a href="../../gradient-boosting-series.html">saga on gradient boosting</a> with a down-to-Earth tutorial on the essentials of solving classification problems with XGBoost. We’ll run through two examples: one for binary classification and another for multi-class classification. In both cases I’ll show you how to train XGBoost models using either the scikit-learn interface or the native xgboost training API. Once trained, we’ll evaluate the models with validation data then inspect them with feature importance and partial dependence plots. You can use the XGBoost classification notebook in my <a href="https://github.com/mcb00/ds-templates">ds-templates repository</a> to follow along with your own dataset.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-classification-main.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Afternoon in the Mara</figcaption>
+<figcaption>Afternoon in the Mara</figcaption>
 </figure>
 </div>
 <section id="preparing-data-for-xgboost-classifier" class="level2">
@@ -287,7 +323,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="breast-cancer-wisconsin-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="breast-cancer-wisconsin-dataset">Breast Cancer Wisconsin Dataset</h3>
 <p>We’ll demonstrate binary classification in XGBoost using the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_breast_cancer.html#sklearn.datasets.load_breast_cancer">breast cancer wisconsin data</a>, one of scikit-learn’s built-in toy datasets. This is a tiny dataset with 569 observations of 30 features and a binary target representing whether samples are malignant or benign..</p>
-<div class="cell" data-execution_count="1">
+<div id="cell-6" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np </span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd </span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt </span>
@@ -342,7 +378,7 @@ memory usage: 137.9 KB</code></pre>
 </div>
 </div>
 <p>In this dataset, the features are all numeric, so no need to do preprocessing before passing to XGBoost. Below we’ll have a look at the target to ensure it’s encoded in <span class="math inline">\(\{0,1\}\)</span> and to check the class balance.</p>
-<div class="cell" data-execution_count="2">
+<div id="cell-8" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[target].unique())</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(target_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -350,7 +386,7 @@ memory usage: 137.9 KB</code></pre>
 ['malignant' 'benign']</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="3">
+<div id="cell-9" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.target.value_counts().sort_index().plot.bar()</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'target'</span>) </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'count'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -358,13 +394,13 @@ memory usage: 137.9 KB</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img" alt="bar plot showing the count of observations in each class"></p>
-<figcaption class="figure-caption">class counts for the breast cancer dataset</figcaption>
+<figcaption>class counts for the breast cancer dataset</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <p>Next We randomly split data into train and validation sets.</p>
-<div class="cell" data-execution_count="4">
+<div id="cell-11" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>n_valid <span class="op">=</span> <span class="dv">50</span> </span>
@@ -379,7 +415,7 @@ memory usage: 137.9 KB</code></pre>
 <section id="training-with-the-train-function" class="level3">
 <h3 class="anchored" data-anchor-id="training-with-the-train-function">Training with the <code>train</code> function</h3>
 <p>We need to set a couple of <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">model parameters</a>, most notably <code>objective</code>, which should be set to <code>binary:logistic</code> for binary classification. I also prefer to explicitly set <code>tree_method</code> to something other than its default of <code>auto</code>; usually I’ll start with <code>exact</code> on small datasets or <code>approx</code> on larger ones. Note also that The <code>train</code> function expects to receive data as <code>DMatrix</code> objects, not pandas dataframes, so we need to create dense matrix objects as well.</p>
-<div class="cell" data-execution_count="5">
+<div id="cell-13" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'tree_method'</span>: <span class="st">'exact'</span>,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'binary:logistic'</span>,</span>
@@ -404,7 +440,7 @@ memory usage: 137.9 KB</code></pre>
 <section id="training-with-xgbclassifier" class="level3">
 <h3 class="anchored" data-anchor-id="training-with-xgbclassifier">Training with <code>XGBClassifier</code></h3>
 <p>The <code>XGBClassifier</code> takes dataframes or numpy arrays as input, so this time we don’t need to create those dense matrix objects.</p>
-<div class="cell" data-execution_count="6">
+<div id="cell-15" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'tree_method'</span>: <span class="st">'exact'</span>,</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'binary:logistic'</span>,</span>
@@ -429,13 +465,13 @@ memory usage: 137.9 KB</code></pre>
 <h3 class="anchored" data-anchor-id="evaluating-the-model">Evaluating the Model</h3>
 <p>We’ll use the <code>sklearn.metrics</code> module to evaluate model performance on the held-out validation set. Have a look at the <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics">scikit-learn metrics for classification</a> for examples of other metrics to use.</p>
 <p>One thing to watch out for when computing metrics is the difference between the actual labels (usually called <code>y_true</code>), the model’s predicted labels (usually called <code>y_pred</code>), and the models predicted probabilities (usually called <code>y_score</code>). If you’re using the <code>XGBClassifier</code> wrapper, you can get predicted labels with the <code>predict</code> method and predicted probabilities with the <code>predict_proba</code> method. Also note that whereas <code>predict</code> returns a vector of size (num data), <code>predict_proba</code> returns a vector of size (num data, num classes); thus for binary classification, we’ll take just the second column of the array which gives the probability of class 1.</p>
-<div class="cell" data-execution_count="7">
+<div id="cell-17" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>y_true <span class="op">=</span> valid_df[target]</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> clf.predict(valid_df[features])</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>y_score <span class="op">=</span> clf.predict_proba(valid_df[features])[:,<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Probably the simplest classification metric is accuracy, the proportion of labels we predicted correctly.</p>
-<div class="cell" data-execution_count="8">
+<div id="cell-19" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> metrics </span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>metrics.accuracy_score(y_true, y_pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -444,7 +480,7 @@ memory usage: 137.9 KB</code></pre>
 </div>
 </div>
 <p>We can generate a classification report with several different metrics at once.</p>
-<div class="cell" data-execution_count="9">
+<div id="cell-21" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(metrics.classification_report(y_true, y_pred, target_names<span class="op">=</span>target_names))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>              precision    recall  f1-score   support
@@ -459,7 +495,7 @@ weighted avg       0.96      0.96      0.96        50
 </div>
 </div>
 <p>And we can compute the AUC, a popular classification metric based on the ROC curve, which depends on the predicted probability rather than the predicted labels.</p>
-<div class="cell" data-execution_count="10">
+<div id="cell-23" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>metrics.roc_auc_score(y_true, y_score)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <pre><code>0.9885714285714287</code></pre>
@@ -470,7 +506,7 @@ weighted avg       0.96      0.96      0.96        50
 <h3 class="anchored" data-anchor-id="feature-importance">Feature Importance</h3>
 <p>Because of the <a href="../../posts/xgboost-for-regression-in-python/#feature-importance-for-xgboost">limitations of the built-in XGBoost feature importance metrics</a> I recommend that you use either <a href="https://scikit-learn.org/stable/modules/permutation_importance.html">permutation feature importance</a> or perhaps <a href="https://shap.readthedocs.io/en/latest/index.html">SHAP feature importance</a>.</p>
 <p>Here we’ll compute the permutation feature importance, which tells us by how much the model’s performance changes when we scramble a particular feature’s values at prediction time. This reflects how much the model relies on each feature when making predictions.</p>
-<div class="cell" data-execution_count="11">
+<div id="cell-25" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.inspection <span class="im">import</span> permutation_importance</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> make_scorer</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -478,7 +514,7 @@ weighted avg       0.96      0.96      0.96        50
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>permu_imp <span class="op">=</span> permutation_importance(clf, valid_df[features], valid_df[target], </span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                                   n_repeats<span class="op">=</span><span class="dv">30</span>, random_state<span class="op">=</span><span class="dv">0</span>, scoring<span class="op">=</span>scorer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="12">
+<div id="cell-26" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>importances_permutation <span class="op">=</span> pd.Series(permu_imp[<span class="st">'importances_mean'</span>], index<span class="op">=</span>features)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>importances_permutation.sort_values(ascending<span class="op">=</span><span class="va">True</span>)[<span class="op">-</span><span class="dv">10</span>:].plot.barh()</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Permutation Importance on Out-of-Sample Set'</span>)</span>
@@ -487,7 +523,7 @@ weighted avg       0.96      0.96      0.96        50
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img" alt="horizontal bar plot showing permutation feature importance"></p>
-<figcaption class="figure-caption">top 10 features by permutation importance on validation set</figcaption>
+<figcaption>top 10 features by permutation importance on validation set</figcaption>
 </figure>
 </div>
 </div>
@@ -497,7 +533,7 @@ weighted avg       0.96      0.96      0.96        50
 <section id="partial-dependence" class="level2">
 <h2 class="anchored" data-anchor-id="partial-dependence">Partial Dependence</h2>
 <p>A <a href="https://scikit-learn.org/stable/modules/partial_dependence.html">partial dependence plot (PDP)</a> is a representation of the dependence between the model output and one or more feature variables. In binary classification, the model output is the probability of the so-called positive class, i.e.&nbsp;the class with encoded label 1, which corresponds to probability of “benign” in this example.. We can loosely interpret the partial dependence as showing how the expected value of the target changes across values of a particular feature, marginalizing over other features. I say “loosely” because it comes with caveats, a particularly serious one being that correlation among features tends to invalidate the above interpretation. Anyway, we can treat PDPs as useful heuristics for getting a sense of how a model thinks the target changes with feature values.</p>
-<div class="cell" data-execution_count="13">
+<div id="cell-28" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.inspection <span class="im">import</span> PartialDependenceDisplay</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>PartialDependenceDisplay.from_estimator(clf, </span>
@@ -507,7 +543,7 @@ weighted avg       0.96      0.96      0.96        50
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img" alt="line plots showing partial dependence of probability of benign"></p>
-<figcaption class="figure-caption">PDP of target probability of benign vs three features</figcaption>
+<figcaption>PDP of target probability of benign vs three features</figcaption>
 </figure>
 </div>
 </div>
@@ -518,7 +554,7 @@ weighted avg       0.96      0.96      0.96        50
 <section id="forest-cover-type-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="forest-cover-type-dataset">Forest Cover Type Dataset</h3>
 <p>We’ll illustrate multi-class classification using the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_covtype.html#sklearn.datasets.fetch_covtype">scikit-learn forest cover type dataset</a>, which has around 580k observations of 54 features and a target with 7 classes.</p>
-<div class="cell" data-execution_count="14">
+<div id="cell-30" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>dbunch <span class="op">=</span> datasets.fetch_covtype(as_frame<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dbunch.frame</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> dbunch.feature_names </span>
@@ -589,7 +625,7 @@ memory usage: 241.6 MB</code></pre>
 </div>
 </div>
 <p>Here again the features are all numeric, so we don’t need to further preprocess them. Let’s have a look at the target.</p>
-<div class="cell" data-execution_count="15">
+<div id="cell-32" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'Cover_Type'</span>].value_counts().sort_index().plot.bar()</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'cover type'</span>) </span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'count'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -597,13 +633,13 @@ memory usage: 241.6 MB</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img" alt="bar plot showing the count of observations in each class"></p>
-<figcaption class="figure-caption">class counts for the forest cover type dataset</figcaption>
+<figcaption>class counts for the forest cover type dataset</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <p>For multi-class classification, our target variable must take values in <span class="math inline">\(\{0,1,\dots,K\}\)</span>. However, from the histogram of the cover type above, we see that it takes values in <span class="math inline">\(\{1,2,\dots,7\}\)</span>. To fix this we can use the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html">scikit-learn label encoder</a> to create a valid target column.</p>
-<div class="cell" data-execution_count="16">
+<div id="cell-34" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder </span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> <span class="st">'encoded'</span></span>
@@ -615,7 +651,7 @@ memory usage: 241.6 MB</code></pre>
 </div>
 </div>
 <p>Then we can create training and validation sets.</p>
-<div class="cell" data-execution_count="17">
+<div id="cell-36" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>n_valid <span class="op">=</span> <span class="dv">20000</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>train_df, valid_df <span class="op">=</span> train_test_split(df, test_size<span class="op">=</span>n_valid, random_state<span class="op">=</span><span class="dv">42</span>)</span>
@@ -628,7 +664,7 @@ memory usage: 241.6 MB</code></pre>
 <section id="training-with-the-train-function-1" class="level3">
 <h3 class="anchored" data-anchor-id="training-with-the-train-function-1">Training with the <code>train</code> function</h3>
 <p>If you’re training with the <code>train</code> function, multi-class classification can be done with two objectives: <code>multi:softmax</code> and <code>multi:softprob</code>. Both use the same loss function—negative multinomial log likelihood—but the softmax option produces a trained <code>Booster</code> object whose predict method returns a 1d array of predicted labels, whereas the softprob option produces a trained <code>Booster</code> object whose predict method returns a 2d array of predicted probabilities. In either case, you also need to explicitly tell XGBoost how many classes the target has with the <code>num_class</code> parameter.</p>
-<div class="cell" data-execution_count="18">
+<div id="cell-38" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'tree_method'</span>: <span class="st">'approx'</span>,</span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'multi:softprob'</span>,</span>
@@ -654,7 +690,7 @@ memory usage: 241.6 MB</code></pre>
 <section id="training-with-xgbclassifier-1" class="level3">
 <h3 class="anchored" data-anchor-id="training-with-xgbclassifier-1">Training with <code>XGBClassifier</code></h3>
 <p>In multi-class classification, I think the scikit-learn <code>XGBClassifier</code> wrapper is quite a bit more convenient than the native <code>train</code> function. You can set the <code>objective</code> parameter to <code>multi:softprob</code>, and <code>XGBClassifier.fit</code> will produce a model having both <code>predict</code> and <code>predict_proba</code> methods. Also there is no need to explicitly set the number of classes in the target and no need to create the <code>DMatrix</code> objects.</p>
-<div class="cell" data-execution_count="19">
+<div id="cell-40" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'tree_method'</span>: <span class="st">'approx'</span>,</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'multi:softprob'</span>,</span>
@@ -678,7 +714,7 @@ memory usage: 241.6 MB</code></pre>
 <section id="evaluating-the-model-1" class="level3">
 <h3 class="anchored" data-anchor-id="evaluating-the-model-1">Evaluating the Model</h3>
 <p>This time, we’ll keep the entire 2d array of predicted probabilities in <code>y_score</code>.</p>
-<div class="cell" data-execution_count="20">
+<div id="cell-42" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>y_true <span class="op">=</span> valid_df[target]</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> clf.predict(valid_df[features])</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>y_score <span class="op">=</span> clf.predict_proba(valid_df[features])</span>
@@ -687,13 +723,13 @@ memory usage: 241.6 MB</code></pre>
 <pre><code>((20000,), (20000,), (20000, 7))</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="21">
+<div id="cell-43" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>metrics.accuracy_score(y_true, y_pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="21">
 <pre><code>0.77425</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="22">
+<div id="cell-44" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(metrics.classification_report(y_true, y_pred))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>              precision    recall  f1-score   support
@@ -713,7 +749,7 @@ weighted avg       0.78      0.77      0.77     20000
 </div>
 </div>
 <p>Some binary classification metrics, like AUC, can be extended to the multi-class setting by computing the metric for each class, then averaging in some way to get an overall score. The details are controlled by the <code>average</code> and <code>multi_class</code> parameters, which are described in the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score">documentation</a>.</p>
-<div class="cell" data-execution_count="23">
+<div id="cell-46" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>metrics.roc_auc_score(y_true, y_score, average<span class="op">=</span><span class="st">'weighted'</span>, multi_class<span class="op">=</span><span class="st">'ovr'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
 <pre><code>0.9129422094408693</code></pre>
@@ -723,12 +759,12 @@ weighted avg       0.78      0.77      0.77     20000
 <section id="feature-importance-1" class="level3">
 <h3 class="anchored" data-anchor-id="feature-importance-1">Feature Importance</h3>
 <p>We can compute permutation feature importance with exactly the same code that we used for the binary classifier.</p>
-<div class="cell" data-execution_count="24">
+<div id="cell-48" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>scorer <span class="op">=</span> make_scorer(metrics.log_loss, greater_is_better<span class="op">=</span><span class="va">False</span>, needs_proba<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>permu_imp <span class="op">=</span> permutation_importance(clf, valid_df[features], valid_df[target], </span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>                                   n_repeats<span class="op">=</span><span class="dv">30</span>, random_state<span class="op">=</span><span class="dv">0</span>, scoring<span class="op">=</span>scorer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="25">
+<div id="cell-49" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>importances_permutation <span class="op">=</span> pd.Series(permu_imp[<span class="st">'importances_mean'</span>], index<span class="op">=</span>features)</span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>importances_permutation.sort_values(ascending<span class="op">=</span><span class="va">True</span>)[<span class="op">-</span><span class="dv">10</span>:].plot.barh()</span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Permutation Importance on Out-of-Sample Set'</span>)</span>
@@ -737,7 +773,7 @@ weighted avg       0.78      0.77      0.77     20000
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-26-output-1.png" class="img-fluid figure-img" alt="horizontal bar plot showing permutation feature importance"></p>
-<figcaption class="figure-caption">top 10 features by permutation importance on validation set</figcaption>
+<figcaption>top 10 features by permutation importance on validation set</figcaption>
 </figure>
 </div>
 </div>
@@ -746,7 +782,7 @@ weighted avg       0.78      0.77      0.77     20000
 <section id="partial-dependence-1" class="level3">
 <h3 class="anchored" data-anchor-id="partial-dependence-1">Partial Dependence</h3>
 <p>Recall that partial dependence reflects how the expected model output changes with a particular feature. In the multi-class setting, the model has multiple outputs—one probability for each class—so we need to choose which class probability to show in the plots. We choose the target class with the <code>target</code> parameter; be sure to pass in the encoded value, e.g.&nbsp;we need to use the label encoder to transform a raw class label back into the encoded value. Here we’ll examine partial dependence for the probability of cover type 3.</p>
-<div class="cell" data-execution_count="26">
+<div id="cell-51" class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>PartialDependenceDisplay.from_estimator(clf, </span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>                                        X<span class="op">=</span>valid_df[features], </span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>                                        features<span class="op">=</span>[<span class="st">'Elevation'</span>, <span class="st">'Horizontal_Distance_To_Roadways'</span>], </span>
@@ -755,7 +791,7 @@ weighted avg       0.78      0.77      0.77     20000
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="xgboost-for-classification-in-python_files/figure-html/cell-27-output-1.png" class="img-fluid figure-img" alt="line plots showing partial dependence of probability of cover type 3 vs two features"></p>
-<figcaption class="figure-caption">PDP of target probability of cover type == 3 vs elevation and distance to roadway</figcaption>
+<figcaption>PDP of target probability of cover type == 3 vs elevation and distance to roadway</figcaption>
 </figure>
 </div>
 </div>
@@ -822,18 +858,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -865,11 +890,48 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/randomrealizations\.com\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -879,8 +941,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -892,7 +963,129 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -936,6 +1129,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -961,6 +1155,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1021,6 +1241,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

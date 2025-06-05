@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.6.40">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2020-12-08">
 <meta name="description" content="Understand the intuition behind the gradient boosting machine (GBM) and learn how to implement it from scratch.">
 
-<title>Random Realizations – How to Build a Gradient Boosting Machine from Scratch</title>
+<title>How to Build a Gradient Boosting Machine from Scratch – Random Realizations</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -25,7 +25,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -36,7 +36,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -73,17 +73,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-7bfda625c7ff35f40b8288d308b7c4dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -92,6 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -99,25 +106,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <script async="" defer="" src="https://umami.randomrealizations.com/script.js" data-domains="randomrealizations.com" data-website-id="17844d61-f224-45c0-aa5f-2935c14dd5ac"></script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 <meta property="og:title" content="Random Realizations">
 <meta property="og:description" content="A blog about data science, statistics, machine learning, and the scientific method">
-<meta property="og:image" content="https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/opengraph.png">
-<meta property="og:site-name" content="Random Realizations">
-<meta property="og:image:alt" content="SF buzzes silently in the distance">
-<link rel="canonical" href="https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/" />
+<meta property="og:image" content="https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/thumbnail.jpg">
+<meta property="og:site_name" content="Random Realizations">
+<meta property="og:image:alt" content="circle painted by hand in a single brush stroke">
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a href="../../index.html" class="navbar-brand navbar-brand-logo">
     <img src="../../logo.png" alt="" class="navbar-logo">
     </a>
@@ -126,48 +159,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../about.html" rel="" target="">
- <span class="menu-text">About</span></a>
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../archive.html" rel="" target="">
- <span class="menu-text">Archive</span></a>
+    <a class="nav-link" href="../../archive.html"> 
+<span class="menu-text">Archive</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Series</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-series">    
         <li>
-    <a class="dropdown-item" href="../../gradient-boosting-series.html" rel="" target="">
+    <a class="dropdown-item" href="../../gradient-boosting-series.html">
  <span class="dropdown-text">Gradient Boosting Series</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Resources</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="https://python-bloggers.com/" rel="" target="">
+    <a class="dropdown-item" href="https://python-bloggers.com/">
  <span class="dropdown-text">Python-Bloggers</span></a>
   </li>  
     </ul>
   </li>
 </ul>
-            <div class="quarto-navbar-tools tools-wide">
-    <a href="https://github.com/mcb00" rel="" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
-    <a href="https://twitter.com/mcbwrs" rel="" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
-    <a href="https://www.linkedin.com/in/matt-bowers" rel="" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
-</div>
           </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools tools-wide">
+    <a href="https://github.com/mcb00" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/mcbwrs" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -248,12 +281,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header>
+
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="main.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">SF buzzes silently in the distance</figcaption>
+<figcaption>SF buzzes silently in the distance</figcaption>
 </figure>
 </div>
 <p>Ahh, gradient boosting. In addition to having a totally kickass name, this family of machine learning algorithms is currently among the best known approaches for prediction problems on structured data. Like its cousin random forest, gradient boosting is an ensemble technique that generates a single strong model by combining many simple models, usually decision trees. These tree ensemble methods perform very well on tabular data prediction problems and are therefore widely used in industrial applications and machine learning competitions.</p>
@@ -261,9 +296,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="toy-data" class="level2">
 <h2 class="anchored" data-anchor-id="toy-data">Toy Data</h2>
 <p>We begin our boosting adventure with a deceptively simple toy dataset having one feature <span class="math inline">\(x\)</span> and target <span class="math inline">\(y\)</span>.</p>
-<div class="cell" data-execution_count="4">
+<div id="cell-6" class="cell" data-scrolled="false" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-4-output-1.png" class="img-fluid" alt="Figure showing a scatterplot of x and y toy data. y increases linearly in x then becomes constant in x."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img" alt="Figure showing a scatterplot of x and y toy data. y increases linearly in x then becomes constant in x."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Notice that <span class="math inline">\(y\)</span> increases with <span class="math inline">\(x\)</span> for a while, then flattens out. This is a pattern that happens all the time in real data, and it’s one that linear models epically fail to capture. Let’s build a gradient boosting machine to model it.</p>
@@ -273,19 +312,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Suppose we have a crappy model <span class="math inline">\(F_0(x)\)</span> that uses features <span class="math inline">\(x\)</span> to predict target <span class="math inline">\(y\)</span>. A crappy but reasonable choice of <span class="math inline">\(F_0(x)\)</span> would be a model that always predicts the mean of <span class="math inline">\(y\)</span>.</p>
 <p><span class="math display">\[F_0(x) = \bar{y}\]</span></p>
 <p>That would look like this.</p>
-<div class="cell" data-execution_count="6">
+<div id="cell-11" class="cell" data-scrolled="false" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-6-output-1.png" class="img-fluid" alt="Figure showing the toy data with a flat model prediction."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img" alt="Figure showing the toy data with a flat model prediction."></p>
+</figure>
+</div>
 </div>
 </div>
 <p><span class="math inline">\(F_0(x)\)</span> by itself is not a great model, so its residuals <span class="math inline">\(y - F_0(x)\)</span> are still pretty big and they still exhibit meaningful structure that we should try to capture with our model.</p>
-<div class="cell" data-execution_count="7">
+<div id="cell-13" class="cell" data-scrolled="false" data-execution_count="7">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Figure showing residuals from the initial flat model."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img" alt="Figure showing residuals from the initial flat model."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Well what if I had another crappy model <span class="math inline">\(h_1(x)\)</span> that could predict the residuals <span class="math inline">\(y - F_0(x)\)</span>?</p>
-<table class="table">
+<table class="caption-top table">
 <thead>
 <tr class="header">
 <th style="text-align: center;">Model</th>
@@ -302,21 +349,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p>It’s worth noting that the crappiness of this new model is essential; in fact in this boosting context, it’s usually called a <em>weak learner</em>. To get a model that’s only slightly better than nothing, let’s use a very simple <a href="https://en.wikipedia.org/wiki/Decision_tree_learning">decision tree</a> with a single split, a.k.a. a stump. This model basically divides our feature <span class="math inline">\(x\)</span> into two regions and predicts the mean value of <span class="math inline">\(y\)</span> for all of the <span class="math inline">\(x\)</span>’s in each region. It might look like this.</p>
-<div class="cell" data-scrolled="true" data-execution_count="8">
+<div id="cell-17" class="cell" data-scrolled="true" data-execution_count="8">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-8-output-1.png" class="img-fluid" alt="Figure showing a fit to the residuals."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img" alt="Figure showing a fit to the residuals."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>We could make a composite model by adding the predictions of the base model <span class="math inline">\(F_0(x)\)</span> to the predictions of the supplemental model <span class="math inline">\(h_1(x)\)</span> (which will pick up some of the slack left by <span class="math inline">\(F_0(x)\)</span>). We’d get a new model <span class="math inline">\(F_1(x)\)</span>:</p>
 <p><span class="math display">\[F_1(x) = F_0(x) + h_1(x)\]</span></p>
 <p>which is better at predicting <span class="math inline">\(y\)</span> than the original model <span class="math inline">\(F_0(x)\)</span> alone.</p>
-<div class="cell" data-execution_count="9">
+<div id="cell-19" class="cell" data-scrolled="false" data-execution_count="9">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Figure showing a composite model with one step."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img" alt="Figure showing a composite model with one step."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Why stop there? Our composite model <span class="math inline">\(F_1(x)\)</span> might still be kind of crappy, and so its residuals <span class="math inline">\(y - F_1(x)\)</span> might still be pretty big and structurey. Let’s add another model <span class="math inline">\(h_2(x)\)</span> to predict those residuals.</p>
-<table class="table">
+<table class="caption-top table">
 <thead>
 <tr class="header">
 <th style="text-align: center;">Model</th>
@@ -334,9 +389,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>The new composite model is</p>
 <p><span class="math display">\[F_2(x) = F_1(x) + h_2(x).\]</span></p>
-<div class="cell" data-scrolled="true" data-execution_count="10">
+<div id="cell-23" class="cell" data-scrolled="true" data-execution_count="10">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Figure with two panels. On the left a residual plot with model fit to the residuals. On the right the toy data with updated composite model fit."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img" alt="Figure with two panels. On the left a residual plot with model fit to the residuals. On the right the toy data with updated composite model fit."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>If we keep doing this, at each stage we’ll train a new model <span class="math inline">\(h_m(x)\)</span> on the previous composite model’s residuals <span class="math inline">\(y-F_{m-1}(x)\)</span>, and we’ll get a new composite model</p>
@@ -346,9 +405,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 \]</span></p>
 <p>Here’s how our model would evolve up to <span class="math inline">\(M=6\)</span>.</p>
-<div class="cell" data-execution_count="11">
+<div id="cell-25" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-11-output-1.png" class="img-fluid" alt="Figure with two columns and several rows of panels. The left column contains residual plots. The right column contains updated composite models. Each subsequent row shows the results of another boosting round where the composite model becomes more accurate after each round."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img" alt="Figure with two columns and several rows of panels. The left column contains residual plots. The right column contains updated composite models. Each subsequent row shows the results of another boosting round where the composite model becomes more accurate after each round."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Voila! That, friends, is boosting!</p>
@@ -370,7 +433,7 @@ F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 <p>If you wish to make an apple pie from scratch, you must first invent the universe.</p>
 </blockquote>
 <p>We will not be inventing a universe that contains the Earth, apple trees, computers, python, numpy, and sklearn. To keep the “scratch” implementation clean, we’ll allow ourselves the luxury of numpy and an off-the-shelf sklearn decision tree which we’ll use as our weak learner.</p>
-<div class="cell" data-execution_count="12">
+<div id="cell-33" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeRegressor</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># model hyperparameters</span></span>
@@ -394,14 +457,18 @@ F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 <p>We first define our hyperparameters: - <code>learning_rate</code> is (<span class="math inline">\(\eta\)</span>) - <code>n_trees</code> is the number of weak learner trees to add (<span class="math inline">\(M\)</span>) - <code>max_depth</code> controls the depth of the trees; here we set to 1 for stumps</p>
 <p>We define our base model predictions <code>F0</code> to simply predict the mean value of <code>y</code>. <code>Fm</code> corresponds to the current composite model <span class="math inline">\(F_m(x)\)</span> as we iteratively add weak learners, so we’ll initialize it with <code>F0</code>. <code>trees</code> is an empty list that we’ll use to hold our weak learners.</p>
 <p>Next we iteratively add <code>n_trees</code> weak learners to our composite model. At each iteration, we create a new decision tree and train it on <code>x</code> to predict the current residuals <code>y - Fm</code>. We update <code>Fm</code> with the newly trained learner’s predictions scaled by the learning rate, and we append the new weak learner <span class="math inline">\(h_m(x)\)</span> in the <code>trees</code> list. We generate final predictions <code>y_hat</code> on the training data by summing up the predictions from each weak learner, scaling by the learning rate, and adding to the base model (a.k.a. the mean of <code>y</code>).</p>
-<div class="cell" data-execution_count="13">
+<div id="cell-35" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
-<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing the toy data with a composite model after several boosting rounds. The model fits the scatter data well."></p>
+<div>
+<figure class="figure">
+<p><img src="gradient-boosting-machine-from-scratch_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img" alt="Figure showing the toy data with a composite model after several boosting rounds. The model fits the scatter data well."></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Nice! Our GBM fits that nonlinear data pretty well.</p>
 <p>Now that we have a working implementation, let’s go ahead and implement it as a class with <code>fit</code> and <code>predict</code> methods like we’re used to having in sklearn.</p>
-<div class="cell" data-execution_count="15">
+<div id="cell-38" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GradientBoostingFromScratch():</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_trees, learning_rate, max_depth<span class="op">=</span><span class="dv">1</span>):</span>
@@ -421,7 +488,7 @@ F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.F0 <span class="op">+</span> <span class="va">self</span>.learning_rate <span class="op">*</span> np.<span class="bu">sum</span>([tree.predict(x) <span class="cf">for</span> tree <span class="kw">in</span> <span class="va">self</span>.trees], axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s compare the performance of our implementation with the sklearn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html"><code>GradientBoostingRegressor</code></a>.</p>
-<div class="cell" data-execution_count="16">
+<div id="cell-40" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> GradientBoostingRegressor</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -489,18 +556,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -532,11 +588,48 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/randomrealizations\.com\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -546,8 +639,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -559,7 +661,129 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -603,6 +827,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -628,6 +853,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -688,6 +939,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

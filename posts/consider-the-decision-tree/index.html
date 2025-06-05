@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.6.40">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2021-12-12">
 <meta name="description" content="Understand the core strengths and weaknesses of the decision tree, and see how ensembling makes trees shine.">
 
-<title>Random Realizations – Consider the Decision Tree</title>
+<title>Consider the Decision Tree – Random Realizations</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -25,7 +25,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -36,7 +36,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -73,17 +73,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-7bfda625c7ff35f40b8288d308b7c4dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -92,6 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -103,19 +110,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 <meta property="og:title" content="Random Realizations">
 <meta property="og:description" content="A blog about data science, statistics, machine learning, and the scientific method">
-<meta property="og:image" content="https://randomrealizations.com/posts/consider-the-decision-tree/opengraph.png">
-<meta property="og:site-name" content="Random Realizations">
-<meta property="og:image:alt" content="A California cypress tree abides in silence on Alameda Beach">
-<link rel="canonical" href="https://randomrealizations.com/posts/consider-the-decision-tree/" />
+<meta property="og:image" content="https://randomrealizations.com/posts/consider-the-decision-tree/thumbnail.jpg">
+<meta property="og:site_name" content="Random Realizations">
+<meta property="og:image:alt" content="circle painted by hand in a single brush stroke">
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a href="../../index.html" class="navbar-brand navbar-brand-logo">
     <img src="../../logo.png" alt="" class="navbar-logo">
     </a>
@@ -124,48 +130,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../about.html" rel="" target="">
- <span class="menu-text">About</span></a>
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../archive.html" rel="" target="">
- <span class="menu-text">Archive</span></a>
+    <a class="nav-link" href="../../archive.html"> 
+<span class="menu-text">Archive</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Series</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-series">    
         <li>
-    <a class="dropdown-item" href="../../gradient-boosting-series.html" rel="" target="">
+    <a class="dropdown-item" href="../../gradient-boosting-series.html">
  <span class="dropdown-text">Gradient Boosting Series</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-resources" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Resources</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="https://python-bloggers.com/" rel="" target="">
+    <a class="dropdown-item" href="https://python-bloggers.com/">
  <span class="dropdown-text">Python-Bloggers</span></a>
   </li>  
     </ul>
   </li>
 </ul>
-            <div class="quarto-navbar-tools tools-wide">
-    <a href="https://github.com/mcb00" rel="" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
-    <a href="https://twitter.com/mcbwrs" rel="" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
-    <a href="https://www.linkedin.com/in/matt-bowers" rel="" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
-</div>
           </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools tools-wide">
+    <a href="https://github.com/mcb00" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/mcbwrs" title="Matt on Twitter" class="quarto-navigation-tool px-1" aria-label="Matt on Twitter"><i class="bi bi-twitter"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -259,12 +265,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header>
+
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="main.jpg" title="." class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">A California cypress tree abides in silence on Alameda Beach.</figcaption>
+<figcaption>A California cypress tree abides in silence on Alameda Beach.</figcaption>
 </figure>
 </div>
 <p>Ah, the decision tree. It’s an underrated and often overlooked hero of modern statistical learning. Trees aren’t particularly powerful learning algorithms on their own, but when utilized as building blocks in larger ensemble models like random forest and gradient boosted trees, they can achieve state of the art performance in many practical applications. Since we’ve been focusing on gradient boosting ensembles lately, let’s take a moment to consider the humble decision tree itself. This post gives a high-level intuition for how trees work, an opinionated list of their key strengths and weaknesses, and some perspective on why ensembling makes them truly shine.</p>
@@ -281,55 +289,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Ten baseline variables, age, sex, body mass index, average blood pressure, and six blood serum measurements were obtained for each of n = 442 diabetes patients, as well as the response of interest, a quantitative measure of disease progression one year after baseline.</p>
 </blockquote>
 <p>First we load the data. To make our lives easier, we’ll just use two features: average blood pressure (bp) and the first blood serum measurement (s1) to predict the target. I’ll rescale the features to make the values easier for me to read, but it won’t affect our tree–more on that later.</p>
-<div class="cell" data-execution_count="2">
+<div id="cell-6" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np </span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>color_palette <span class="op">=</span> <span class="st">"viridis"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="3">
+<div id="cell-7" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_diabetes</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> load_diabetes(as_frame<span class="op">=</span><span class="va">True</span>, return_X_y<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> X[[<span class="st">'bp'</span>, <span class="st">'s1'</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-scrolled="true" data-execution_count="4">
+<div id="cell-8" class="cell" data-scrolled="true" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-5-output-1.png" class="img-fluid figure-img" alt="Scatterplot of two features with color of the points indicating the target value for each data point"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Let’s grow a tree to predict the target given values of blood pressure and blood serum.</p>
-<div class="cell" data-execution_count="5">
+<div id="cell-10" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeRegressor</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="dv">2</span>)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>tree.fit(X,y)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-scrolled="true" data-execution_count="6">
+<div id="cell-11" class="cell" data-scrolled="true" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img" alt="Tree diagram showing split rules and predicted values for the fitted tree"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>To make predictions using our fitted tree, we start at the root node (which is at the top), and we work our way down moving left if our feature is less than the split threshold and to the right if it’s greater than the split threshold. For example let’s predict the target for a new case with bp= 1 and s1 = 5. Since our blood pressure of 1 is less than 2.359, we move to the left child node. Here, since our serum of 5 is greater than the threshold at 0.875, we move to the right child node. This node has no further children, and thus we return its predicted value of 155.343.</p>
-<div class="cell" data-execution_count="7">
+<div id="cell-13" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tree.predict(pd.DataFrame({<span class="st">'bp'</span>: <span class="dv">1</span>, <span class="st">'s1'</span>: <span class="dv">5</span>}, index<span class="op">=</span>[<span class="dv">0</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <pre><code>array([155.34313725])</code></pre>
 </div>
 </div>
 <p>Let’s overlay these splits on our feature scatterplot to see how the tree has partitioned the feature space.</p>
-<div class="cell" data-execution_count="8">
+<div id="cell-15" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img" alt="Scatterplot of two features with vertical and horizontal dashed lines corresponding to the splits"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>The tree has managed to carve out regions of feature space where the target values tend to be similar within each region, e.g.&nbsp;we have low target values in the bottom left partition and high target values in the far right region.</p>
 <p>Let’s take a look at the regression surface predicted by our tree. Since the tree predicts the exact same value for all instances in a given partition, the surface has only four distinct values.</p>
-<div class="cell" data-execution_count="9">
+<div id="cell-17" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img" alt="Plot of the space spanned by two features with color indicating the model predicted value"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Fabulous, now that we’ve seen a tree in action, let’s talk about trees’ key strengths and weaknesses.</p>
@@ -362,9 +386,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="feature-target-relationship" class="level3">
 <h3 class="anchored" data-anchor-id="feature-target-relationship">Feature-Target Relationship</h3>
 <p>Finally, it is possible for trees to discover complex nonlinear feature-target relationships without the need for user-specification of the relationships. This is because trees use local piecewise constant approximations without making any parametric assumptions. With enough splits, the tree can approximate arbitrary feature-target relationships.</p>
-<div class="cell" data-execution_count="11">
+<div id="cell-22" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-12-output-1.png" class="img-fluid figure-img" alt="Figure showing sinusoidal scatter data and a piecewise constant approximation from a decision tree"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -379,18 +407,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="quantization" class="level3">
 <h3 class="anchored" data-anchor-id="quantization">Quantization</h3>
 <p>Because regression trees use piecewise constant functions to approximate the target, prediction accuracy can deteriorate near split boundaries. For example, if the target is increasing with the feature, a tree might tend to overpredict the target on the left side of split boundaries and overpredict on the right side of split boundaries.</p>
-<div class="cell" data-scrolled="true" data-execution_count="12">
+<div id="cell-24" class="cell" data-scrolled="true" data-execution_count="12">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img" alt="Figure showing scatter data and a decision tree fit where data points near splits are either over or under predicted"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
 <section id="extrapolation" class="level3">
 <h3 class="anchored" data-anchor-id="extrapolation">Extrapolation</h3>
 <p>Because they are trained by partitioning the feature space in a training dataset, trees cannot intelligently extrapolate beyond the data on which they are trained. For example if we query a tree for predictions beyond the greatest feature value encountered in training, it will just return the prediction corresponding to the largest in-sample feature values.</p>
-<div class="cell" data-scrolled="true" data-execution_count="13">
+<div id="cell-26" class="cell" data-scrolled="true" data-execution_count="13">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img" alt="Figure showing scatter data and a decision tree fit with a constant predicted value outside the data range"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -404,9 +440,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We can go a long way toward addressing the issues of overfitting and prediction quantization by using trees as building blocks in larger algorithms called tree ensembles, the most popular examples being random forest and gradient boosted trees. A tree ensemble is a collection of different individual tree models whose predictions are averaged to generate an overall prediction.</p>
 <p>Ensembling helps address overfitting because even if each individual tree is overfitted, the average of their individual noisy predictions will tend to be more stable. Think of it in terms of the <a href="https://en.wikipedia.org/wiki/Bias%E2%80%93variance_tradeoff">bias variance tradeoff</a>, where bias refers to a model’s failure to capture certain patterns and variance refers to how different a model prediction would be if the model were trained on a different sample of training data. Since the ensemble is averaging over the predictions of all the individual models, training it on a different sample of training data would change the individual models predictions, but their overall average prediction will tend to remain stable. Thus, ensembling helps reduce the effects of overfitting by reducing model variance without increasing bias.</p>
 <p>Ensembling also helps address prediction quantization issues. While each individual tree’s predictions might express large jumps in the regression surface, averaging many different trees’ predictions together effectively generates a surface with more partitions and smaller jumps between them. This provides a smoother approximation of the feature-target relationship.</p>
-<div class="cell" data-scrolled="true" data-execution_count="14">
+<div id="cell-29" class="cell" data-scrolled="true" data-execution_count="14">
 <div class="cell-output cell-output-display">
-<p><img src="consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
+<div>
+<figure class="figure">
+<p><img src="consider-the-decision-tree_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img" alt="Figure showing scatter data and a smooth model prediction from a tree ensemble model"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -461,18 +501,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -504,11 +533,48 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/randomrealizations\.com\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -518,8 +584,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -531,7 +606,129 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -575,6 +772,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -600,6 +798,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -662,6 +886,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <script src="https://utteranc.es/client.js" repo="mcb00/blog" issue-term="title" theme="github-light" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
+
 
 
 
