@@ -296,7 +296,25 @@ window.Quarto = {
 <section id="toy-data" class="level2">
 <h2 class="anchored" data-anchor-id="toy-data">Toy Data</h2>
 <p>We begin our boosting adventure with a deceptively simple toy dataset having one feature <span class="math inline">\(x\)</span> and target <span class="math inline">\(y\)</span>.</p>
-<div id="cell-6" class="cell" data-scrolled="false" data-execution_count="4">
+<div id="cell-5" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">50</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.where(x <span class="op">&lt;</span> <span class="dv">5</span>, x, <span class="dv">5</span>) <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="fl">0.4</span>, size<span class="op">=</span>x.shape)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> x.reshape(<span class="op">-</span><span class="dv">1</span>,<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-6" class="cell" data-scrolled="false">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>plt.scatter(x,y, label<span class="op">=</span><span class="st">'y'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'y'</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>plt.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -312,7 +330,32 @@ window.Quarto = {
 <p>Suppose we have a crappy model <span class="math inline">\(F_0(x)\)</span> that uses features <span class="math inline">\(x\)</span> to predict target <span class="math inline">\(y\)</span>. A crappy but reasonable choice of <span class="math inline">\(F_0(x)\)</span> would be a model that always predicts the mean of <span class="math inline">\(y\)</span>.</p>
 <p><span class="math display">\[F_0(x) = \bar{y}\]</span></p>
 <p>That would look like this.</p>
-<div id="cell-11" class="cell" data-scrolled="false" data-execution_count="6">
+<div id="cell-10" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>eta <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>F_0 <span class="op">=</span> y.mean() <span class="op">*</span> np.ones(shape<span class="op">=</span>y.shape)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>h_1 <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>h_1.fit(x, y <span class="op">-</span> F_0)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>F_1 <span class="op">=</span> F_0 <span class="op">+</span> eta <span class="op">*</span> h_1.predict(x)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>h_2 <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>h_2.fit(x, y <span class="op">-</span> F_1)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>F_2 <span class="op">=</span> F_1 <span class="op">+</span> eta <span class="op">*</span> h_2.predict(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-11" class="cell" data-scrolled="false">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>plt.plot(x, y, <span class="st">'o'</span>, label<span class="op">=</span><span class="vs">r'$y$'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>plt.plot(x, F_0, <span class="st">'-r'</span>, label<span class="op">=</span><span class="vs">r'$F_0(x)$'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'y'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>plt.ylim([<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -322,7 +365,18 @@ window.Quarto = {
 </div>
 </div>
 <p><span class="math inline">\(F_0(x)\)</span> by itself is not a great model, so its residuals <span class="math inline">\(y - F_0(x)\)</span> are still pretty big and they still exhibit meaningful structure that we should try to capture with our model.</p>
-<div id="cell-13" class="cell" data-scrolled="false" data-execution_count="7">
+<div id="cell-13" class="cell" data-scrolled="false">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y <span class="op">-</span> F_0, <span class="st">'d'</span>, label<span class="op">=</span><span class="vs">r'$y - F_0(x)$'</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>ax.vlines(x, <span class="dv">0</span>, y <span class="op">-</span> F_0, linewidth<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.plot(x, h_1.predict(x), '--r', label=r'$h_1(x)$')</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'residuals'</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>ax.legend()</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>ax.set_ylim([<span class="op">-</span><span class="dv">6</span>, <span class="dv">6</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -349,7 +403,18 @@ window.Quarto = {
 </tbody>
 </table>
 <p>It’s worth noting that the crappiness of this new model is essential; in fact in this boosting context, it’s usually called a <em>weak learner</em>. To get a model that’s only slightly better than nothing, let’s use a very simple <a href="https://en.wikipedia.org/wiki/Decision_tree_learning">decision tree</a> with a single split, a.k.a. a stump. This model basically divides our feature <span class="math inline">\(x\)</span> into two regions and predicts the mean value of <span class="math inline">\(y\)</span> for all of the <span class="math inline">\(x\)</span>’s in each region. It might look like this.</p>
-<div id="cell-17" class="cell" data-scrolled="true" data-execution_count="8">
+<div id="cell-17" class="cell" data-scrolled="true">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>ax.plot(x, y <span class="op">-</span> F_0, <span class="st">'d'</span>, label<span class="op">=</span><span class="vs">r'$y - F_0(x)$'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ax.vlines(x, <span class="dv">0</span>, y <span class="op">-</span> F_0, linewidth<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>plt.plot(x, h_1.predict(x), <span class="st">'--r'</span>, label<span class="op">=</span><span class="vs">r'$h_1(x)$'</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'residuals'</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>ax.legend()</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>ax.set_ylim([<span class="op">-</span><span class="dv">6</span>, <span class="dv">6</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -361,7 +426,16 @@ window.Quarto = {
 <p>We could make a composite model by adding the predictions of the base model <span class="math inline">\(F_0(x)\)</span> to the predictions of the supplemental model <span class="math inline">\(h_1(x)\)</span> (which will pick up some of the slack left by <span class="math inline">\(F_0(x)\)</span>). We’d get a new model <span class="math inline">\(F_1(x)\)</span>:</p>
 <p><span class="math display">\[F_1(x) = F_0(x) + h_1(x)\]</span></p>
 <p>which is better at predicting <span class="math inline">\(y\)</span> than the original model <span class="math inline">\(F_0(x)\)</span> alone.</p>
-<div id="cell-19" class="cell" data-scrolled="false" data-execution_count="9">
+<div id="cell-19" class="cell" data-scrolled="false">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>plt.plot(x, y, <span class="st">'o'</span>, label<span class="op">=</span><span class="vs">r'$y$'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>plt.plot(x, F_1, <span class="st">'-r'</span>, label<span class="op">=</span><span class="vs">r'$F_1(x)$'</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'y'</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>plt.ylim([<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -389,7 +463,24 @@ window.Quarto = {
 </table>
 <p>The new composite model is</p>
 <p><span class="math display">\[F_2(x) = F_1(x) + h_2(x).\]</span></p>
-<div id="cell-23" class="cell" data-scrolled="true" data-execution_count="10">
+<div id="cell-23" class="cell" data-scrolled="true">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># m = 2</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>,<span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">4</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].plot(x, y <span class="op">-</span> F_1, <span class="st">'d'</span>, label<span class="op">=</span><span class="vs">r'$y - F_1(x)$'</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].vlines(x, <span class="dv">0</span>, y <span class="op">-</span> F_1, linewidth<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].plot(x, h_2.predict(x), <span class="st">'--r'</span>, label<span class="op">=</span><span class="vs">r'$h_2(x)$'</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].legend()</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].set_ylim([<span class="op">-</span><span class="dv">6</span>, <span class="dv">6</span>])</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">1</span>].plot(x, y, <span class="st">'o'</span>, label<span class="op">=</span><span class="vs">r'$y$'</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">1</span>].plot(x, F_2, <span class="st">'-r'</span>, label<span class="op">=</span><span class="vs">r'$F_2(x)$'</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">1</span>].legend()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">1</span>].set_ylim([<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -405,7 +496,56 @@ window.Quarto = {
 F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 \]</span></p>
 <p>Here’s how our model would evolve up to <span class="math inline">\(M=6\)</span>.</p>
-<div id="cell-25" class="cell" data-execution_count="11">
+<div id="cell-25" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hyperparameters</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>n_trees <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>max_depth <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Training</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>F0 <span class="op">=</span> y.mean() </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">7</span>,<span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">28</span>))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">0</span>].axis(<span class="st">'off'</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].plot(x, y, <span class="st">'o'</span>, label<span class="op">=</span><span class="vs">r'$y$'</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].plot(x, F_0, <span class="st">'-r'</span>, label<span class="op">=</span><span class="vs">r'$F_0(x)$'</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].set_title(<span class="st">'m = 0'</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].set_ylabel(<span class="st">'y'</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].legend()</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>,<span class="dv">1</span>].set_ylim([<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>])<span class="op">;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>Fm <span class="op">=</span> F0</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>trees <span class="op">=</span> []</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_trees):</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span>max_depth)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    tree.fit(x, y <span class="op">-</span> Fm)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    m <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].plot(x, y <span class="op">-</span> Fm, <span class="st">'d'</span>, label<span class="op">=</span><span class="vs">r'$y - F_</span><span class="sc">{}</span><span class="vs">(x)$'</span>.<span class="bu">format</span>(m<span class="op">-</span><span class="dv">1</span>))</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].vlines(x, <span class="dv">0</span>, y <span class="op">-</span> Fm, linewidth<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].plot(x, tree.predict(x), <span class="st">'--r'</span>, label<span class="op">=</span><span class="vs">r'$h_</span><span class="sc">{}</span><span class="vs">(x)$'</span>.<span class="bu">format</span>(m))</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].legend()</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].set_ylim([<span class="op">-</span><span class="dv">6</span>, <span class="dv">6</span>])</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].set_title(<span class="st">'m = </span><span class="sc">{}</span><span class="st">'</span>.<span class="bu">format</span>(m))</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">0</span>].set_ylabel(<span class="st">'residuals'</span>)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    Fm <span class="op">+=</span> learning_rate <span class="op">*</span> tree.predict(x)</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    trees.append(tree)</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].plot(x, y, <span class="st">'o'</span>, label<span class="op">=</span><span class="vs">r'$y$'</span>)</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].plot(x, Fm, <span class="st">'-r'</span>, label<span class="op">=</span><span class="vs">r'$F_</span><span class="sc">{}</span><span class="vs">(x)$'</span>.<span class="bu">format</span>(m))</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].legend()</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].set_ylim([<span class="op">-</span><span class="dv">1</span>,<span class="dv">7</span>])</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].set_title(<span class="st">'m = </span><span class="sc">{}</span><span class="st">'</span>.<span class="bu">format</span>(m))</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    ax[m,<span class="dv">1</span>].set_ylabel(<span class="st">'y'</span>)</span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>ax[m,<span class="dv">0</span>].set_xlabel(<span class="st">'x'</span>)</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>ax[m,<span class="dv">1</span>].set_xlabel(<span class="st">'x'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -434,30 +574,37 @@ F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 </blockquote>
 <p>We will not be inventing a universe that contains the Earth, apple trees, computers, python, numpy, and sklearn. To keep the “scratch” implementation clean, we’ll allow ourselves the luxury of numpy and an off-the-shelf sklearn decision tree which we’ll use as our weak learner.</p>
 <div id="cell-33" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeRegressor</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># model hyperparameters</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.3</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>n_trees <span class="op">=</span> <span class="dv">10</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>max_depth <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Training</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>F0 <span class="op">=</span> y.mean() </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>Fm <span class="op">=</span> F0</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>trees <span class="op">=</span> []</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_trees):</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span>max_depth)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    tree.fit(x, y <span class="op">-</span> Fm)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Fm <span class="op">+=</span> learning_rate <span class="op">*</span> tree.predict(x)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    trees.append(tree)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Prediction</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>y_hat <span class="op">=</span> F0 <span class="op">+</span> learning_rate <span class="op">*</span> np.<span class="bu">sum</span>([t.predict(x) <span class="cf">for</span> t <span class="kw">in</span> trees], axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeRegressor</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># model hyperparameters</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>n_trees <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>max_depth <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Training</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>F0 <span class="op">=</span> y.mean() </span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>Fm <span class="op">=</span> F0</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>trees <span class="op">=</span> []</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_trees):</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span>max_depth)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    tree.fit(x, y <span class="op">-</span> Fm)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    Fm <span class="op">+=</span> learning_rate <span class="op">*</span> tree.predict(x)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    trees.append(tree)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Prediction</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>y_hat <span class="op">=</span> F0 <span class="op">+</span> learning_rate <span class="op">*</span> np.<span class="bu">sum</span>([t.predict(x) <span class="cf">for</span> t <span class="kw">in</span> trees], axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We first define our hyperparameters: - <code>learning_rate</code> is (<span class="math inline">\(\eta\)</span>) - <code>n_trees</code> is the number of weak learner trees to add (<span class="math inline">\(M\)</span>) - <code>max_depth</code> controls the depth of the trees; here we set to 1 for stumps</p>
 <p>We define our base model predictions <code>F0</code> to simply predict the mean value of <code>y</code>. <code>Fm</code> corresponds to the current composite model <span class="math inline">\(F_m(x)\)</span> as we iteratively add weak learners, so we’ll initialize it with <code>F0</code>. <code>trees</code> is an empty list that we’ll use to hold our weak learners.</p>
 <p>Next we iteratively add <code>n_trees</code> weak learners to our composite model. At each iteration, we create a new decision tree and train it on <code>x</code> to predict the current residuals <code>y - Fm</code>. We update <code>Fm</code> with the newly trained learner’s predictions scaled by the learning rate, and we append the new weak learner <span class="math inline">\(h_m(x)\)</span> in the <code>trees</code> list. We generate final predictions <code>y_hat</code> on the training data by summing up the predictions from each weak learner, scaling by the learning rate, and adding to the base model (a.k.a. the mean of <code>y</code>).</p>
-<div id="cell-35" class="cell" data-execution_count="13">
+<div id="cell-35" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>plt.plot(x,y,<span class="st">'o'</span>, label<span class="op">=</span><span class="st">'y'</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>plt.plot(x,y_hat,<span class="st">'-k'</span>, label<span class="op">=</span><span class="st">'GBM'</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'x'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -469,36 +616,36 @@ F_M(x) = F_0(x) + \sum_{m = 1}^{M} h_m(x)
 <p>Nice! Our GBM fits that nonlinear data pretty well.</p>
 <p>Now that we have a working implementation, let’s go ahead and implement it as a class with <code>fit</code> and <code>predict</code> methods like we’re used to having in sklearn.</p>
 <div id="cell-38" class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GradientBoostingFromScratch():</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_trees, learning_rate, max_depth<span class="op">=</span><span class="dv">1</span>):</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n_trees<span class="op">=</span>n_trees<span class="op">;</span> <span class="va">self</span>.learning_rate<span class="op">=</span>learning_rate<span class="op">;</span> <span class="va">self</span>.max_depth<span class="op">=</span>max_depth<span class="op">;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fit(<span class="va">self</span>, x, y):</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.trees <span class="op">=</span> []</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.F0 <span class="op">=</span> y.mean()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        Fm <span class="op">=</span> <span class="va">self</span>.F0 </span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.n_trees):</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="va">self</span>.max_depth)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            tree.fit(x, y <span class="op">-</span> Fm)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            Fm <span class="op">+=</span> <span class="va">self</span>.learning_rate <span class="op">*</span> tree.predict(x)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.trees.append(tree)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, x):</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.F0 <span class="op">+</span> <span class="va">self</span>.learning_rate <span class="op">*</span> np.<span class="bu">sum</span>([tree.predict(x) <span class="cf">for</span> tree <span class="kw">in</span> <span class="va">self</span>.trees], axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GradientBoostingFromScratch():</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_trees, learning_rate, max_depth<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n_trees<span class="op">=</span>n_trees<span class="op">;</span> <span class="va">self</span>.learning_rate<span class="op">=</span>learning_rate<span class="op">;</span> <span class="va">self</span>.max_depth<span class="op">=</span>max_depth<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fit(<span class="va">self</span>, x, y):</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.trees <span class="op">=</span> []</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.F0 <span class="op">=</span> y.mean()</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        Fm <span class="op">=</span> <span class="va">self</span>.F0 </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.n_trees):</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            tree <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="va">self</span>.max_depth)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>            tree.fit(x, y <span class="op">-</span> Fm)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>            Fm <span class="op">+=</span> <span class="va">self</span>.learning_rate <span class="op">*</span> tree.predict(x)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.trees.append(tree)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict(<span class="va">self</span>, x):</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.F0 <span class="op">+</span> <span class="va">self</span>.learning_rate <span class="op">*</span> np.<span class="bu">sum</span>([tree.predict(x) <span class="cf">for</span> tree <span class="kw">in</span> <span class="va">self</span>.trees], axis<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s compare the performance of our implementation with the sklearn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html"><code>GradientBoostingRegressor</code></a>.</p>
 <div id="cell-40" class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> GradientBoostingRegressor</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>sklearn_gbm <span class="op">=</span> GradientBoostingRegressor(n_estimators <span class="op">=</span><span class="dv">25</span>, learning_rate<span class="op">=</span><span class="fl">0.3</span>, max_depth<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>sklearn_gbm.fit(x,y)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>scratch_gbm <span class="op">=</span> GradientBoostingFromScratch(n_trees<span class="op">=</span><span class="dv">25</span>, learning_rate<span class="op">=</span><span class="fl">0.3</span>, max_depth<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>scratch_gbm.fit(x,y)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>mean_squared_error(y, sklearn_gbm.predict(x)), mean_squared_error(y, scratch_gbm.predict(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> GradientBoostingRegressor</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>sklearn_gbm <span class="op">=</span> GradientBoostingRegressor(n_estimators <span class="op">=</span><span class="dv">25</span>, learning_rate<span class="op">=</span><span class="fl">0.3</span>, max_depth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>sklearn_gbm.fit(x,y)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>scratch_gbm <span class="op">=</span> GradientBoostingFromScratch(n_trees<span class="op">=</span><span class="dv">25</span>, learning_rate<span class="op">=</span><span class="fl">0.3</span>, max_depth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>scratch_gbm.fit(x,y)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>mean_squared_error(y, sklearn_gbm.predict(x)), mean_squared_error(y, scratch_gbm.predict(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
 <pre><code>(0.08622324648703916, 0.0862232464870392)</code></pre>
 </div>
