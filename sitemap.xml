@@ -14,7 +14,7 @@
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/bayesian-modeling-primer/</loc>
-    <lastmod>2025-06-05T22:20:31.945Z</lastmod>
+    <lastmod>2025-12-07T21:42:05.596Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-machine-from-scratch/</loc>
@@ -22,7 +22,7 @@
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2025-01-26T01:19:51.188Z</lastmod>
+    <lastmod>2025-12-07T21:42:05.598Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/</loc>
@@ -33,36 +33,40 @@
     <lastmod>2025-01-26T01:19:51.177Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/hello-world/</loc>
-    <lastmod>2025-01-26T01:19:51.187Z</lastmod>
+    <loc>https://randomrealizations.com/posts/logistic-regression-with-pytorch/</loc>
+    <lastmod>2025-12-07T22:38:30.072Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/shap-from-scratch/</loc>
-    <lastmod>2025-01-26T01:19:51.190Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
-    <lastmod>2025-01-26T01:19:51.187Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</loc>
+    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
     <lastmod>2025-01-26T01:19:51.196Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2025-01-26T01:19:51.171Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2025-01-26T01:19:51.182Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
     <lastmod>2025-01-26T01:19:51.185Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
-    <lastmod>2025-01-26T01:19:51.196Z</lastmod>
+    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
+    <lastmod>2025-01-26T01:19:51.182Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
+    <lastmod>2025-01-26T01:19:51.171Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</loc>
+    <lastmod>2025-12-07T21:42:05.602Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
+    <lastmod>2025-01-26T01:19:51.187Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/shap-from-scratch/</loc>
+    <lastmod>2025-12-07T21:42:05.599Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/hello-world/</loc>
+    <lastmod>2025-01-26T01:19:51.187Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/xgboost-for-classification-in-python/</loc>
@@ -86,7 +90,7 @@
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/traditional-vs-roth-401k/</loc>
-    <lastmod>2025-06-05T02:41:16.255Z</lastmod>
+    <lastmod>2025-12-07T21:42:05.601Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/archive.html</loc>
