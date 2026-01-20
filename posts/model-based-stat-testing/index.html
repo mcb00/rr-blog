@@ -238,10 +238,14 @@ window.Quarto = {
   <li><a href="#the-regression-approach" id="toc-the-regression-approach" class="nav-link" data-scroll-target="#the-regression-approach">The Regression Approach</a></li>
   <li><a href="#the-punchline" id="toc-the-punchline" class="nav-link" data-scroll-target="#the-punchline">The Punchline</a></li>
   <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a></li>
-  <li><a href="#on-the-clarity-of-assumptions" id="toc-on-the-clarity-of-assumptions" class="nav-link" data-scroll-target="#on-the-clarity-of-assumptions">On the Clarity of Assumptions</a></li>
   </ul></li>
   <li><a href="#one-way-anova" id="toc-one-way-anova" class="nav-link" data-scroll-target="#one-way-anova">One-Way ANOVA</a></li>
   <li><a href="#chi-squared-test-of-independence" id="toc-chi-squared-test-of-independence" class="nav-link" data-scroll-target="#chi-squared-test-of-independence">Chi-Squared Test of Independence</a></li>
+  <li><a href="#advantages-of-a-model-based-testing-approach" id="toc-advantages-of-a-model-based-testing-approach" class="nav-link" data-scroll-target="#advantages-of-a-model-based-testing-approach">Advantages of a Model-Based Testing Approach</a>
+  <ul class="collapse">
+  <li><a href="#clear-and-explicit-assumptions" id="toc-clear-and-explicit-assumptions" class="nav-link" data-scroll-target="#clear-and-explicit-assumptions">Clear and Explicit Assumptions</a></li>
+  <li><a href="#extension-to-covariates" id="toc-extension-to-covariates" class="nav-link" data-scroll-target="#extension-to-covariates">Extension to Covariates</a></li>
+  </ul></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   </ul>
 </nav>
@@ -414,19 +418,6 @@ Regression p-value: 0.002190</code></pre>
 </div>
 <p>As promised, the two-sample equal-variance t-test yields identical results to a linear regression with a dummy variable.</p>
 </section>
-<section id="on-the-clarity-of-assumptions" class="level3">
-<h3 class="anchored" data-anchor-id="on-the-clarity-of-assumptions">On the Clarity of Assumptions</h3>
-<p>I want to specifically highlight what I see as one of the greatest benefits of using a model-based approach for these testing problems. All of the key assumptions that we need to make are expressed compactly in the model that we write down to represent the data generating process. Here’s the one we wrote down for comparing group means.</p>
-<p><span class="math display">\[ Y = \beta_0 + \beta_1 X + \epsilon \]</span></p>
-<p>where <span class="math inline">\(\epsilon \overset{iid}{\sim} N(0, \sigma^2)\)</span>.</p>
-<p>From this model spec, we can see the following assumptions are made explicit</p>
-<ul>
-<li>The outcome is assumed to be normally distributed.</li>
-<li>The variance of the outcome is assumed to be equal in the two groups.</li>
-<li>The samples in each group are assumed to be independent and identically distributed.</li>
-</ul>
-<p>We don’t have to memorize any lists of assumptions; we can simply read the model spec and see exactly what assumptions are being made about the data generating process.</p>
-</section>
 </section>
 <section id="one-way-anova" class="level2">
 <h2 class="anchored" data-anchor-id="one-way-anova">One-Way ANOVA</h2>
@@ -546,6 +537,34 @@ Logistic Regression (Likelihood Ratio Test):
 <p>Whoa, this time we get slightly different test statistics and p-values; what’s happening here?</p>
 <p>The classical Pearson chi-squared test and the likelihood ratio test from logistic regression are actually <em>different test statistics</em> testing the same hypothesis. Both are asymptotically chi-squared distributed under the null, but they use different formulas and give different values for finite samples. The p-values are close and lead to the same conclusion—both are testing whether group membership and outcome are independent.</p>
 <p>There are many valid ways to answer questions using data, and appropriate approaches will tend to agree with each other.</p>
+</section>
+<section id="advantages-of-a-model-based-testing-approach" class="level2">
+<h2 class="anchored" data-anchor-id="advantages-of-a-model-based-testing-approach">Advantages of a Model-Based Testing Approach</h2>
+<p>We’ve seen that classical tests like the t-test, ANOVA, and chi-squared are special cases of regression models. But so what? Why bother with this reformulation when the canned tests work just fine?</p>
+<p>The model-based perspective offers some real practical advantages that become apparent once you start working with messier, real-world data. Let’s look at two key benefits.</p>
+<section id="clear-and-explicit-assumptions" class="level3">
+<h3 class="anchored" data-anchor-id="clear-and-explicit-assumptions">Clear and Explicit Assumptions</h3>
+<p>In the model-based approach all key assumptions are expressed compactly in the model specification itself. Here’s the model we wrote down for comparing group means:</p>
+<p><span class="math display">\[ Y = \beta_0 + \beta_1 X + \epsilon \]</span></p>
+<p>where <span class="math inline">\(\epsilon \overset{iid}{\sim} N(0, \sigma^2)\)</span>.</p>
+<p>From this model spec, we can immediately see the assumptions being made:</p>
+<ul>
+<li>The outcome is assumed to be normally distributed</li>
+<li>The variance of the outcome is assumed to be equal in the two groups (homoscedasticity)</li>
+<li>The samples in each group are assumed to be independent and identically distributed</li>
+</ul>
+<p>We don’t have to memorize separate lists of assumptions for each test in the statistical zoo. We can simply read the model specification and see exactly what we’re assuming about the data generating process. And if one of these assumptions seems questionable for our context, we know exactly which part of the model to modify.</p>
+</section>
+<section id="extension-to-covariates" class="level3">
+<h3 class="anchored" data-anchor-id="extension-to-covariates">Extension to Covariates</h3>
+<p>This model-based approach makes it straightforward to include covariates in the analysis. Suppose we’re comparing means between two groups, but we also have a continuous covariate (like age, tenure, marketing spend, baseline measurement, etc.) that might affect the outcome.</p>
+<p>In the classical testing framework, we’d need to reach for a different test—maybe ANCOVA—and navigate a new set of conditions and assumptions. But in the regression framework, we simply add another term to our model:</p>
+<p><span class="math display">\[ Y = \beta_0 + \beta_1 X_{\text{group}} + \beta_2 X_{\text{covariate}} + \epsilon \]</span></p>
+<p>Now <span class="math inline">\(\beta_1\)</span> represents the group difference <em>adjusted for</em> the covariate. We’re still testing <span class="math inline">\(H_0: \beta_1 = 0\)</span>, just as before. The logic is identical; we’ve just extended the model.</p>
+<p>The same logic applies for testing interactions between group membership and covariates.</p>
+<p><span class="math display">\[ Y = \beta_0 + \beta_1 X_{\text{group}} + \beta_2 X_{\text{covariate}} + \beta_3 X_{\text{group}} \cdot X_{\text{covariate}} + \epsilon \]</span></p>
+<p>I don’t even know what canned stat test lets you test interactions like that, but luckily it doesn’t matter. The model-based approach makes these extensions feel like natural elaborations rather than jumps to entirely different procedures. We’re reasoning from first principles about how we think the data were generated, rather than searching through flowcharts for the “right” test.</p>
+</section>
 </section>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>

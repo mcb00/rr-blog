@@ -261,19 +261,6 @@ Regression p-value: 0.002190</code></pre>
 </div>
 <p>As promised, the two-sample equal-variance t-test yields identical results to a linear regression with a dummy variable.</p>
 </section>
-<section id="on-the-clarity-of-assumptions" class="level3">
-<h3 class="anchored" data-anchor-id="on-the-clarity-of-assumptions">On the Clarity of Assumptions</h3>
-<p>I want to specifically highlight what I see as one of the greatest benefits of using a model-based approach for these testing problems. All of the key assumptions that we need to make are expressed compactly in the model that we write down to represent the data generating process. Here’s the one we wrote down for comparing group means.</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X%20+%20%5Cepsilon%20"></p>
-<p>where <img src="https://latex.codecogs.com/png.latex?%5Cepsilon%20%5Coverset%7Biid%7D%7B%5Csim%7D%20N(0,%20%5Csigma%5E2)">.</p>
-<p>From this model spec, we can see the following assumptions are made explicit</p>
-<ul>
-<li>The outcome is assumed to be normally distributed.</li>
-<li>The variance of the outcome is assumed to be equal in the two groups.</li>
-<li>The samples in each group are assumed to be independent and identically distributed.</li>
-</ul>
-<p>We don’t have to memorize any lists of assumptions; we can simply read the model spec and see exactly what assumptions are being made about the data generating process.</p>
-</section>
 </section>
 <section id="one-way-anova" class="level2">
 <h2 class="anchored" data-anchor-id="one-way-anova">One-Way ANOVA</h2>
@@ -711,6 +698,34 @@ Logistic Regression (Likelihood Ratio Test):
 <p>Whoa, this time we get slightly different test statistics and p-values; what’s happening here?</p>
 <p>The classical Pearson chi-squared test and the likelihood ratio test from logistic regression are actually <em>different test statistics</em> testing the same hypothesis. Both are asymptotically chi-squared distributed under the null, but they use different formulas and give different values for finite samples. The p-values are close and lead to the same conclusion—both are testing whether group membership and outcome are independent.</p>
 <p>There are many valid ways to answer questions using data, and appropriate approaches will tend to agree with each other.</p>
+</section>
+<section id="advantages-of-a-model-based-testing-approach" class="level2">
+<h2 class="anchored" data-anchor-id="advantages-of-a-model-based-testing-approach">Advantages of a Model-Based Testing Approach</h2>
+<p>We’ve seen that classical tests like the t-test, ANOVA, and chi-squared are special cases of regression models. But so what? Why bother with this reformulation when the canned tests work just fine?</p>
+<p>The model-based perspective offers some real practical advantages that become apparent once you start working with messier, real-world data. Let’s look at two key benefits.</p>
+<section id="clear-and-explicit-assumptions" class="level3">
+<h3 class="anchored" data-anchor-id="clear-and-explicit-assumptions">Clear and Explicit Assumptions</h3>
+<p>In the model-based approach all key assumptions are expressed compactly in the model specification itself. Here’s the model we wrote down for comparing group means:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X%20+%20%5Cepsilon%20"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Cepsilon%20%5Coverset%7Biid%7D%7B%5Csim%7D%20N(0,%20%5Csigma%5E2)">.</p>
+<p>From this model spec, we can immediately see the assumptions being made:</p>
+<ul>
+<li>The outcome is assumed to be normally distributed</li>
+<li>The variance of the outcome is assumed to be equal in the two groups (homoscedasticity)</li>
+<li>The samples in each group are assumed to be independent and identically distributed</li>
+</ul>
+<p>We don’t have to memorize separate lists of assumptions for each test in the statistical zoo. We can simply read the model specification and see exactly what we’re assuming about the data generating process. And if one of these assumptions seems questionable for our context, we know exactly which part of the model to modify.</p>
+</section>
+<section id="extension-to-covariates" class="level3">
+<h3 class="anchored" data-anchor-id="extension-to-covariates">Extension to Covariates</h3>
+<p>This model-based approach makes it straightforward to include covariates in the analysis. Suppose we’re comparing means between two groups, but we also have a continuous covariate (like age, tenure, marketing spend, baseline measurement, etc.) that might affect the outcome.</p>
+<p>In the classical testing framework, we’d need to reach for a different test—maybe ANCOVA—and navigate a new set of conditions and assumptions. But in the regression framework, we simply add another term to our model:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X_%7B%5Ctext%7Bgroup%7D%7D%20+%20%5Cbeta_2%20X_%7B%5Ctext%7Bcovariate%7D%7D%20+%20%5Cepsilon%20"></p>
+<p>Now <img src="https://latex.codecogs.com/png.latex?%5Cbeta_1"> represents the group difference <em>adjusted for</em> the covariate. We’re still testing <img src="https://latex.codecogs.com/png.latex?H_0:%20%5Cbeta_1%20=%200">, just as before. The logic is identical; we’ve just extended the model.</p>
+<p>The same logic applies for testing interactions between group membership and covariates.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X_%7B%5Ctext%7Bgroup%7D%7D%20+%20%5Cbeta_2%20X_%7B%5Ctext%7Bcovariate%7D%7D%20+%20%5Cbeta_3%20X_%7B%5Ctext%7Bgroup%7D%7D%20%5Ccdot%20X_%7B%5Ctext%7Bcovariate%7D%7D%20+%20%5Cepsilon%20"></p>
+<p>I don’t even know what canned stat test lets you test interactions like that, but luckily it doesn’t matter. The model-based approach makes these extensions feel like natural elaborations rather than jumps to entirely different procedures. We’re reasoning from first principles about how we think the data were generated, rather than searching through flowcharts for the “right” test.</p>
+</section>
 </section>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
