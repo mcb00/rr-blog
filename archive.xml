@@ -17,7 +17,713 @@
 <width>144</width>
 </image>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Fri, 04 Jul 2025 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 19 Jan 2026 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Decoding Statistical Testing with a Model-Based Perspective</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/model-based-stat-testing/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Ahh, statistical hypothesis testing—it’s a cornerstone of classical statistical inference. It can also seem a bit daunting when presented as a list of <a href="https://en.wikipedia.org/wiki/Category:Statistical_tests">over 100 different methods</a> from which the user is expected to choose the right procedure based on their application domain, data, and question. But it doesn’t have to be that way—there is a unifying perspective that can help us cut right through all that complexity.</p>
+<p><em>It turns out that many traditional frequentist tests can be viewed as special cases of regression models.</em></p>
+<p>This is a powerful and liberating idea, because it can help us transition from choosing from the zoo of canned methods to building our own bespoke analyses, tailored to our exact use case. Adopting this perspective will allow us to</p>
+<ul>
+<li>transcend rote memorization of which test should be applied where and instead reason from first principles</li>
+<li>make our assumptions clear and explicit</li>
+<li>make extensions like incorporating covariates and interactions more natural</li>
+</ul>
+<p>So the plan for this post is to take a look at three of the most common statistical tests—the two-sample t-test, the ANOVA, and the chi-squared test for independence. For each test, we’ll simulate some data and implement it using the traditional test approach as well as a regression-based approach. I’m going to do a detailed analytical breakdown for the two-sample t-test to show the equivalence between the two approaches, leaving the analytical breakdowns of the other tests to you, dear reader, as exercises.</p>
+<p>Let’s roll!</p>
+<section id="two-sample-t-test" class="level2">
+<h2 class="anchored" data-anchor-id="two-sample-t-test">Two-Sample t-test</h2>
+<p>We’ll look at the t-test from two perspectives—the classical setup and a linear regression reformulation. In each case we’ll break the approach down into these items: data generating process, estimator, expectation and variance of the estimator, test statistic, and sampling distribution of the test statistic. You can use this kind of breakdown to understand pretty much any classical statistical test. In this case, the point is to clearly show that the classical t-test and the linear regression formulation yield identical tests.</p>
+<section id="the-classical-t-test-approach" class="level3">
+<h3 class="anchored" data-anchor-id="the-classical-t-test-approach">The Classical t-test Approach</h3>
+<p><strong>The data generating process</strong></p>
+<p>You have two populations or processes <img src="https://latex.codecogs.com/png.latex?Y_0"> and <img src="https://latex.codecogs.com/png.latex?Y_1">, and you want to know whether their true means <img src="https://latex.codecogs.com/png.latex?%5Cmu_0"> and <img src="https://latex.codecogs.com/png.latex?%5Cmu_1"> are equal. We assume that both processes are Gaussian with equal but unknown variance <img src="https://latex.codecogs.com/png.latex?%5Csigma%5E2">:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y_0%20%5Csim%20N(%5Cmu_0,%20%5Csigma%5E2),%20%5Cquad%20Y_1%20%5Csim%20N(%5Cmu_1,%20%5Csigma%5E2)%20"></p>
+<p><strong>The estimator</strong></p>
+<p>You draw <img src="https://latex.codecogs.com/png.latex?n_0"> samples from group 0 and <img src="https://latex.codecogs.com/png.latex?n_1"> samples from group 1 for a total of <img src="https://latex.codecogs.com/png.latex?n=n_0+n_1"> samples, and compute the sample means <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BY%7D_0"> and <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BY%7D_1">. Your estimator for the difference in means is simply:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cdelta%7D%20=%20%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0"></p>
+<p><strong>Expectation of the estimator</strong></p>
+<p>Since <img src="https://latex.codecogs.com/png.latex?E%5B%5Cbar%7BY%7D_0%5D%20=%20%5Cmu_0"> and <img src="https://latex.codecogs.com/png.latex?E%5B%5Cbar%7BY%7D_1%5D%20=%20%5Cmu_1">, we have:</p>
+<p><img src="https://latex.codecogs.com/png.latex?E%5B%5Chat%7B%5Cdelta%7D%5D%20=%20E%5B%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0%5D%20=%20%5Cmu_1%20-%20%5Cmu_0"></p>
+<p>So <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cdelta%7D"> is an unbiased estimator of the true difference in means.</p>
+<p><strong>Standard error of the estimator</strong></p>
+<p>The sample means are independent, so:</p>
+<p><img src="https://latex.codecogs.com/png.latex?Var%5B%5Chat%7B%5Cdelta%7D%5D%20=%20Var%5B%5Cbar%7BY%7D_1%5D%20+%20Var%5B%5Cbar%7BY%7D_0%5D%20=%20%5Cfrac%7B%5Csigma%5E2%7D%7Bn_1%7D%20+%20%5Cfrac%7B%5Csigma%5E2%7D%7Bn_0%7D%20=%20%5Csigma%5E2%5Cleft(%5Cfrac%7B1%7D%7Bn_1%7D%20+%20%5Cfrac%7B1%7D%7Bn_0%7D%5Cright)"></p>
+<p>Since we don’t know <img src="https://latex.codecogs.com/png.latex?%5Csigma%5E2">, we estimate it with the pooled sample variance:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%20=%20%5Cfrac%7B(n_0-1)s_0%5E2%20+%20(n_1-1)s_1%5E2%7D%7Bn_0%20+%20n_1%20-%202%7D"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?s_0%5E2"> and <img src="https://latex.codecogs.com/png.latex?s_1%5E2"> are the sample variances for each group. This gives us the estimated standard error:</p>
+<p><img src="https://latex.codecogs.com/png.latex?SE(%5Chat%7B%5Cdelta%7D)%20=%20%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%5Cleft(%5Cfrac%7B1%7D%7Bn_0%7D%20+%20%5Cfrac%7B1%7D%7Bn_1%7D%5Cright)%7D"></p>
+<p><strong>The test statistic</strong></p>
+<p>We form the test statistic by dividing our estimator by its standard error:</p>
+<p><img src="https://latex.codecogs.com/png.latex?t%20=%20%5Cfrac%7B%5Chat%7B%5Cdelta%7D%7D%7BSE(%5Chat%7B%5Cdelta%7D)%7D%20=%20%5Cfrac%7B%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0%7D%7B%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%20(1/n_0%20+%201/n_1)%7D%7D"></p>
+<p><strong>Sampling distribution</strong></p>
+<p>Under the null hypothesis <img src="https://latex.codecogs.com/png.latex?H_0:%20%5Cmu_1%20=%20%5Cmu_0">, this test statistic follows a Student’s t-distribution with <img src="https://latex.codecogs.com/png.latex?n_0%20+%20n_1%20-%202"> degrees of freedom.</p>
+<p>Having horrifying flashbacks to your intro to stats class yet? No worries. Let’s look at it from a new perspective.</p>
+</section>
+<section id="the-regression-approach" class="level3">
+<h3 class="anchored" data-anchor-id="the-regression-approach">The Regression Approach</h3>
+<p><strong>The data generating process</strong></p>
+<p>We can express the exact same data generating process as a linear regression model. Stack all observations into a single length-<img src="https://latex.codecogs.com/png.latex?n"> vector <img src="https://latex.codecogs.com/png.latex?Y"> and create a dummy variable <img src="https://latex.codecogs.com/png.latex?X%20%5Cin%20%5C%7B0,1%5C%7D"> indexing which group each observation came from:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X%20+%20%5Cepsilon%20"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Cepsilon%20%5Coverset%7Biid%7D%7B%5Csim%7D%20N(0,%20%5Csigma%5E2)">.</p>
+<p>Taking conditional expectations:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20E%5BY%7CX=0%5D%20=%20%5Cbeta_0%20=%20%5Cmu_0%20"> <img src="https://latex.codecogs.com/png.latex?%20E%5BY%7CX=1%5D%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20=%20%5Cmu_1%20"></p>
+<p>So we can see that <img src="https://latex.codecogs.com/png.latex?%5Cbeta_1%20=%20%5Cmu_1%20-%20%5Cmu_0">, meaning the regression coefficient <img src="https://latex.codecogs.com/png.latex?%5Cbeta_1"> directly represents the difference in population means.</p>
+<p><strong>The estimator</strong></p>
+<p>The ordinary least squares estimator for <img src="https://latex.codecogs.com/png.latex?%5Cbeta_1"> is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cbeta%7D_1%20=%20%5Cfrac%7B%5Csum_%7Bi=1%7D%5E%7Bn%7D%20(X_i%20-%20%5Cbar%7BX%7D)(Y_i%20-%20%5Cbar%7BY%7D)%7D%7B%5Csum_%7Bi=1%7D%5E%7Bn%7D%20(X_i%20-%20%5Cbar%7BX%7D)%5E2%7D"></p>
+<p>For our dummy variable where <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BX%7D%20=%20n_1/(n_0%20+%20n_1)">, after some algebra that you can crank through on your own this simplifies to:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cbeta%7D_1%20=%20%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0"></p>
+<p>Well look at that—the regression coefficient estimate is exactly the difference in sample means!</p>
+<p><strong>Expectation of the estimator</strong></p>
+<p>By the properties of OLS under our model assumptions:</p>
+<p><img src="https://latex.codecogs.com/png.latex?E%5B%5Chat%7B%5Cbeta%7D_1%5D%20=%20%5Cbeta_1%20=%20%5Cmu_1%20-%20%5Cmu_0"></p>
+<p>So <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cbeta%7D_1"> is also an unbiased estimator of the difference in means.</p>
+<p><strong>Standard error of the estimator</strong></p>
+<p>The standard error formula for an OLS coefficient is:</p>
+<p><img src="https://latex.codecogs.com/png.latex?SE(%5Chat%7B%5Cbeta%7D_1)%20=%20%5Csqrt%7B%5Chat%7B%5Csigma%7D%5E2%20%5Ccdot%20%5Cfrac%7B1%7D%7B%5Csum_%7Bi=1%7D%5E%7Bn%7D(X_i%20-%20%5Cbar%7BX%7D)%5E2%7D%7D"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Csigma%7D%5E2"> is the residual variance from the regression:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Csigma%7D%5E2%20=%20%5Cfrac%7B1%7D%7Bn_0%20+%20n_1%20-%202%7D%5Csum_%7Bi=1%7D%5E%7Bn%7D(Y_i%20-%20%5Chat%7BY%7D_i)%5E2"></p>
+<p>For our dummy variable, it turns out that: - The residual variance <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Csigma%7D%5E2"> equals the pooled variance <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2"> - The sum <img src="https://latex.codecogs.com/png.latex?%5Csum_%7Bi=1%7D%5E%7Bn%7D(X_i%20-%20%5Cbar%7BX%7D)%5E2%20=%20%5Cfrac%7Bn_0%20n_1%7D%7Bn_0%20+%20n_1%7D"></p>
+<p>Substituting these:</p>
+<p><img src="https://latex.codecogs.com/png.latex?SE(%5Chat%7B%5Cbeta%7D_1)%20=%20%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%20%5Ccdot%20%5Cfrac%7Bn_0%20+%20n_1%7D%7Bn_0%20n_1%7D%7D%20=%20%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%5Cleft(%5Cfrac%7B1%7D%7Bn_0%7D%20+%20%5Cfrac%7B1%7D%7Bn_1%7D%5Cright)%7D"></p>
+<p>This is exactly the same standard error we got from the classical approach.</p>
+<p><strong>The test statistic</strong></p>
+<p>We form the test statistic by dividing our coefficient estimate by its standard error:</p>
+<p><img src="https://latex.codecogs.com/png.latex?t%20=%20%5Cfrac%7B%5Chat%7B%5Cbeta%7D_1%7D%7BSE(%5Chat%7B%5Cbeta%7D_1)%7D%20=%20%5Cfrac%7B%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0%7D%7B%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%20(1/n_0%20+%201/n_1)%7D%7D"></p>
+<p><strong>Sampling distribution</strong></p>
+<p>Under the null hypothesis <img src="https://latex.codecogs.com/png.latex?H_0:%20%5Cbeta_1%20=%200">, this test statistic follows a Student’s t-distribution with <img src="https://latex.codecogs.com/png.latex?n_0%20+%20n_1%20-%202"> degrees of freedom (the residual degrees of freedom from the regression).</p>
+</section>
+<section id="the-punchline" class="level3">
+<h3 class="anchored" data-anchor-id="the-punchline">The Punchline</h3>
+<p>See what just happened? The two approaches give us:</p>
+<ul>
+<li>The same point estimate: <img src="https://latex.codecogs.com/png.latex?%5Chat%7B%5Cdelta%7D%20=%20%5Chat%7B%5Cbeta%7D_1%20=%20%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0"></li>
+<li>The same standard error: <img src="https://latex.codecogs.com/png.latex?%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2(1/n_0%20+%201/n_1)%7D"></li>
+<li>The same test statistic: <img src="https://latex.codecogs.com/png.latex?t%20=%20%5Cfrac%7B%5Cbar%7BY%7D_1%20-%20%5Cbar%7BY%7D_0%7D%7B%5Csqrt%7B%5Chat%7B%5Csigma%7D_%7B%5Ctext%7Bpooled%7D%7D%5E2%20(1/n_0%20+%201/n_1)%7D%7D"></li>
+<li>The same sampling distribution: <img src="https://latex.codecogs.com/png.latex?t_%7Bn_0+n_1-2%7D"></li>
+<li>Therefore, the same p-value</li>
+</ul>
+<p>In other words these approaches are mathematically equivalent.</p>
+</section>
+<section id="implementation" class="level3">
+<h3 class="anchored" data-anchor-id="implementation">Implementation</h3>
+<p>Let’s simulate some data and implement both testing approaches.</p>
+<div id="4230263f" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> scipy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> stats</span>
+<span id="cb1-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> statsmodels.api <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> sm</span>
+<span id="cb1-4"></span>
+<span id="cb1-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Simulate data</span></span>
+<span id="cb1-6">np.random.seed(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb1-7">n0, n1 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span></span>
+<span id="cb1-8">mu0, mu1 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">12</span></span>
+<span id="cb1-9">sigma <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span></span>
+<span id="cb1-10">group0 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.normal(mu0, sigma, n0)</span>
+<span id="cb1-11">group1 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.normal(mu1, sigma, n1)</span>
+<span id="cb1-12"></span>
+<span id="cb1-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Traditional t-test</span></span>
+<span id="cb1-14">t_stat, p_val_ttest <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> stats.ttest_ind(group1, group0, equal_var<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb1-15"></span>
+<span id="cb1-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Regression approach</span></span>
+<span id="cb1-17">y <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.concatenate([group0, group1])</span>
+<span id="cb1-18">x <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.concatenate([np.zeros(n0), np.ones(n1)])</span>
+<span id="cb1-19">X <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sm.add_constant(x)</span>
+<span id="cb1-20">model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sm.OLS(y, X).fit()</span>
+<span id="cb1-21"></span>
+<span id="cb1-22"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Compare</span></span>
+<span id="cb1-23"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"t-test statistic: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>t_stat<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb1-24"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"Regression t-stat for β₁: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>model<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>tvalues[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb1-25"></span>
+<span id="cb1-26"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">t-test p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>p_val_ttest<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb1-27"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"Regression p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>model<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>pvalues[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>t-test statistic: 3.258749
+Regression t-stat for β₁: 3.258749
+
+t-test p-value: 0.002190
+Regression p-value: 0.002190</code></pre>
+</div>
+</div>
+<p>As promised, the two-sample equal-variance t-test yields identical results to a linear regression with a dummy variable.</p>
+</section>
+<section id="on-the-clarity-of-assumptions" class="level3">
+<h3 class="anchored" data-anchor-id="on-the-clarity-of-assumptions">On the Clarity of Assumptions</h3>
+<p>I want to specifically highlight what I see as one of the greatest benefits of using a model-based approach for these testing problems. All of the key assumptions that we need to make are expressed compactly in the model that we write down to represent the data generating process. Here’s the one we wrote down for comparing group means.</p>
+<p><img src="https://latex.codecogs.com/png.latex?%20Y%20=%20%5Cbeta_0%20+%20%5Cbeta_1%20X%20+%20%5Cepsilon%20"></p>
+<p>where <img src="https://latex.codecogs.com/png.latex?%5Cepsilon%20%5Coverset%7Biid%7D%7B%5Csim%7D%20N(0,%20%5Csigma%5E2)">.</p>
+<p>From this model spec, we can see the following assumptions are made explicit</p>
+<ul>
+<li>The outcome is assumed to be normally distributed.</li>
+<li>The variance of the outcome is assumed to be equal in the two groups.</li>
+<li>The samples in each group are assumed to be independent and identically distributed.</li>
+</ul>
+<p>We don’t have to memorize any lists of assumptions; we can simply read the model spec and see exactly what assumptions are being made about the data generating process.</p>
+</section>
+</section>
+<section id="one-way-anova" class="level2">
+<h2 class="anchored" data-anchor-id="one-way-anova">One-Way ANOVA</h2>
+<p>The two-sample t-test generalizes naturally to comparing means across more than two groups—that’s one-way ANOVA. The classical ANOVA asks: “Are the means of <img src="https://latex.codecogs.com/png.latex?k"> groups all equal, or does at least one differ from the others?”</p>
+<p>From a regression perspective, this is just a linear model with a categorical predictor that has <img src="https://latex.codecogs.com/png.latex?k"> levels. We create <img src="https://latex.codecogs.com/png.latex?k-1"> dummy variables (leaving one group as the reference), and the F-test from ANOVA is equivalent to testing whether all the dummy variable coefficients are simultaneously zero.</p>
+<p>Let’s see this in action. We’ll simulate data from three groups with different means and compare the classical ANOVA F-test to the F-test from a linear regression.</p>
+<div id="67dffc65" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span>
+<span id="cb3-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd</span>
+<span id="cb3-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> scipy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> stats</span>
+<span id="cb3-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> statsmodels.api <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> sm</span>
+<span id="cb3-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> statsmodels.formula.api <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> ols</span>
+<span id="cb3-6"></span>
+<span id="cb3-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Simulate three groups with different means</span></span>
+<span id="cb3-8">np.random.seed(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb3-9">n_per_group <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">20</span></span>
+<span id="cb3-10">group_a <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.normal(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, n_per_group)</span>
+<span id="cb3-11">group_b <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.normal(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">12</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, n_per_group)</span>
+<span id="cb3-12">group_c <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.normal(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">11</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, n_per_group)</span>
+<span id="cb3-13"></span>
+<span id="cb3-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Create dataframe</span></span>
+<span id="cb3-15">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame({</span>
+<span id="cb3-16">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'value'</span>: np.concatenate([group_a, group_b, group_c]),</span>
+<span id="cb3-17">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'group'</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'A'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_per_group <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'B'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_per_group <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'C'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_per_group</span>
+<span id="cb3-18">})</span>
+<span id="cb3-19"></span>
+<span id="cb3-20"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Classical one-way ANOVA</span></span>
+<span id="cb3-21">f_stat_anova, p_val_anova <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> stats.f_oneway(group_a, group_b, group_c)</span>
+<span id="cb3-22"></span>
+<span id="cb3-23"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Regression approach</span></span>
+<span id="cb3-24">model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> ols(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'value ~ C(group)'</span>, data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>df).fit()</span>
+<span id="cb3-25">anova_table <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sm.stats.anova_lm(model, typ<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-26"></span>
+<span id="cb3-27"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Classical ANOVA:"</span>)</span>
+<span id="cb3-28"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  F-statistic: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>f_stat_anova<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb3-29"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>p_val_anova<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb3-30"></span>
+<span id="cb3-31"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Regression ANOVA:"</span>)</span>
+<span id="cb3-32"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  F-statistic: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>anova_table<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>loc[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'C(group)'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'F'</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb3-33"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>anova_table<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>loc[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'C(group)'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'PR(&gt;F)'</span>]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classical ANOVA:
+  F-statistic: 5.145429
+  p-value: 0.008824
+
+Regression ANOVA:
+  F-statistic: 5.145429
+  p-value: 0.008824</code></pre>
+</div>
+</div>
+<p>Nice! The F-statistics and p-values match perfectly. The ANOVA is testing whether the group coefficients in the regression are all zero—which is exactly what the classical ANOVA F-test does.</p>
+</section>
+<section id="chi-squared-test-of-independence" class="level2">
+<h2 class="anchored" data-anchor-id="chi-squared-test-of-independence">Chi-Squared Test of Independence</h2>
+<p>The chi-squared test asks whether two categorical variables are independent. The classic example: is group (A vs.&nbsp;B) independent of outcome (success vs.&nbsp;failure)? If you arrange the counts in a 2×2 contingency table, the chi-squared test tells you whether the proportions differ significantly between groups.</p>
+<p>From a regression perspective, this is testing whether a binary outcome’s probability depends on a categorical predictor—which is exactly what logistic regression does. For a 2×2 table, we model the log-odds of the outcome as a function of group membership, and testing independence is equivalent to testing whether the logistic regression coefficient equals zero.</p>
+<blockquote class="blockquote">
+<p>Note: unlike linear regression where we can use t-tests on coefficients to determine if a predictor matters, logistic regression and other GLMs typically use likelihood ratio tests to compare the full model with one that has the predictor of interest dropped.</p>
+</blockquote>
+<p>Let’s simulate some binary outcome data for two groups and compare the classical chi-squared test to a logistic regression.</p>
+<div id="e6e21473" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> np</span>
+<span id="cb5-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> pd</span>
+<span id="cb5-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> scipy <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> stats</span>
+<span id="cb5-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> statsmodels.api <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> sm</span>
+<span id="cb5-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> statsmodels.formula.api <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> logit</span>
+<span id="cb5-6"></span>
+<span id="cb5-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Simulate binary outcomes for two groups</span></span>
+<span id="cb5-8">np.random.seed(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">42</span>)</span>
+<span id="cb5-9">n_a <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span></span>
+<span id="cb5-10">n_b <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span></span>
+<span id="cb5-11"></span>
+<span id="cb5-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Group A: 30% success rate</span></span>
+<span id="cb5-13">group_a_outcomes <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.binomial(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.30</span>, n_a)</span>
+<span id="cb5-14"></span>
+<span id="cb5-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Group B: 50% success rate</span></span>
+<span id="cb5-16">group_b_outcomes <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> np.random.binomial(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.50</span>, n_b)</span>
+<span id="cb5-17"></span>
+<span id="cb5-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Create contingency table</span></span>
+<span id="cb5-19">contingency_table <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.crosstab(</span>
+<span id="cb5-20">    index<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>pd.Series([<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'A'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_a <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'B'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_b, name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'group'</span>),</span>
+<span id="cb5-21">    columns<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>pd.Series(np.concatenate([group_a_outcomes, group_b_outcomes]), name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'outcome'</span>)</span>
+<span id="cb5-22">)</span>
+<span id="cb5-23"></span>
+<span id="cb5-24"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Classical chi-squared test</span></span>
+<span id="cb5-25">chi2_stat, p_val_chi2, dof, expected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> stats.chi2_contingency(contingency_table)</span>
+<span id="cb5-26"></span>
+<span id="cb5-27"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Logistic regression approach</span></span>
+<span id="cb5-28">df <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pd.DataFrame({</span>
+<span id="cb5-29">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'outcome'</span>: np.concatenate([group_a_outcomes, group_b_outcomes]),</span>
+<span id="cb5-30">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'group'</span>: [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'A'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_a <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'B'</span>]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>n_b</span>
+<span id="cb5-31">})</span>
+<span id="cb5-32"></span>
+<span id="cb5-33">logit_model <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> logit(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'outcome ~ C(group)'</span>, data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>df).fit(disp<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb5-34"></span>
+<span id="cb5-35"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Get the likelihood ratio test statistic (comparable to chi-squared)</span></span>
+<span id="cb5-36">lr_stat <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> logit_model.llr  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Likelihood ratio test statistic</span></span>
+<span id="cb5-37">p_val_lr <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> logit_model.llr_pvalue</span>
+<span id="cb5-38"></span>
+<span id="cb5-39"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Classical Chi-Squared Test:"</span>)</span>
+<span id="cb5-40"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  χ² statistic: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>chi2_stat<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb5-41"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>p_val_chi2<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb5-42"></span>
+<span id="cb5-43"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Logistic Regression (Likelihood Ratio Test):"</span>)</span>
+<span id="cb5-44"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  LR χ² statistic: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>lr_stat<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb5-45"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"  p-value: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>p_val_lr<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classical Chi-Squared Test:
+  χ² statistic: 8.299616
+  p-value: 0.003965
+
+Logistic Regression (Likelihood Ratio Test):
+  LR χ² statistic: 9.232498
+  p-value: 0.002378</code></pre>
+</div>
+</div>
+<p>Whoa, this time we get slightly different test statistics and p-values; what’s happening here?</p>
+<p>The classical Pearson chi-squared test and the likelihood ratio test from logistic regression are actually <em>different test statistics</em> testing the same hypothesis. Both are asymptotically chi-squared distributed under the null, but they use different formulas and give different values for finite samples. The p-values are close and lead to the same conclusion—both are testing whether group membership and outcome are independent.</p>
+<p>There are many valid ways to answer questions using data, and appropriate approaches will tend to agree with each other.</p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>We’ve just scratched the surface of this simple idea that we can take a model-based approach to inference in many cases where the default might be to use a traditional canned statistical procedure. Doing so has many benefits, including making assumptions clear, extensibility to more complex scenarios with other covariates and interactions, and naturally enabling us to use Bayesian inference to do inference on the model parameters. Try it out; next time you reach for an off-the-shelf statistical test, see if you can take a model-based approach instead.</p>
+<p>Happy modeling!</p>
+</section>
+
+ ]]></description>
+  <category>statistics</category>
+  <guid>https://randomrealizations.com/posts/model-based-stat-testing/</guid>
+  <pubDate>Mon, 19 Jan 2026 08:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/enso-thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Logistic Regression with PyTorch</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -3983,1370 +4689,6 @@ font-style: inherit;">5</span>, :])</span></code></pre></div>
   <guid>https://randomrealizations.com/posts/shap-from-scratch/</guid>
   <pubDate>Sun, 04 Aug 2024 07:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/posts/shap-from-scratch/shap_from_scratch_thumb.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>The Ultimate Guide to XGBoost Parameter Tuning</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>Ahh, the dark art of hyperparameter tuning. It’s a key step in the machine learning workflow, and it’s an activity that can easily be overlooked or be overkill. Therefore, dear reader, it is an art that requires the application of both skill and wisdom to realize its full potential while avoiding its perils. Today I’ll show you my approach for hyperparameter tuning XGBoost, although the principles apply to any GBT framework. I’ll give you some intuition for how to think about the key parameters in XGBoost, and I’ll show you an efficient strategy for parameter tuning GBTs. I’ll be using the optuna python library to tune parameters with bayesian optimization, but you can implement my strategy with whatever hyperparameter tuning utility you like. You can download a notebook with this tuning workflow from my <a href="https://github.com/mcb00/ds-templates">data science templates repository</a>. Finally we’ll wrap up with the kind of cautionary tale data scientists tell their colleagues around the campfire about when all this fancy hyperparameter tuning can backfire catastrophically—ignore at your own peril.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/optuna_main.jpg" class="img-fluid figure-img"></p>
-<figcaption>Lunar halo on a frosty night in Johnson City, TN</figcaption>
-</figure>
-</div>
-<section id="xgboost-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="xgboost-parameters">XGBoost Parameters</h2>
-<p>Gradient boosting algorithms like XGBoost have two main types of hyperparameters: <em>tree parameters</em> which control the decision tree trained at each boosting round and <em>boosting parameters</em> which control the boosting procedure itself. Below I’ll highlight my favorite parameters, but you can see the full list in the <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">documentation</a>.</p>
-<section id="tree-parameters" class="level3">
-<h3 class="anchored" data-anchor-id="tree-parameters">Tree Parameters</h3>
-<p>In theory you can use any kind of model as a base learner in a gradient boosting algorithm, but for reasons we discussed before, <a href="../../posts/consider-the-decision-tree/">decision trees</a> are typically the best choice. In XGBoost, we can choose the tree construction algorithm, and we get three types of parameters to control its behavior: tree complexity parameters, sampling parameters, and regularization parameters.</p>
-<section id="tree-construction-algorithm" class="level4">
-<h4 class="anchored" data-anchor-id="tree-construction-algorithm">Tree construction algorithm</h4>
-<p>The tree construction algorithm boils down to split finding, and different algorithms have different ways of generating candidate splits to consider. In XGBoost we have the parameter:</p>
-<ul>
-<li><code>tree_method</code> - select tree construction algorithm: <code>exact</code>, <code>hist</code>, <code>approx</code>, or the horrifying default—<code>auto</code>—which outsources your choice of tree construction algo to XGBoost and which you should never ever use. I’ve been burned by this hidden <code>tree_method=auto</code> default multiple times before learning my lesson. Why is the online model worse than the offline model? Why is this model suddenly taking so much longer to train? Avoid these debugging nightmares and set <code>tree_method</code> explicitly; the exact method tends to be slow and ironically less accurate, so I use either approx or hist.</li>
-</ul>
-</section>
-<section id="tree-complexity-parameters" class="level4">
-<h4 class="anchored" data-anchor-id="tree-complexity-parameters">Tree complexity parameters</h4>
-<p>Tree complexity just means how many leaf nodes the trees have, and therefore how expressive they can be. I use these two parameters:</p>
-<ul>
-<li><code>max_depth</code> - maximum number of split levels allowed. Reasonable values are usually from 3-12.</li>
-<li><code>min_child_weight</code> - minimum allowable sum of hessian values over data in a node. When using the default squared error objective, this is the minimum number of samples allowed in a leaf node (see <a href="https://stats.stackexchange.com/questions/317073/explanation-of-min-child-weight-in-xgboost-algorithm">this explanation</a> of why that’s true). For a squared error objective, values in [1, 200] usually work well.</li>
-</ul>
-<p>These two parameters oppose each other; increasing max depth allows for more expressive trees, while increasing min child weight makes trees less expressive and therefore is a powerful way to counter overfitting. Note that <code>gamma</code> (a.k.a. <code>min_split_loss</code>) also limits node splitting, but I usually don’t use it because <code>min_child_weight</code> seems to work well enough on its own.</p>
-</section>
-<section id="sampling-parameters" class="level4">
-<h4 class="anchored" data-anchor-id="sampling-parameters">Sampling parameters</h4>
-<p>XGBoost can randomly sample rows and columns to be used for training each tree; you might think of this as <em>bagging</em>. We have a few parameters:</p>
-<ul>
-<li><code>subsample</code> - proportion of rows to use in each tree. Setting this less than 1.0 results in stochastic gradient descent, because each tree is trained on only a subset of the entire training dataset. Any value in (0,1] is valid, but it seems like values in [0.7, 1] are usually the best.</li>
-<li><code>colsample_bytree</code>, <code>colsample_bylevel</code>, <code>colsample_bynode</code> - control the fraction of columns available to each tree, at each split level, or at each split, respectively. I usually use either by level or by node because I like the idea that trees might be forced to learn interactions by having different features available at each subsequent split. Again, values in (0,1] are valid, but values in [0.5,1] usually seem to work best.</li>
-</ul>
-</section>
-<section id="regularization-parameters" class="level4">
-<h4 class="anchored" data-anchor-id="regularization-parameters">Regularization parameters</h4>
-<p>In XGBoost, regularization penalizes the actual values predicted by the individual trees, pushing values toward zero. I usually use:</p>
-<ul>
-<li><code>reg_lambda</code> - L2 regularization of tree predicted values. Increasing this parameter decreases tree expressiveness and therefore counters overfitting. Valid values are in [0,<img src="https://latex.codecogs.com/png.latex?%5Cinfty">), but good values typically fall in [0,10].</li>
-</ul>
-<p>There is also an L1 regularization parameter called <code>reg_alpha</code>; feel free to use it instead. It seems that using one or the other is usually sufficient.</p>
-</section>
-</section>
-<section id="boosting-parameters-and-early-stopping" class="level3">
-<h3 class="anchored" data-anchor-id="boosting-parameters-and-early-stopping">Boosting Parameters and Early Stopping</h3>
-<p>Trained gradient boosting models take the form:</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20F(%5Cmathbf%7Bx%7D)%20=%20b%20+%20%5Ceta%20%5Csum_%7Bk=1%7D%5E%7BK%7D%20f_k(%5Cmathbf%7Bx%7D)%20"></p>
-<p>where <img src="https://latex.codecogs.com/png.latex?b"> is the constant base predicted value, <img src="https://latex.codecogs.com/png.latex?f_k(%5Ccdot)"> is the base learner for round <img src="https://latex.codecogs.com/png.latex?k">, parameter <img src="https://latex.codecogs.com/png.latex?K"> is the number of boosting rounds, and parameter <img src="https://latex.codecogs.com/png.latex?%5Ceta"> is the learning rate. In XGBoost these parameters correspond with:</p>
-<ul>
-<li><code>num_boost_round</code> (<img src="https://latex.codecogs.com/png.latex?K">) - the number of boosting iterations</li>
-<li><code>learning_rate</code> (<img src="https://latex.codecogs.com/png.latex?%5Ceta">) - the scaling or “shrinkage” factor applied to the predicted value of each base learner. Valid values are in (0,1]; the default is 0.3. Fun fact: the <img src="https://latex.codecogs.com/png.latex?%5Ceta"> character is called “eta”, and <code>learning_rate</code> is aliased to <code>eta</code> in xgboost, so you can use parameter <code>eta</code> instead of <code>learning_rate</code> if you like.</li>
-</ul>
-<p>These two parameters are very closely linked; the optimal value of one depends on the value of the other. To illustrate their relationship, we can train two different XGBoost models on the same training dataset, where one model has a lower learning rate than the other.</p>
-<div id="cell-4" class="cell" data-execution_count="3">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> xgboost <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> xgb </span>
-<span id="cb1-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> make_regression </span>
-<span id="cb1-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> plt </span>
-<span id="cb1-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.model_selection <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> train_test_split </span>
-<span id="cb1-5"></span>
-<span id="cb1-6">X, y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> make_regression(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5000</span>, random_state<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-7">X_train, X_valid, y_train, y_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> train_test_split(X, y, test_size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.1</span>, random_state<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb1-8"></span>
-<span id="cb1-9">eta1, eta2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.15</span></span>
-<span id="cb1-10">reg1 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.XGBRegressor(n_estimators<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1000</span>, learning_rate<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>eta1, early_stopping_rounds<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">25</span>)</span>
-<span id="cb1-11">reg1.fit(X_train, y_train, </span>
-<span id="cb1-12">        eval_set<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(X_train, y_train), (X_valid, y_valid)], </span>
-<span id="cb1-13">        verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-14">reg2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.XGBRegressor(n_estimators<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1000</span>, learning_rate<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>eta2, early_stopping_rounds<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">25</span>)</span>
-<span id="cb1-15">reg2.fit(X_train, y_train, </span>
-<span id="cb1-16">        eval_set<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(X_train, y_train), (X_valid, y_valid)], </span>
-<span id="cb1-17">        verbose<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-18"></span>
-<span id="cb1-19">fig, ax <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> plt.subplots()</span>
-<span id="cb1-20"></span>
-<span id="cb1-21">best_round1, best_round2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> reg1.best_iteration, reg2.best_iteration</span>
-<span id="cb1-22">obj1 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> reg1.evals_result()[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'validation_1'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>]</span>
-<span id="cb1-23">obj2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> reg2.evals_result()[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'validation_1'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>]</span>
-<span id="cb1-24">best_obj1 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> obj1[best_round1]</span>
-<span id="cb1-25">best_obj2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> obj2[best_round1]</span>
-<span id="cb1-26"></span>
-<span id="cb1-27">plt.plot(reg1.evals_result()[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'validation_1'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>], <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'-b'</span>, label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'learning_rate=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>eta1<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb1-28">plt.plot(reg2.evals_result()[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'validation_1'</span>][<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span>], <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'-r'</span>, label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'learning_rate=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>eta2<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb1-29">ax.annotate(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'learning_rate=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>eta1<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ch" style="color: #20794D;
-background-color: null;
-font-style: inherit;">\n</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">best_iteration=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>best_round1<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>, </span>
-<span id="cb1-30">            xy<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>(best_round1, best_obj1), </span>
-<span id="cb1-31">            xytext<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>(best_round1, best_obj1<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">20</span>),</span>
-<span id="cb1-32">            horizontalalignment<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'right'</span>,</span>
-<span id="cb1-33">            arrowprops<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">dict</span>(facecolor<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'black'</span>, shrink<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.05</span>))</span>
-<span id="cb1-34">ax.annotate(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'learning_rate=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>eta2<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ch" style="color: #20794D;
-background-color: null;
-font-style: inherit;">\n</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">best_iteration=</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>best_round2<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>, </span>
-<span id="cb1-35">            xy<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>(best_round2, best_obj2), </span>
-<span id="cb1-36">            xytext<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>(best_round2, best_obj2<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">20</span>),</span>
-<span id="cb1-37">            horizontalalignment<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'right'</span>,</span>
-<span id="cb1-38">            arrowprops<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">dict</span>(facecolor<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'black'</span>, shrink<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.05</span>))</span>
-<span id="cb1-39">plt.legend()</span>
-<span id="cb1-40">plt.ylabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'RMSE'</span>) </span>
-<span id="cb1-41">plt.xlabel(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'boosting round'</span>) </span>
-<span id="cb1-42">plt.title(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Validation Scores by Boosting Round'</span>)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-</details>
-<div class="cell-output cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/index_files/figure-html/cell-2-output-1.png" class="img-fluid figure-img" alt="XGBoost objective curves for two models"></p>
-<figcaption>Hold-out validation score (RMSE) by boosting round for two XGBoost models differing only by learning rate.</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>The above figure shows root mean squared error measured on a held-out validation dataset for two different XGBoost models: one with a higher learning rate and one with a lower learning rate. The figure demonstrates two key properties of the boosting parameters:</p>
-<ol type="1">
-<li>While training a model with a given learning rate, the evaluation score (computed on a hold-out set) tends to improve with additional boosting rounds up to a certain point, but beyond that point it flattens out or even gets worse.</li>
-<li>All else constant, a smaller learning rate leads to a model with more boosting rounds and better evaluation score.</li>
-</ol>
-<p>We can leverage the first property to make our tuning more efficient by using XGBoost’s <code>early_stopping_rounds: int</code> argument, which terminates training after observing the specified number of boosting rounds <a href="https://github.com/dmlc/xgboost/pull/6942">without sufficient improvement</a> to the evaluation metric. The models above were trained using <code>early_stopping_rounds=50</code>, which terminates training after 50 boosting rounds without improvement in RMSE on the validation data. For each model, the arrow indicates the boosting round with the best score.</p>
-<p>The figure also exemplifies the second property, where the model with lower learning rate attains a better validation score but requires more boosting rounds to trigger early stopping. Note that smaller and smaller learning rates will provide diminishing improvements to the validation score.</p>
-</section>
-</section>
-<section id="an-efficient-parameter-search-strategy-for-xgboost" class="level2">
-<h2 class="anchored" data-anchor-id="an-efficient-parameter-search-strategy-for-xgboost">An Efficient Parameter Search Strategy for XGBoost</h2>
-<p>Efficiency is the key to effective parameter tuning, because wasting less time means searching more parameter values and finding better models in a given amount of time. But as we just saw, there is a tradeoff between accuracy and training time via the learning rate. Given infinite time and compute resources, we would just choose an arbitrarily tiny learning rate and search through tree parameter values while using early stopping to choose the number of boosting rounds. The problem is that tiny learning rates require tons of boosting rounds, which will make our ideal search prohibitively slow when confronted with the reality of finite time and resources. So what can we do?</p>
-<p>My approach is based on the claim that <em>good tree parameters at one learning rate are also good tree parameters at other learning rates</em>. The intuition is that given two models—one with good tree parameters and one with bad tree parameters—the model with good tree parameters will score better, regardless of the learning rate. Thus, tree parameters are “independent” of boosting parameters—See <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> for justification of this claim.</p>
-<p>Independence between tree parameters and boosting parameters suggests a two-stage procedure where we first find optimal tree parameters, then we maximize performance by pushing boosting parameters to the extreme. The procedure is:</p>
-<ol type="1">
-<li><strong>Tune tree parameters.</strong> Fix the learning rate at a relatively high value (like 0.3ish) and enable early stopping so that each model trains within a few seconds. Use your favorite hyperparameter tuning technique to find the optimal tree parameters.</li>
-<li><strong>Tune boosting parameters.</strong> Using these optimal tree parameter values, fix the learning rate as low as you want and train your model, using early stopping to identify the optimal number of boosting rounds.</li>
-</ol>
-<p>Why is this a good idea? Because by starting with a high learning rate and early stopping enabled, you can burn through hundreds of model training trials and find some really good tree parameters in a few minutes. Then, with the confidence that your tree parameters are actually quite good, you can set a really low learning rate and boost a few thousand rounds to get a model with the best of both tree parameter and boosting parameter worlds.</p>
-<blockquote class="blockquote">
-<p>You can check out <a href="https://colab.research.google.com/drive/1feyrtDphFizVI1VmctrNgpJzonsmWiHx?usp=sharing">this notebook</a> where I justify this approach by running two parameter searches—one with high learning rate and one with low learning rate—showing that they recover the same optimal tree parameters.</p>
-</blockquote>
-</section>
-<section id="tuning-xgboost-parameters-with-optuna" class="level2">
-<h2 class="anchored" data-anchor-id="tuning-xgboost-parameters-with-optuna">Tuning XGBoost Parameters with Optuna</h2>
-<p><a href="https://optuna.readthedocs.io/en/stable/">Optuna</a> is a model-agnostic python library for hyperparameter tuning. I like it because it has a flexible API that abstracts away the details of the search algorithm being used. That means you can use this one library to tune all kinds of different models, and you can easily switch the parameter sampling approach among grid search, random search, the very sensible default bayesian optimization, and more. Another massive benefit is that optuna provides a specific <a href="https://optuna.readthedocs.io/en/stable/reference/generated/optuna.integration.XGBoostPruningCallback.html">XGBoost integration</a> which terminates training early on lousy parameter combinations.</p>
-<p>You can install optuna with anaconda, e.g.</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode .zsh code-with-copy"><code class="sourceCode zsh"><span id="cb2-1"><span class="ex" style="color: null;
-background-color: null;
-font-style: inherit;">$</span> conda install <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">-c</span> conda-forge optuna</span></code></pre></div>
-</section>
-<section id="example-tuning-the-bluebook-for-bulldozers-regression-model" class="level2">
-<h2 class="anchored" data-anchor-id="example-tuning-the-bluebook-for-bulldozers-regression-model">Example: Tuning the Bluebook for Bulldozers Regression Model</h2>
-<p>To illustrate the procedure, we’ll tune the parameters for the regression model we built back in the <a href="../../posts/xgboost-for-regression-in-python/">XGBoost for regression</a> post. First we’ll load up the bulldozer data and prepare the features and target just like we did before.</p>
-<div id="cell-9" class="cell" data-execution_count="4">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> time </span>
-<span id="cb3-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np</span>
-<span id="cb3-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> pandas <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> pd</span>
-<span id="cb3-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> plt</span>
-<span id="cb3-5"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.metrics <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> mean_squared_error</span>
-<span id="cb3-6"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> xgboost <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> xgb</span>
-<span id="cb3-7"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> optuna </span>
-<span id="cb3-8"></span>
-<span id="cb3-9">df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pd.read_csv(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'../xgboost-for-regression-in-python/Train.csv'</span>, parse_dates<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>])<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb3-10"></span>
-<span id="cb3-11"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> encode_string_features(df):</span>
-<span id="cb3-12">    out_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df.copy()</span>
-<span id="cb3-13">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> feature, feature_type <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> df.dtypes.items():</span>
-<span id="cb3-14">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> feature_type <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'object'</span>:</span>
-<span id="cb3-15">            out_df[feature] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> out_df[feature].astype(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'category'</span>)</span>
-<span id="cb3-16">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> out_df</span>
-<span id="cb3-17"></span>
-<span id="cb3-18">df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> encode_string_features(df)</span>
-<span id="cb3-19"></span>
-<span id="cb3-20">df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate_days_since_epoch'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> (</span>
-<span id="cb3-21">    df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> pd.Timestamp(year<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1970</span>, month<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, day<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span>
-<span id="cb3-22">    ).dt.days</span>
-<span id="cb3-23"></span>
-<span id="cb3-24">df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'logSalePrice'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.log1p(df[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'SalePrice'</span>])</span>
-<span id="cb3-25"></span>
-<span id="cb3-26"></span>
-<span id="cb3-27">features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [</span>
-<span id="cb3-28">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'SalesID'</span>,</span>
-<span id="cb3-29">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'MachineID'</span>,</span>
-<span id="cb3-30">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ModelID'</span>,</span>
-<span id="cb3-31">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'datasource'</span>,</span>
-<span id="cb3-32">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'auctioneerID'</span>,</span>
-<span id="cb3-33">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'YearMade'</span>,</span>
-<span id="cb3-34">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'MachineHoursCurrentMeter'</span>,</span>
-<span id="cb3-35">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'UsageBand'</span>,</span>
-<span id="cb3-36">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelDesc'</span>,</span>
-<span id="cb3-37">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiBaseModel'</span>,</span>
-<span id="cb3-38">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiSecondaryDesc'</span>,</span>
-<span id="cb3-39">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelSeries'</span>,</span>
-<span id="cb3-40">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiModelDescriptor'</span>,</span>
-<span id="cb3-41">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductSize'</span>,</span>
-<span id="cb3-42">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'fiProductClassDesc'</span>,</span>
-<span id="cb3-43">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'state'</span>,</span>
-<span id="cb3-44">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductGroup'</span>,</span>
-<span id="cb3-45">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'ProductGroupDesc'</span>,</span>
-<span id="cb3-46">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Drive_System'</span>,</span>
-<span id="cb3-47">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Enclosure'</span>,</span>
-<span id="cb3-48">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Forks'</span>,</span>
-<span id="cb3-49">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pad_Type'</span>,</span>
-<span id="cb3-50">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Ride_Control'</span>,</span>
-<span id="cb3-51">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stick'</span>,</span>
-<span id="cb3-52">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Transmission'</span>,</span>
-<span id="cb3-53">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Turbocharged'</span>,</span>
-<span id="cb3-54">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Extension'</span>,</span>
-<span id="cb3-55">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Width'</span>,</span>
-<span id="cb3-56">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Enclosure_Type'</span>,</span>
-<span id="cb3-57">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Engine_Horsepower'</span>,</span>
-<span id="cb3-58">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Hydraulics'</span>,</span>
-<span id="cb3-59">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pushblock'</span>,</span>
-<span id="cb3-60">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Ripper'</span>,</span>
-<span id="cb3-61">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Scarifier'</span>,</span>
-<span id="cb3-62">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Tip_Control'</span>,</span>
-<span id="cb3-63">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Tire_Size'</span>,</span>
-<span id="cb3-64">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Coupler'</span>,</span>
-<span id="cb3-65">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Coupler_System'</span>,</span>
-<span id="cb3-66">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Grouser_Tracks'</span>,</span>
-<span id="cb3-67">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Hydraulics_Flow'</span>,</span>
-<span id="cb3-68">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Track_Type'</span>,</span>
-<span id="cb3-69">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Undercarriage_Pad_Width'</span>,</span>
-<span id="cb3-70">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stick_Length'</span>,</span>
-<span id="cb3-71">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Thumb'</span>,</span>
-<span id="cb3-72">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Pattern_Changer'</span>,</span>
-<span id="cb3-73">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Grouser_Type'</span>,</span>
-<span id="cb3-74">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Backhoe_Mounting'</span>,</span>
-<span id="cb3-75">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Blade_Type'</span>,</span>
-<span id="cb3-76">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Travel_Controls'</span>,</span>
-<span id="cb3-77">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Differential_Type'</span>,</span>
-<span id="cb3-78">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Steering_Controls'</span>,</span>
-<span id="cb3-79">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate_days_since_epoch'</span></span>
-<span id="cb3-80"> ]</span>
-<span id="cb3-81"></span>
-<span id="cb3-82">target <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'logSalePrice'</span></span></code></pre></div>
-</details>
-</div>
-<p>But this time, since we’re going to slam our validation set over and over during hyperparameter search, we want to reserve an actual test set to check how the final model generalizes. We make four different <code>xgboost.DMatrix</code> datasets for this process: training, validation, training+validation, and test. Training and validation are for the parameter search, and training+validation and test are for the final model.</p>
-<div id="cell-11" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1">n_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12000</span></span>
-<span id="cb4-2">n_test <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12000</span></span>
-<span id="cb4-3"></span>
-<span id="cb4-4">sorted_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> df.sort_values(by<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'saledate'</span>)</span>
-<span id="cb4-5">train_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sorted_df[:<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>(n_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> n_test)] </span>
-<span id="cb4-6">valid_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sorted_df[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>(n_valid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> n_test):<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>n_test] </span>
-<span id="cb4-7">test_df <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> sorted_df[<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>n_test:]</span>
-<span id="cb4-8"></span>
-<span id="cb4-9">dtrain <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>train_df[features], label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>train_df[target], </span>
-<span id="cb4-10">                     enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb4-11">dvalid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>valid_df[features], label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>valid_df[target], </span>
-<span id="cb4-12">                     enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb4-13">dtest <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>test_df[features], label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>test_df[target], </span>
-<span id="cb4-14">                    enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb4-15">dtrainvalid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.DMatrix(data<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>pd.concat([train_df, valid_df])[features], </span>
-<span id="cb4-16">                          label<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>pd.concat([train_df, valid_df])[target], </span>
-<span id="cb4-17">                          enable_categorical<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span></code></pre></div>
-</div>
-</section>
-<section id="preliminaries-base-parameters-and-scoring-function" class="level2">
-<h2 class="anchored" data-anchor-id="preliminaries-base-parameters-and-scoring-function">Preliminaries: base parameters and scoring function</h2>
-<p>We’ll go ahead and set a couple of parameters that we usually want to keep fixed across all trials in a parameter search, including the XGBoost objective for training and the evaluation metric to be used for early stopping. We’ll also want to implement a model scoring function that takes a trained model and a dataset and returns the score, in our case, RMSE.</p>
-<div id="cell-13" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1">metric <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'rmse'</span></span>
-<span id="cb5-2">base_params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {</span>
-<span id="cb5-3">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'objective'</span>: <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg:squarederror'</span>,</span>
-<span id="cb5-4">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'eval_metric'</span>: metric,</span>
-<span id="cb5-5">}</span></code></pre></div>
-</div>
-<div id="cell-14" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> score_model(model: xgb.core.Booster, dmat: xgb.core.DMatrix) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">float</span>:</span>
-<span id="cb6-2">    y_true <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> dmat.get_label() </span>
-<span id="cb6-3">    y_pred <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> model.predict(dmat) </span>
-<span id="cb6-4">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> mean_squared_error(y_true, y_pred, squared<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
-</div>
-</section>
-<section id="stage-1-tune-tree-parameters-with-optuna" class="level2">
-<h2 class="anchored" data-anchor-id="stage-1-tune-tree-parameters-with-optuna">Stage 1: Tune Tree Parameters with Optuna</h2>
-<p>Next we need to choose a fixed learning rate and tune the tree parameters. We want a learning rate that allows us to train within a few seconds, so we need to time model training. Start with a high learning rate (like 0.8) and work down until you find a rate that takes a few seconds. Below I end up landing at 0.3, which takes about 4 seconds to train on my little laptop.</p>
-<div id="cell-16" class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span></span>
-<span id="cb7-2"></span>
-<span id="cb7-3">params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {</span>
-<span id="cb7-4">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'tree_method'</span>: <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'approx'</span>,</span>
-<span id="cb7-5">    <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>: learning_rate</span>
-<span id="cb7-6">}</span>
-<span id="cb7-7">params.update(base_params)</span>
-<span id="cb7-8">tic <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> time.time()</span>
-<span id="cb7-9">model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrain,</span>
-<span id="cb7-10">                  evals<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>)],</span>
-<span id="cb7-11">                  num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10000</span>,</span>
-<span id="cb7-12">                  early_stopping_rounds<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span>,</span>
-<span id="cb7-13">                  verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb7-14"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>time<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>time() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> tic<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:.1f}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;"> seconds'</span>)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>4.5 seconds</code></pre>
-</div>
-</div>
-<p>Then we implement our optuna objective, a function taking an optuna study <a href="https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.Trial.html"><code>Trial</code></a> object and returning the score we want to optimize. We use the <code>suggest_categorical</code>, <code>suggest_float</code>, and <code>suggest_int</code> methods of the <code>Trial</code> object to define the search space for each parameter. Note the use of the pruning callback function which we pass into the <code>callback</code> argument of the XGBoost <code>train</code> function; this is a must, since it allows optuna to terminate training on lousy models after a few boosting rounds. After training a model with the selected parameter values, we stash the optimal number of boosting rounds from early stopping into an optuna user attribute using the <a href="https://optuna.readthedocs.io/en/stable/tutorial/20_recipes/003_attributes.html"><code>trial.user_attrs()</code></a> method. Finally we return the score computed by our <code>model_score</code> function.</p>
-<div id="cell-18" class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> objective(trial):</span>
-<span id="cb9-2">    params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {</span>
-<span id="cb9-3">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'tree_method'</span>: trial.suggest_categorical(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'tree_method'</span>, [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'approx'</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'hist'</span>]),</span>
-<span id="cb9-4">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>: trial.suggest_int(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'max_depth'</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12</span>),</span>
-<span id="cb9-5">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>: trial.suggest_int(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'min_child_weight'</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">250</span>),</span>
-<span id="cb9-6">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>: trial.suggest_float(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'subsample'</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.1</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span>),</span>
-<span id="cb9-7">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>: trial.suggest_float(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'colsample_bynode'</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.1</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1.0</span>),</span>
-<span id="cb9-8">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>: trial.suggest_float(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'reg_lambda'</span>, <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.001</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">25</span>, log<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>),</span>
-<span id="cb9-9">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>: learning_rate,</span>
-<span id="cb9-10">    }</span>
-<span id="cb9-11">    num_boost_round <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10000</span></span>
-<span id="cb9-12">    params.update(base_params)</span>
-<span id="cb9-13">    pruning_callback <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> optuna.integration.XGBoostPruningCallback(trial, <span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'valid-</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>metric<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb9-14">    model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrain, num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>num_boost_round,</span>
-<span id="cb9-15">                      evals<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>)],</span>
-<span id="cb9-16">                      early_stopping_rounds<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span>,</span>
-<span id="cb9-17">                      verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb9-18">                      callbacks<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[pruning_callback])</span>
-<span id="cb9-19">    trial.set_user_attr(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'best_iteration'</span>, model.best_iteration)</span>
-<span id="cb9-20">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> model.best_score</span></code></pre></div>
-</div>
-<p>To create a new optuna study and search through 50 parameter combinations, you could just run these two lines.</p>
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">study <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> optuna.create_study(direction<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'minimize'</span>)</span>
-<span id="cb10-2">study.optimize(objective, n_trials<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span>)</span></code></pre></div>
-<p>But, in practice, I prefer to run these potentially long running tasks for a pre-specified amount of clock time, rather than a specified number of trials—who knows how long 50 trials will take. I also want the results to be reproducible. So, to set the random seed and run the optimization for around 300 seconds (long enough to go make a nice cup of tea, stretch, and come back), I do something like this:</p>
-<div id="cell-20" class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">sampler <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> optuna.samplers.TPESampler(seed<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">42</span>)</span>
-<span id="cb11-2">study <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> optuna.create_study(direction<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'minimize'</span>, sampler<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>sampler)</span>
-<span id="cb11-3">tic <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> time.time()</span>
-<span id="cb11-4"><span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">while</span> time.time() <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> tic <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">&lt;</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">300</span>:</span>
-<span id="cb11-5">    study.optimize(objective, n_trials<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span></code></pre></div>
-</div>
-<div id="cell-21" class="cell" data-execution_count="26">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stage 1 =============================='</span>)</span>
-<span id="cb12-2"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'best score = </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>study<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>best_trial<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>value<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb12-3"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'boosting params ---------------------------'</span>)</span>
-<span id="cb12-4"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'fixed learning rate: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>learning_rate<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb12-5"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'best boosting round: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>study<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>best_trial<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>user_attrs[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"best_iteration"</span>]<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb12-6"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'best tree params --------------------------'</span>)</span>
-<span id="cb12-7"><span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> k, v <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> study.best_trial.params.items():</span>
-<span id="cb12-8">    <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(k, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">':'</span>, v)</span></code></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Stage 1 ==============================
-best score = 0.23107522766919256
-boosting params ---------------------------
-fixed learning rate: 0.3
-best boosting round: 23
-best tree params --------------------------
-tree_method : approx
-max_depth : 10
-min_child_weight : 6
-subsample : 0.9729188669457949
-colsample_bynode : 0.8491983767203796
-reg_lambda : 0.008587261143813469</code></pre>
-</div>
-</div>
-<p>If we decide we want to tune the tree parameters a little more, we can just call <code>study.optimize(...)</code> again, adding as many trials as we want to the study. Once we’re happy with the tree parameters, we can proceed to stage 2.</p>
-</section>
-<section id="stage-2-intensify-the-boosting-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="stage-2-intensify-the-boosting-parameters">Stage 2: Intensify the Boosting Parameters</h2>
-<p>Now we take the optimal tree parameters that we found in stage 1, and we train a new model with a fixed low learning rate; here I use 0.01, but you could go lower. The lower your learning rate, the better your performance (with diminishing returns) and the more boosting rounds you’ll need to max out the evaluation metric on the validation data.</p>
-<div id="cell-23" class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">low_learning_rate <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.01</span></span>
-<span id="cb14-2"></span>
-<span id="cb14-3">params <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> {}</span>
-<span id="cb14-4">params.update(base_params)</span>
-<span id="cb14-5">params.update(study.best_trial.params)</span>
-<span id="cb14-6">params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'learning_rate'</span>] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> low_learning_rate</span>
-<span id="cb14-7">model_stage2 <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrain, </span>
-<span id="cb14-8">                         num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">10000</span>,</span>
-<span id="cb14-9">                         evals<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>[(dtrain, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'train'</span>), (dvalid, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'valid'</span>)],</span>
-<span id="cb14-10">                         early_stopping_rounds<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span>,</span>
-<span id="cb14-11">                         verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span></code></pre></div>
-</div>
-<div id="cell-24" class="cell" data-execution_count="28">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Stage 2 =============================='</span>)</span>
-<span id="cb15-2"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'best score = </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>score_model(model_stage2, dvalid)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb15-3"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'boosting params ---------------------------'</span>)</span>
-<span id="cb15-4"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'fixed learning rate: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>params[<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"learning_rate"</span>]<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb15-5"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'best boosting round: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>model_stage2<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>best_iteration<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Stage 2 ==============================
-best score = 0.22172991931438446
-boosting params ---------------------------
-fixed learning rate: 0.01
-best boosting round: 1446</code></pre>
-</div>
-</div>
-</section>
-<section id="train-and-evaluate-the-final-model" class="level2">
-<h2 class="anchored" data-anchor-id="train-and-evaluate-the-final-model">Train and Evaluate the Final Model</h2>
-<p>Now we can train our final model on the combined training and validation datasets using the optimal tree parameters from stage 1 and the fixed learning rate and optimal boosting rounds from stage 2. Then we evaluate on the held out test data.</p>
-<div id="cell-26" class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">model_final <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> xgb.train(params<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>params, dtrain<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>dtrainvalid, </span>
-<span id="cb17-2">                        num_boost_round<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>model_stage2.best_iteration,</span>
-<span id="cb17-3">                        verbose_eval<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span></code></pre></div>
-</div>
-<div id="cell-27" class="cell" data-execution_count="30">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Final Model =========================='</span>)</span>
-<span id="cb18-2"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'test score = </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>score_model(model_final, dtest)<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span>
-<span id="cb18-3"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'parameters ---------------------------'</span>)</span>
-<span id="cb18-4"><span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> k, v <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> params.items():</span>
-<span id="cb18-5">    <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(k, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">':'</span>, v)</span>
-<span id="cb18-6"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">f'num_boost_round: </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span>model_stage2<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>best_iteration<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Final Model ==========================
-test score = 0.21621863543987274
-parameters ---------------------------
-objective : reg:squarederror
-eval_metric : rmse
-tree_method : approx
-max_depth : 10
-min_child_weight : 6
-subsample : 0.9729188669457949
-colsample_bynode : 0.8491983767203796
-reg_lambda : 0.008587261143813469
-learning_rate : 0.01
-num_boost_round: 1446</code></pre>
-</div>
-</div>
-<p>Back in the <a href="../../posts/xgboost-for-regression-in-python/">regression post</a> we got an RMSE of about 0.231 just using default parameter values, which put us in 5th place on the <a href="https://www.kaggle.com/competitions/bluebook-for-bulldozers/leaderboard">leaderboard for the Kagle dozers competition</a>. Now with about 10 minutes of hyperparameter tuning, our RMSE is down to 0.216 which puts us in 1st place by a huge margin. 🙌</p>
-</section>
-<section id="what-could-possibly-go-wrong" class="level2">
-<h2 class="anchored" data-anchor-id="what-could-possibly-go-wrong">What could possibly go wrong?</h2>
-<p>Hyperparameter tuning can easily be overlooked in the move-fast-and-break-everything hustle of building an ML product, but it can also easily become overkill or even downright harmful, depending on the application. There are three key questions to ask:</p>
-<ol type="1">
-<li>How much value is created by an incremental gain in model prediction accuracy?</li>
-<li>What is the cost of increasing model prediction accuracy?</li>
-<li>Is my model answering the right question?</li>
-</ol>
-<p>Sometimes a small gain in model prediction performance translates into millions of dollars of impact. The dream scenario is that you swoop in on some key model in your organization, markedly improve its accuracy with an easy afternoon of hyperparameter tuning, realize massive improvements in your org’s KPIs, and get mad respect, bonuses, and promoted. But the reality is that often additional model accuracy doesn’t really change business KPIs by very much. Try to figure out the actual value of improved model accuracy and proceed accordingly.</p>
-<p>Remember too that hyperparameter tuning has its costs, most obviously the developer time and compute resources for the search itself. It can also lead us to larger and deeper models which take longer to train, occupy larger memory footprints, and have higher prediction latency.</p>
-<p>Worst of all and quite counterintuitively, it’s possible that improving a model’s prediction accuracy can compromise overall business KPIs. I’ve seen this with my own eyes at work; offline testing shows that hyperparameter tuning significantly improves a model’s prediction accuracy, but when the model goes into production, an AB test shows that the business KPIs are actually worse. What happened? In this case, the model’s prediction was being used indirectly to infer the relationship between one of the features and the prediction target to inform automatic business decisions. Answering questions about how changing an input will affect an output requires causal reasoning, and <a href="https://arxiv.org/abs/1608.00060">traditional ML models are not the right tool for the job</a>. I’ll have a lot more to say about that soon; let this story foreshadow an epic new epoch on Random Realizations….</p>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>There it is, an efficient and ridiculously easy hyperparameter tuning strategy for XGBoost using optuna. If you found this helpful, if you have questions, or if you have your own preferred method for parameter search, let me know about it down in the comments!</p>
-</section>
-
- ]]></description>
-  <category>python</category>
-  <category>tutorial</category>
-  <category>gradient boosting</category>
-  <category>xgboost</category>
-  <guid>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</guid>
-  <pubDate>Tue, 26 Dec 2023 08:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/optuna_thumbnail.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>

@@ -21,43 +21,23 @@
     <lastmod>2025-12-07T22:55:18.826Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
-    <lastmod>2025-12-07T21:42:05.598Z</lastmod>
+    <loc>https://randomrealizations.com/posts/random-realizations-resurrected/</loc>
+    <lastmod>2025-01-26T01:19:51.189Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/</loc>
-    <lastmod>2025-01-26T01:19:51.173Z</lastmod>
+    <loc>https://randomrealizations.com/posts/decision-tree-from-scratch/</loc>
+    <lastmod>2025-01-26T01:19:51.178Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
-    <lastmod>2025-01-26T01:19:51.177Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-for-regression-in-python/</loc>
+    <lastmod>2025-01-26T01:19:51.195Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/logistic-regression-with-pytorch/</loc>
-    <lastmod>2025-12-07T22:38:30.072Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-for-classification-in-python/</loc>
+    <lastmod>2025-01-26T01:19:51.194Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
-    <lastmod>2025-01-26T01:19:51.196Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
-    <lastmod>2025-01-26T01:19:51.185Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
-    <lastmod>2025-01-26T01:19:51.182Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
-    <lastmod>2025-01-26T01:19:51.171Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</loc>
-    <lastmod>2025-12-07T21:42:05.602Z</lastmod>
-  </url>
-  <url>
-    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
+    <loc>https://randomrealizations.com/posts/hello-world/</loc>
     <lastmod>2025-01-26T01:19:51.187Z</lastmod>
   </url>
   <url>
@@ -65,24 +45,48 @@
     <lastmod>2025-12-07T21:42:05.599Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/hello-world/</loc>
+    <loc>https://randomrealizations.com/posts/hello-pyspark/</loc>
     <lastmod>2025-01-26T01:19:51.187Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/xgboost-for-classification-in-python/</loc>
-    <lastmod>2025-01-26T01:19:51.194Z</lastmod>
+    <loc>https://randomrealizations.com/posts/xgboost-parameter-tuning-with-optuna/</loc>
+    <lastmod>2025-12-07T21:42:05.602Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/xgboost-for-regression-in-python/</loc>
-    <lastmod>2025-01-26T01:19:51.195Z</lastmod>
+    <loc>https://randomrealizations.com/posts/8020-pandas-tutorial/</loc>
+    <lastmod>2025-01-26T01:19:51.171Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/decision-tree-from-scratch/</loc>
-    <lastmod>2025-01-26T01:19:51.178Z</lastmod>
+    <loc>https://randomrealizations.com/posts/get-down-with-gradient-descent/</loc>
+    <lastmod>2025-01-26T01:19:51.182Z</lastmod>
   </url>
   <url>
-    <loc>https://randomrealizations.com/posts/random-realizations-resurrected/</loc>
-    <lastmod>2025-01-26T01:19:51.189Z</lastmod>
+    <loc>https://randomrealizations.com/posts/gradient-boosting-machine-with-any-loss-function/</loc>
+    <lastmod>2025-01-26T01:19:51.185Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/xgboost-from-scratch/</loc>
+    <lastmod>2025-01-26T01:19:51.196Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/logistic-regression-with-pytorch/</loc>
+    <lastmod>2025-12-07T22:38:30.072Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/consider-the-decision-tree/</loc>
+    <lastmod>2025-01-26T01:19:51.177Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/blogging-with-quarto-and-jupyter/</loc>
+    <lastmod>2025-01-26T01:19:51.173Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/how-gradient-boosting-does-gradient-descent/</loc>
+    <lastmod>2025-12-07T21:42:05.598Z</lastmod>
+  </url>
+  <url>
+    <loc>https://randomrealizations.com/posts/model-based-stat-testing/</loc>
+    <lastmod>2026-01-20T01:11:43.609Z</lastmod>
   </url>
   <url>
     <loc>https://randomrealizations.com/posts/gradient-boosting-multi-class-classification-from-scratch/</loc>

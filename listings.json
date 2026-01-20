@@ -18,6 +18,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/model-based-stat-testing/index.html",
       "/posts/logistic-regression-with-pytorch/index.html",
       "/posts/bayesian-modeling-primer/index.html",
       "/posts/traditional-vs-roth-401k/index.html",
@@ -44,6 +45,7 @@
   {
     "listing": "/archive.html",
     "items": [
+      "/posts/model-based-stat-testing/index.html",
       "/posts/logistic-regression-with-pytorch/index.html",
       "/posts/bayesian-modeling-primer/index.html",
       "/posts/traditional-vs-roth-401k/index.html",
