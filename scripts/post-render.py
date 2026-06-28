@@ -5,35 +5,37 @@ This script performs post processing on a rendered Quarto site by doing
 """
 
 from xml.dom.minidom import parse
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 import warnings
-import os
+from pathlib import Path
 
-SITE_DIR = '_site'
-SITEMAP_FILE = os.path.join(SITE_DIR, 'sitemap.xml')
+SITE_DIR = Path('_site')
+SITEMAP_FILE = SITE_DIR / 'sitemap.xml'
 
-def add_canonical_tags(urls: list):
+def add_canonical_tags(urls: list[str]) -> None:
     """
     Adds canonical URL tags to HTML pages based on a list of URLs.
     Handles cases where sitemap URLs might refer to directories or already contain index.html.
     """
     print('\nAdding canonical url tags to pages...')
     for url in urls:
-        parsed_path = urlparse(url).path
+        parsed = urlparse(url)
+        # Decode percent-encoded paths (e.g., %20 -> space) to match local file system
+        parsed_path = unquote(parsed.path)
 
         # Determine the full file path.
         # If the sitemap URL points to a directory (e.g., /about/),
         # assume the corresponding file is index.html within that directory.
-        if parsed_path == '/' or parsed_path == '':
+        if parsed_path in ('/', ''):
             # This is the root of the site, which is a directory. Skip as a file.
             continue
         elif parsed_path.endswith('/'):
-            file_path = os.path.join(SITE_DIR, parsed_path, 'index.html')
+            file_path = SITE_DIR / parsed_path.lstrip('/') / 'index.html'
         else:
-            file_path = os.path.join(SITE_DIR, parsed_path)
+            file_path = SITE_DIR / parsed_path.lstrip('/')
 
         # Check if the constructed path is actually a file
-        if not os.path.isfile(file_path):
+        if not file_path.is_file():
             warnings.warn(f'Skipping {file_path} as it is not a file or does not exist.')
             continue
 
@@ -47,48 +49,49 @@ def add_canonical_tags(urls: list):
 
         try:
             # Read in the file
-            with open(file_path, 'r', encoding='utf-8') as file:
-                filedata = file.read()
+            filedata = file_path.read_text(encoding='utf-8')
 
             if '<link rel="canonical"' not in filedata:
                 print(f'Adding canonical tag to file: {file_path}')
                 # Replace the target string
                 filedata = filedata.replace('</head>', canonical_tag + '\n</head>')
                 # Write the file out again
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(filedata)
+                file_path.write_text(filedata, encoding='utf-8')
             else:
                 warnings.warn(f'{file_path} already contains canonical tag. Skipping this file.')
         except Exception as e:
             warnings.warn(f"Error processing {file_path}: {e}")
 
-def strip_index_html_from_sitemap(sitemap_path: str):
+def strip_index_html_from_sitemap(sitemap_path: Path) -> None:
     """
     Removes 'index.html' from URLs within the sitemap.xml file.
     """
     print('\nStripping index.html from urls in the sitemap...')
     try:
-        with open(sitemap_path, 'r', encoding='utf-8') as file:
-            filedata = file.read()
+        filedata = sitemap_path.read_text(encoding='utf-8')
 
         # Only replace if 'index.html' is present to avoid unnecessary file writes
         if 'index.html' in filedata:
             filedata = filedata.replace('index.html', '')
-            with open(sitemap_path, 'w', encoding='utf-8') as file:
-                file.write(filedata)
+            sitemap_path.write_text(filedata, encoding='utf-8')
         else:
             print(f"'{sitemap_path}' already stripped of 'index.html'.")
     except Exception as e:
         warnings.warn(f"Error stripping index.html from sitemap {sitemap_path}: {e}")
 
 if __name__ == "__main__":
-    if not os.path.exists(SITEMAP_FILE):
+    if not SITEMAP_FILE.exists():
         warnings.warn(f"Sitemap file not found at {SITEMAP_FILE}. Skipping post-render operations.")
     else:
         try:
-            document = parse(SITEMAP_FILE)
+            document = parse(str(SITEMAP_FILE))
             locs = document.getElementsByTagName('loc')
-            urls = [l.firstChild.nodeValue for l in locs]
+            # Handle empty loc nodes safely
+            urls = [
+                l.firstChild.nodeValue 
+                for l in locs 
+                if l.firstChild and l.firstChild.nodeValue
+            ]
 
             add_canonical_tags(urls)
             strip_index_html_from_sitemap(SITEMAP_FILE)
