@@ -15,13 +15,39 @@ That's right, today we're talking *Causal Inference*.
 
 ## Why causal inference 
 
+### The Purpose of Data Science
+
+Every once in a while my mom asks me if I can re-explain to her what data scientists do. It's a great question really—we in the field should probably ask ourselves more often. In a single sentence I'd say: the purpose of data science is to create value from data.  And what's valuable to the organizations that employ us?  Well an organization has goals, and in order to achieve those goals it needs to make decisions about which actions to take. At its most effective, data science is about decision intelligence—informing a decision making process to help achieve desired outcomes. These decisions come in many forms, from executive deliberation on bold strategic bets to adaptive transaction-level automation occurring millions of times per day.
+
+Examples include
+What price to charge for this hotel room on these dates?
+Which carbon emissions policy to implement?
+How to allocate the quarterly marketing budget?
+
+Behind each of these decisions is a set of what if questions of the form: What would happen if I did this? What would happen if I did that? To inform the decision we can predict answers to these what if questions. 
+
+Often these answers are already valuable, but sometimes we can go one step further and recommend the action corresponding to the most favorable outcome. Thus our business problems can often be formulated as mathematical optimization problems of the form
+
+$$ \underset{x} \text{argmax} f(x) $$
+
+where $x$ indexes the possible actions we can take and $f$ is a "what if" function that predicts the benefit of an action. The above expression says: "find the action that maximizes the predicted benefit."
+
+So far so good, but where does that "what if" function come from? 
+If only there was a completely foolproof way to make predictions...
+
+
+### Prediction
+
 When I arrived in silicon valley in 2017, data science was having a moment. It was still riding high from that 2012 HBS article proclaiming data science as 
 [The Sexiest Job of the 21st Century](https://hbr.org/2012/10/data-scientist-the-sexiest-job-of-the-21st-century).
 At the time PhDs from fields across academia were flocking to Silicon Valley to join the ranks of the rapidly growing tech companies who, after reading that HBS article, were ready to pay top dollar for people who knew how to coax treasure out of their mountains of messy data.
-There were of course many ways to coax out that treasure, but it soon became clear that *machine learning*, and in particular predictive modeling, was well suited to solve a wide variety of business problems.
+There were of course many ways to coax out that treasure, but it soon became clear that predictive modeling via machine learning was particularly well suited to solve a wide variety of business problems.
+And so, ML was hot.
 
-To the delight of many ex-academics, we found that ML was just statistical modeling—which we had already been using to do scientific research—but with all the emphasis on  prediction accuracy rather than getting insights about the phenomena under study. And boy did it work! It's sort of mind blowing how little effort is required to achieve amazing prediction accuracy on lots of different problems, using essentially the same approach for every problem. 
-Heck, I've shown you on this very blog how to solve pretty much any tabular data prediction problem to worldclass accuracy over just two or three posts about how to fit and tune XGBoost.
+To the delight of many ex-academics, we found that ML was just statistical modeling—which we had already been using to do scientific research—but with all the emphasis on  prediction accuracy rather than getting insights about the phenomena under study. 
+You can take that residual plot and chuck it in the trash; all we need is holdout accuracy.
+And boy did it work! It's sort of mind blowing how little effort is required to achieve amazing prediction accuracy on lots of different problems, using essentially the same approach for every problem. 
+Heck, I've shown you on this very blog how to solve pretty much any tabular data prediction problem to worldclass accuracy over just two or three posts about how to fit and tune XGBoost models.
 Implementing these solutions has more or less reduced down to something like:
 
 ```python
@@ -33,6 +59,7 @@ model.fit(X, y)
 predictions = model.predict(X_new)
 ```
 
+
 With this amazingly powerful prediction tool in hand, it's no surprise that pretty soon, everything starts to look like a prediction problem. Need to know how much customers will buy? Use historical transaction data to predict purchase volume. Need to recommend a product to a user? Use historical purchase data to predict which product they're most likely to buy. Need to automatically set the price of this hotel room? Use historical prices to predict the price.
 
 Gradually, as we observed more and more ML applications around us, we fell into a cognitive bias calledThe Law of the Instrument, which involves overreliance on a familiar tool.
@@ -42,7 +69,17 @@ Abraham Maslow
 
 Unbeknownst to us, some of these problems were not nails; they were screws. And when we tried to solve them with ML, we got screwed.
 
+### Prediction Failure Mode
 
+Why do predictive models sometimes fail when used as optimization objectives for decision making?
+While there are a bunch of possible reasons, we'll focus on  the central one — say it with me now — **correlation does not imply causation**.
+ML models trained on observational data are basically fancy correlation machines.
+They can learn complicated association structures among variables, but only those observed in training. 
+
+Suppose we want to determine the effect of promotional offers on customers' rate of churn.
+Consulting the observed data, we see that promo offers have actually been associated with higher churn probability. 
+How can that be? 
+Well, perhaps the LCM team has 
 
 
 
