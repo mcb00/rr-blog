@@ -64,7 +64,7 @@ Need to choose what product to recommend? Just use customer behavior data to pre
 Need to set the price of a hotel room? Just use historical pricing data to predict the price.
 Need to decide whether to offer a promo? Just predict your profit with or without the promo.
 
-TODO image of a hammer
+![hammer](hammern.jpg "")
 > "I suppose it is tempting, if the only tool you have is a hammer, to treat everything as if it were a nail."
 Abraham Maslow
 
