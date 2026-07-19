@@ -76,7 +76,7 @@ But often these decision optimization problems weren't actually nails; they were
 
 ### Decision via prediction failure modes
 
-Why can predictive models fail when used as optimization objectives for decision making?
+To help build some intuition for why optimization based on predictive models can fail, let's work with a concrete example.
 
 Suppose in an effort to increase retention, we're deciding whether to give promotional offers to customers.
 We have some historical customer data that tells us whether each customer was given an offer and whether they were retained.
@@ -84,6 +84,7 @@ We have some historical customer data that tells us whether each customer was gi
 TODO table showing average retention for off vs no offer 
 
 Wow, offers are associated with lower retention in the historical data.
+Our promos must be pretty terrible. 
 
 Representing our summary table as a simple model we have
 
@@ -94,10 +95,25 @@ This model implies that
 
 $$ \underset{x} \text{argmax} f(x) = no offer$$
 
-the best action is to give no promotional offers. 
+Plugging our predictive model into Our decision  optimization framework, it looks like the best action is to give no promotional offers. 
+Case closed, right?
+
+
+### Simpson's Paradox
 
 But what if it turns out that the sales team, who gave out those promos in our historical data, was targeting customers who they thought were at risk of churning?
-Suppose we were able to recover their logs of which customers they thought were at risk. 
+Suppose we were able to recover the logs of which customers they thought were at risk and then we split customers by risk and promo status.
+
+TODO table with risk and promo status
+
+A few very interesting things pop out in this view.
+First, we can see that the sales team did in fact tend to target at risk customers with promos.
+Second, we see that retention is actually higher for promo customers in both the risk and non risk customer groups, indicating that promos being truly effective.
+This situation, where the direction of an association flips after further splitting the data is called Simpson's Paradox.
+
+
+
+
 
 
 When we talk about choosing an action that yields the best outcome, we are talking about  *causality*. 
