@@ -28,7 +28,7 @@ Behind each of these decisions is a set of what if questions of the form: What w
 
 Often these answers are already valuable, but sometimes we can go one step further and recommend the action corresponding to the most favorable outcome. Thus our business problems can often be formulated as mathematical optimization problems of the form
 
-$$ \underset{x} \text{argmax} f(x) $$
+$$ \underset{x}{\operatorname{argmax}} f(x) $$
 
 where $x$ indexes the possible actions we can take and $f$ is a "what if" function that predicts the benefit of an action. The above expression says: "find the action that maximizes the predicted benefit."
 
@@ -64,11 +64,12 @@ Need to choose what product to recommend? Just use customer behavior data to pre
 Need to set the price of a hotel room? Just use historical pricing data to predict the price.
 Need to decide whether to offer a promo? Just predict your profit with or without the promo.
 
-![hammer](hammern.jpg "")
+![hammer](hammer.jpg "")
+
 > "I suppose it is tempting, if the only tool you have is a hammer, to treat everything as if it were a nail."
 Abraham Maslow
 
-Effectively we're taking that decision optimization problem $ \underset{x} \text{argmax} f(x) $
+Effectively we're taking that decision optimization problem $ \underset{x}{\operatorname{argmax}} f(x) $
 and saying: well I don't actually know the objective function $f$, but I can estimate it by training an ML model on some historical data, 
 then I can use the model to find the best decision.
 
@@ -76,15 +77,56 @@ But often these decision optimization problems weren't actually nails; they were
 
 ### Decision via prediction failure modes
 
-To help build some intuition for why optimization based on predictive models can fail, let's work with a concrete example.
+To help build some intuition for why optimization based on predictive models can fail, let's work with a simple, concrete example.
 
 Suppose in an effort to increase retention, we're deciding whether to give promotional offers to customers.
 We have some historical customer data that tells us whether each customer was given an offer and whether they were retained.
 
-TODO table showing average retention for off vs no offer 
+```{python}
+import pandas as pd
+import numpy as np
+
+# For reproducibility
+np.random.seed(42)
+n = 10000
+
+# 1. Simulate risk (40% high risk, 60% low risk)
+risk = np.random.binomial(1, 0.4, n)
+
+# 2. Simulate promo based on risk (high risk much more likely to get promo)
+promo_prob = np.where(risk == 1, 0.8, 0.2)
+promo = np.random.binomial(1, promo_prob)
+
+# 3. Simulate retention (high risk less likely to retain, promo helps slightly)
+retention_prob = np.select(
+    [
+        (risk == 0) & (promo == 0),
+        (risk == 0) & (promo == 1),
+        (risk == 1) & (promo == 0),
+        (risk == 1) & (promo == 1)
+    ],
+    [0.80, 0.90, 0.20, 0.35]
+)
+retention = np.random.binomial(1, retention_prob)
+
+df = pd.DataFrame({
+    'customer_id': np.arange(1, n + 1),
+    'risk': risk,
+    'promo': promo,
+    'retention': retention
+})
+
+# Display first few rows
+df.head()
+```
+
+```{python}
+df.groupby('promo')['retention'].mean()
+```
+
 
 Wow, offers are associated with lower retention in the historical data.
-Our promos must be pretty terrible. 
+Our promos must be pretty terrible or something. 
 
 Representing our summary table as a simple model we have
 
@@ -93,7 +135,7 @@ $$ f(x) = E[Y|X=x] $$
 where $Y$ is the retention status and $X$ is the offer status.
 This model implies that 
 
-$$ \underset{x} \text{argmax} f(x) = no offer$$
+$$ \underset{x}{\operatorname{argmax}} f(x) = \text{no offer} $$
 
 Plugging our predictive model into Our decision  optimization framework, it looks like the best action is to give no promotional offers. 
 Case closed, right?
