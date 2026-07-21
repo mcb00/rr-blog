@@ -64,7 +64,7 @@ Need to choose what product to recommend? Just use customer behavior data to pre
 Need to set the price of a hotel room? Just use historical pricing data to predict the price.
 Need to decide whether to offer a promo? Just predict your profit with or without the promo.
 
-![hammer](hammer.jpg "")
+![](hammer.jpg "")
 
 > "I suppose it is tempting, if the only tool you have is a hammer, to treat everything as if it were a nail."
 Abraham Maslow
@@ -75,14 +75,21 @@ then I can use the model to find the best decision.
 
 But often these decision optimization problems weren't actually nails; they were screws. And when we tried to solve them naively with ML, we got screwed.
 
-### Decision via prediction failure modes
+###  A Cautionary Tale
 
-To help build some intuition for why optimization based on predictive models can fail, let's work with a simple, concrete example.
 
-Suppose in an effort to increase retention, we're deciding whether to give promotional offers to customers.
-We have some historical customer data that tells us whether each customer was given an offer and whether they were retained.
+Let's walk through a concrete example to see what can go wrong when we misuse predictive models for decision making.
+
+Suppose there's an e-commerce firm that's interested in using promotional offers to increase customer retention.
+They've got a historical customer-level dataset that tells whether each customer was given an offer and whether they were retained.
+The data science team plans to build a model to predict customer retention from promo status and then use that to decide whether to do another round of promos.
+We'll simulate the data for this example so we know how everything works.
+In our simulation, the promos will have a small positive effect on retention, just as the DS team might expect.
+But not all customers are equally likely to churn, and unbeknownst to the DS team, those promo offers aren't given out randomly; actually the sales team manually goes through their customer list and targets those they think are at the highest risk of churning.
+
 
 ```{python}
+#| code-fold: true
 import pandas as pd
 import numpy as np
 
@@ -90,28 +97,21 @@ import numpy as np
 np.random.seed(42)
 n = 10000
 
-# 1. Simulate risk (40% high risk, 60% low risk)
-risk = np.random.binomial(1, 0.4, n)
+# 1. Simulate risk (continuous variable)
+risk = np.random.normal(0, 1, n)
 
-# 2. Simulate promo based on risk (high risk much more likely to get promo)
-promo_prob = np.where(risk == 1, 0.8, 0.2)
+# 2. Simulate promo based on risk (higher risk much more likely to get promo)
+promo_prob = 1 / (1 + np.exp(-1.5 * risk))
 promo = np.random.binomial(1, promo_prob)
 
-# 3. Simulate retention (high risk less likely to retain, promo helps slightly)
-retention_prob = np.select(
-    [
-        (risk == 0) & (promo == 0),
-        (risk == 0) & (promo == 1),
-        (risk == 1) & (promo == 0),
-        (risk == 1) & (promo == 1)
-    ],
-    [0.80, 0.90, 0.20, 0.35]
-)
+# 3. Simulate retention (higher risk less likely to retain, promo helps slightly)
+retention_logit = 1.0 - 2.0 * risk + 0.5 * promo
+retention_prob = 1 / (1 + np.exp(-retention_logit))
 retention = np.random.binomial(1, retention_prob)
 
 df = pd.DataFrame({
     'customer_id': np.arange(1, n + 1),
-    'risk': risk,
+    # 'risk': risk,
     'promo': promo,
     'retention': retention
 })
@@ -121,57 +121,93 @@ df.head()
 ```
 
 ```{python}
-df.groupby('promo')['retention'].mean()
+mean_retention = df.groupby('promo')['retention'].mean()
+print(f"Average retention without promo: {mean_retention[0]:.2%}")
+print(f"Average retention with promo: {mean_retention[1]:.2%}")
 ```
 
+When the DS team checked the retention rates for customers with and without promo offers, they were surprised to find that retention was actually. lower for those who had received the promos.
+They mused: "that's odd; our promos must be pretty terrible or something."
+Then they proceeded intrepidly, building a model to predict retention using promo status.
 
-Wow, offers are associated with lower retention in the historical data.
-Our promos must be pretty terrible or something. 
+```{python}
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
-Representing our summary table as a simple model we have
+# Train-test split
+train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
-$$ f(x) = E[Y|X=x] $$ 
+# Features and target
+X_train = train_df[['promo']]
+y_train = train_df['retention']
+X_test = test_df[['promo']]
+y_test = test_df['retention']
 
-where $Y$ is the retention status and $X$ is the offer status.
-This model implies that 
+# Fit a Random Forest model on train data
+clf = RandomForestClassifier(random_state=42)
+clf.fit(X_train, y_train)
 
-$$ \underset{x}{\operatorname{argmax}} f(x) = \text{no offer} $$
+# Evaluate on holdout set
+holdout_predictions = clf.predict(X_test)
+accuracy = accuracy_score(y_test, holdout_predictions)
+print(f"Holdout accuracy: {accuracy:.2%}")
 
-Plugging our predictive model into Our decision  optimization framework, it looks like the best action is to give no promotional offers. 
-Case closed, right?
+# Predict retention for with and without promo
+promo_scenarios = pd.DataFrame({'promo': [0, 1]})
+predictions = clf.predict_proba(promo_scenarios)[:, 1]
+
+print(f"Predicted retention without promo: {predictions[0]:.2%}")
+print(f"Predicted retention with promo: {predictions[1]:.2%}")
+
+# Choose the optimal action (argmax)
+best_promo_idx = np.argmax(predictions)
+best_promo_val = promo_scenarios.loc[best_promo_idx, 'promo']
+print(f"Optimal decision: promo = {best_promo_val}")
+```
+
+ Using their model, they found that  `promo = 0`, no promotional offer, gives the highest retention prediction and is therefore the  optimal decision for the firm.
+
+Womp womp.
+
+---
+
+So what went wrong?
+It turns out that our intrepid DS team has fallen victim to the age old saying — 
+
+> *correlation does not imply causation*.
+
+Predictive models are very good at answering  *observational* questions — questions about what sorts of patterns have been typically observed in the past.
+Specifically, supervised ML models find the **observational* conditional expectation function*:
+
+$$ \hat{f}(x) = E[Y|X=x] $$
+
+which tells us what the response $Y$ tends to look like in training data when feature $X$ happens to take value $x$. In other words, it lives in the realm of correlations.
+The DS team's model learned this observational conditional expectation function, which showed that when promos were applied, retention tended to be low; this much was correct.
 
 
-### Simpson's Paradox
+But when our ill-fated DS team tried to use a predictive model to answer a what if question about promos and their effect on retention, they were actually asking an *interventional* question — a question about what happens when we decide to intervene on a system in a particular way.
+The function they actually wanted to know is the *interventional* conditional expectation function:
 
-But what if it turns out that the sales team, who gave out those promos in our historical data, was targeting customers who they thought were at risk of churning?
-Suppose we were able to recover the logs of which customers they thought were at risk and then we split customers by risk and promo status.
+$$ \hat{f}(x) = E[Y|do(X=x)] $$
 
-TODO table with risk and promo status
+which tells us what the response $Y$ tends to look like when some intervention, represented by the *do operator*,  forcibly sets $X$ to value $x$.
+This is what the DS team actually wanted — a function that gives the expected retention when promo is set rather than observed.
+This expresses a very different situation from the observational distribution.
+Consider how promo arises in the observational data; because the sales team was targeting customers with high churn risk, promo tends to occur in cases with low retention, even though it has a slight positive effect on retention.
+In contrast, when promo arises from an intervention, promo is no longer associated with high churn risk, and thus we're able to see its positive effect on retention.
 
-A few very interesting things pop out in this view.
-First, we can see that the sales team did in fact tend to target at risk customers with promos.
-Second, we see that retention is actually higher for promo customers in both the risk and non risk customer groups, indicating that promos being truly effective.
-This situation, where the direction of an association flips after further splitting the data is called Simpson's Paradox.
+So how do we estimate this interventional expectation function?
+In general the observational and interventional conditional expectation functions are not the same, and they are only the same when certain special conditions are satisfied.
+It  is the function of causal inference  to figure out how to satisfy those conditions so that we can use observational data to answer causal questions.
+In other words:
+
+> "Correlation does not imply causation — except when it does.*"
 
 
+They had assumed that their model would correctly pick up the *causal effect* of promo on retention, but in fact, all it did was capture the *correlation* between them.
 
 
-
-
-When we talk about choosing an action that yields the best outcome, we are talking about  *causality*. 
-We suppose that the system is one in which our actions can influence the outcome.
-
-Don't be shy, let's all say it together:
-
-**Correlation does not necessarily imply causation**.
-
-ML models trained on observational data are basically fancy correlation machines.
-They can learn complicated association structures among variables, 
-
-Suppose we want to determine the effect of promotional offers on customers' rate of churn.
-Consulting the observed data, we see that promo offers have actually been associated with higher churn probability. 
-How can that be? 
-Well, perhaps the LCM team has 
 
 
 
