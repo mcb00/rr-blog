@@ -19,20 +19,28 @@ def add_canonical_tags(urls: list[str]) -> None:
     """
     print('\nAdding canonical url tags to pages...')
     for url in urls:
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         parsed = urlparse(url)
         # Decode percent-encoded paths (e.g., %20 -> space) to match local file system
-        parsed_path = unquote(parsed.path)
+        parsed_path = unquote(parsed.path).lstrip('/')
+=======
+        parsed_path = urlparse(url).path.lstrip('/')
+>>>>>>> Stashed changes
 
         # Determine the full file path.
         # If the sitemap URL points to a directory (e.g., /about/),
         # assume the corresponding file is index.html within that directory.
-        if parsed_path in ('/', ''):
-            # This is the root of the site, which is a directory. Skip as a file.
-            continue
+        if parsed_path == '' or parsed_path == '/':
+<<<<<<< Updated upstream
+            file_path = SITE_DIR / 'index.html'
+=======
+            file_path = os.path.join(SITE_DIR, 'index.html')
+>>>>>>> Stashed changes
         elif parsed_path.endswith('/'):
-            file_path = SITE_DIR / parsed_path.lstrip('/') / 'index.html'
+            file_path = SITE_DIR / parsed_path / 'index.html'
         else:
-            file_path = SITE_DIR / parsed_path.lstrip('/')
+            file_path = SITE_DIR / parsed_path
 
         # Check if the constructed path is actually a file
         if not file_path.is_file():
@@ -58,7 +66,7 @@ def add_canonical_tags(urls: list[str]) -> None:
                 # Write the file out again
                 file_path.write_text(filedata, encoding='utf-8')
             else:
-                warnings.warn(f'{file_path} already contains canonical tag. Skipping this file.')
+                print(f'{file_path} already contains canonical tag. Skipping this file.')
         except Exception as e:
             warnings.warn(f"Error processing {file_path}: {e}")
 
