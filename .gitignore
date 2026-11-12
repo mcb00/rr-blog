@@ -4,3 +4,5 @@ venv
 
 /.quarto/
 *.csv
+
+**/*.quarto_ipynb
