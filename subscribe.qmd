@@ -1,0 +1,37 @@
+---
+title: "Subscribe"
+page-layout: article
+---
+
+Dear reader,
+
+Alright, so here's the deal with subscribing; I do not email the list often.
+This is certainly not a newsletter; I only send messages when I think you might be interested in something I've posted; right now I'm averaging about one post a year; I do aspire to post more often, but I think we all know how that tends to go around here.
+
+```{=html}
+<form action="https://dev.us20.list-manage.com/subscribe/post?u=5212e33f7cd396dd4a742431c&amp;id=0a2f69f3f3&amp;f_id=002e29e8f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate my-4" target="_self" style="max-width: 600px;">
+
+    <div class="mb-3">
+      <input type="email" value="" name="EMAIL" class="form-control form-control-lg" id="mce-EMAIL" placeholder="enter your email" required style="width: 100%;">
+    </div>
+    
+    <div style="margin-top: 15px;">
+    <button 
+        type="submit" 
+        class="btn btn-dark btn-lg"
+        data-umami-event="Subscribe"
+    >Subscribe</button>
+    </div>
+    
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f718424fc5df77c22533bdaa6_a3c37fb57b" tabindex="-1" value=""></div>
+    
+</form>
+```
+
+Unsubscribe at any time.
+I will not share your email with anyone other than Mailchimp, the service I use to maintain the list.
+
+Cheers,
+
+Matt

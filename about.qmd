@@ -24,4 +24,4 @@ Before that I worked at Uber where I solved a variety of problems using statisti
 And before Uber I earned an MS in Applied Statistics and a PhD in Atmospheric Sciences at Purdue University where I studied the spatial-temporal correlation structure of tropical convection systems and developed statistical methods for climate research.
 
 Posts are published here and on [Python-Bloggers](https://python-bloggers.com/).
-If you want to get notified when I post something, go ahead and [subscribe]().
+If you want to get notified when I post something, go ahead and [subscribe](subscribe.qmd).
