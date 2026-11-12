@@ -14,7 +14,6 @@ website:
   site-url:  https://randomrealizations.com/
   description: "A blog about data science, statistics, machine learning, and the scientific method"
   favicon: "favicon-wbg.png"
-  margin-header: includes/subscribe.html
   # comments:
   #   utterances:
   #     repo: mcb00/blog
@@ -33,14 +32,12 @@ website:
     right:
       - text: About
         href: about.qmd
+      - text: Subscribe
+        href: subscribe.qmd
       - text: Series
         menu:
           - text: Gradient Boosting Series
             href: gradient-boosting-series.qmd
-      - text: Resources
-        menu:
-          - text: Python-Bloggers
-            href: https://python-bloggers.com/
           
     tools:
       - icon: github
