@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Posts"
 aliases:
   - archive.html
 listing:
@@ -9,7 +9,7 @@ listing:
   categories: true
   sort-ui: false
   filter-ui: false
-  fields: [date, title, categories]
+  fields: [date, title, categories, description]
   feed: 
     items: 5
     categories: [python]
