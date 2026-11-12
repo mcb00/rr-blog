@@ -13,6 +13,7 @@ listing:
     - posts/xgboost-for-regression-in-python
     - posts/gradient-boosting-multi-class-classification-from-scratch
     - posts/xgboost-for-classification-in-python
+    - posts/xgboost-parameter-tuning-with-optuna
     
   sort: "date"
   type: default
