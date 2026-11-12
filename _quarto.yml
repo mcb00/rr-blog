@@ -33,8 +33,6 @@ website:
     right:
       - text: About
         href: about.qmd
-      - text: Archive
-        href: archive.qmd
       - text: Series
         menu:
           - text: Gradient Boosting Series

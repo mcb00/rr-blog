@@ -1,5 +1,7 @@
 ---
 title: "Home"
+aliases:
+  - archive.html
 listing:
   contents: posts
   sort: "date desc"
@@ -7,10 +9,10 @@ listing:
   categories: true
   sort-ui: false
   filter-ui: false
-  fields: [date, title, description, categories, image]
-  # feed: true
-    # items: 3
-    # categories: [python]
+  fields: [date, title, categories]
+  feed: 
+    items: 5
+    categories: [python]
 page-layout: full
 title-block-banner: false
 ---

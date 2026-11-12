@@ -4,6 +4,7 @@ This script performs post processing on a rendered Quarto site by doing
   - stripping index.html from urls in the sitemap
 """
 
+import shutil
 from xml.dom.minidom import parse
 from urllib.parse import urlparse, unquote
 import warnings
@@ -11,6 +12,20 @@ from pathlib import Path
 
 SITE_DIR = Path('_site')
 SITEMAP_FILE = SITE_DIR / 'sitemap.xml'
+
+def copy_rss_feeds() -> None:
+    """
+    Copies index RSS feeds to archive RSS feed filenames for backward compatibility.
+    """
+    print('\nCopying index RSS feeds for archive compatibility...')
+    feed_mappings = [
+        (SITE_DIR / 'index.xml', SITE_DIR / 'archive.xml'),
+        (SITE_DIR / 'index-python.xml', SITE_DIR / 'archive-python.xml'),
+    ]
+    for src, dst in feed_mappings:
+        if src.is_file():
+            shutil.copy(src, dst)
+            print(f'Copied {src} -> {dst}')
 
 def add_canonical_tags(urls: list[str]) -> None:
     """
@@ -94,6 +109,7 @@ if __name__ == "__main__":
 
             add_canonical_tags(urls)
             strip_index_html_from_sitemap(SITEMAP_FILE)
+            copy_rss_feeds()
 
         except Exception as e:
             print(f"An error occurred during post-render processing: {e}")
