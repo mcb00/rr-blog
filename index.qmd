@@ -9,7 +9,7 @@ listing:
   categories: true
   sort-ui: false
   filter-ui: false
-  fields: [date, title, categories, description]
+  fields: [date, title, categories]
   feed: 
     items: 5
     categories: [python]
