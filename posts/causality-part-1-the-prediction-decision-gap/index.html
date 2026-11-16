@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matt Bowers">
+<meta name="dcterms.date" content="2026-11-11">
+<meta name="description" content="On the causal pitfalls of using predictive models for decision making">
+
+<title>Causality Part I — the Prediction-Decision Gap – Random Realizations</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon-wbg.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-efeb648c893a86541b786b39bfd91b37.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" defer="" src="https://umami.randomrealizations.com/script.js" data-domains="randomrealizations.com" data-website-id="17844d61-f224-45c0-aa5f-2935c14dd5ac"></script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="Random Realizations">
+<meta property="og:description" content="A blog about data science, statistics, machine learning, and the scientific method">
+<meta property="og:image" content="https://randomrealizations.com//enso-thumbnail.jpg">
+<meta property="og:site_name" content="Random Realizations">
+<meta property="og:image:alt" content="circle painted by hand in a single brush stroke">
+<link rel="canonical" href="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/" />
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Random Realizations</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../subscribe.html"> 
+<span class="menu-text">Subscribe</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-series" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Series</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-series">    
+        <li>
+    <a class="dropdown-item" href="../../gradient-boosting-series.html">
+ <span class="dropdown-text">Gradient Boosting Series</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/mcb00" title="Matt on Github" class="quarto-navigation-tool px-1" aria-label="Matt on Github"><i class="bi bi-github"></i></a>
+    <a href="https://www.linkedin.com/in/matt-bowers" title="Matt on Linkedin" class="quarto-navigation-tool px-1" aria-label="Matt on Linkedin"><i class="bi bi-linkedin"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Causality Part I — the Prediction-Decision Gap</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">causal inference</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    On the causal pitfalls of using predictive models for decision making
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Matt Bowers </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 11, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="the-purpose-of-data-science" class="level2">
+<h2 class="anchored" data-anchor-id="the-purpose-of-data-science">The Purpose of Data Science</h2>
+<p>Every once in a while my mom asks me if I can re-explain to her what data scientists do. It’s a great question really—we in the field should ask ourselves more often. In a single sentence I’d say: the purpose of data science is to create value from data. And what’s valuable to the organizations we serve? Well an organization has goals, and in order to achieve those goals it needs to make decisions about which actions to take. At its most effective, data science is about decision intelligence—informing a decision making process to help achieve desired outcomes. These decisions come in many forms, from executive deliberation on strategic bets to streaming automations occuring millions of times per day.</p>
+<p>Examples include: * What price to charge for this ride share trip? * Which product to recommend to this user? * What treatment to give this pneumonia patient?</p>
+<p>Behind each of these decisions is a set of “what if” questions of the form: What would happen if I did this? What would happen if I did that? To inform the decision we could predict answers to these what if questions.</p>
+<p>For data scientists of my generation who spent the early part of their careers getting good at machine learning, this probably sounds an awful lot like a supervised learning problem. We could follow the typical ML playbook and train a model that minimizes out of sample prediction error. That means it would be the best predictor of outcomes from actions and an ideal “what if” function to use in our decisions, right?</p>
+<p>Well, maybe; maybe not.</p>
+<p>There is a key difference between a predictive model and the kind of “what if” function we want for decision making that I call the <em>prediction-decision gap</em>.</p>
+<p><strong>Predictive models tell us the expected outcome given what we observe, while decisions require knowing the expected outcome given that we take a certain action</strong>.</p>
+<p>Using well-fitting statistical models or accuracy-maxing ML models for decision making can fail, not just slightly, but catastrophically. Many of these failure modes arise from errors in reasoning about what causes what and how. In this post we’ll look at two types of prediction-decision failure modes that can occur because of mishandling causality. The first is about the consequences of misreading the causal mechanisms behind the correlations we exploit for prediction, and the second is about how a model can undermine itself by changing the process that generated its own training data. The key idea is that using statistical or ML models for decision making requires careful causal reasoning, and lucky for you, this is the first post in a forthcoming series on Causal Inference.</p>
+<p>So let’s kick this series off by seeing some of the scary things that can happen when we naively use predictive models for decision making.</p>
+</section>
+<section id="prediction-decision-failure-modes" class="level2">
+<h2 class="anchored" data-anchor-id="prediction-decision-failure-modes">Prediction-Decision Failure Modes</h2>
+<section id="correlation-does-not-imply-causation-except-when-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-does-not-imply-causation-except-when-it-does">Correlation does not imply causation — except when it does</h3>
+<p>We’ve all had it drilled into our heads — <em><a href="https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation">correlation does not imply causation</a></em> — meaning it isn’t possible to deduce a cause-and-effect relationship between two events solely on the basis of an observed correlation or other statistical association between them. This does not mean there isn’t a cause effect relationship between the correlated variables; it just means we can’t tell what kind of relationship it is. To put a finer point on this, consider <a href="https://plato.stanford.edu/entries/physics-Rpcc/">Reichenbach’s Common Cause Principle</a>, which states that if two events are correlated, there must either be a causal relationship between them or a third event that causes both. That means that a true correlation between two variables tells us that one causes the other, the other causes the one, or another variable causes both. Note that Tyler-Vigen-style “<a href="https://tylervigen.com/spurious-correlations">spurious correlations</a>” (found by chance when dredging for high sample correlations between small samples of unrelated variables) don’t count as “true” correlations here, since they arise from sampling noise or shared time trends.</p>
+<p>So in a sense, correlation <em>does</em> imply causation, but alone it cannot tell us <em>which</em> causal relationship exists between the variables. Let that sink in, this means that no matter how much observed data we collect, without bringing in additional assumptions, it’s not possible from the data alone to determine which variables are causes and which are effects. Furthermore, since predictive models simply leverage correlations and associations among variables from a sample of training data, a predictive model cannot tell us what causes what. This isn’t a problem for prediction, but in decision making, what causes what is absolutely critical. Operating with the wrong causal mechanism in mind can lead us to make misguided, suboptimal, or even terrible decisions.</p>
+</section>
+<section id="failure-mode-1-misreading-the-mechanism" class="level3">
+<h3 class="anchored" data-anchor-id="failure-mode-1-misreading-the-mechanism">Failure Mode 1: misreading the mechanism</h3>
+<p>Suppose we’re looking at some app usage data, and we want to figure out whether notifications can help to increase user engagement.</p>
+<ul>
+<li><strong>notifications</strong>: user enables push notifications during their first two weeks.</li>
+<li><strong>sessions</strong>: engagement, measured by the number of sessions in the first two weeks.</li>
+</ul>
+<p>The data shows a strong positive correlation between notifications and sessions. We build a predictive model that predicts higher engagement when users have notifications enabled. Our goal is to increase engagement, and we need to make a decision about how to do that — specifically, <em>should we prompt every new user on day 1 to turn notifications on</em>? Well the model predicts that more users with notifications enabled gives more engagement, so naively using the predictive model as our “what if” function, we’d decide to go ahead and prompt every user to enable on day 1. There are many different causal mechanisms that could produce the observed correlation between notifications and sessions; let’s look at a few of them and what it would mean for our prediction-based decision to prompt users on day 1.</p>
+<section id="notifications-cause-sessions" class="level4">
+<h4 class="anchored" data-anchor-id="notifications-cause-sessions">1. Notifications cause sessions</h4>
+<p>Suppose notifications remind people to come back, so each enabled user opens the app more often.</p>
+<div id="cell-4" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"LR"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"notifications"</span>, <span class="st">"Notifications"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"sessions"</span>, <span class="st">"Sessions"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"notifications"</span>, <span class="st">"sessions"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="49">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-2-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Notifications causes Sessions."></p>
+<figcaption>A causal diagram showing that notifications causes sessions. If you’re unfamiliar with causal diagrams, just read arrows as pointing from cause to effect</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>If we prompt users on day 1, sessions go up — we made the right decision!</p>
+</section>
+<section id="reverse-causation-sessions-cause-notifications" class="level4">
+<h4 class="anchored" data-anchor-id="reverse-causation-sessions-cause-notifications">2. Reverse causation: sessions cause notifications</h4>
+<p>Suppose the default OS notification permission prompt automatically fires after a user’s 5th session. Engaged users with many sessions see the prompt and many of them accept, while users who only open the app a few times never see it and thus few of them enable notifications. Suppose further the notifications themselves have no effect on sessions.</p>
+<div id="cell-6" class="cell" data-execution_count="50">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"LR"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"sessions"</span>, <span class="st">"Sessions"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"prompt"</span>, <span class="st">"Prompt"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"notifications"</span>, <span class="st">"Notifications on"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"sessions"</span>, <span class="st">"prompt"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"prompt"</span>, <span class="st">"notifications"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<div>
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-3-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Sessions causes Seeing the Prompt, which causes Notifications to be enabled."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Under this mechanism, sessions cause the prompt to fire, which causes notifications. If we prompt users to enable notifications on day 1, sessions won’t actually increase.</p>
+</section>
+<section id="common-cause-invites-cause-notifications-and-sessions" class="level4">
+<h4 class="anchored" data-anchor-id="common-cause-invites-cause-notifications-and-sessions">3. Common cause: invites cause notifications and sessions</h4>
+<p>Suppose many users discover the app through an invite link sent by a friend. They enable notifications to get updated on what their friends are doing, and they also use the app more than non-invite users because of that social pull. Again, notifications don’t actually increase engagement.</p>
+<div id="cell-8" class="cell" data-execution_count="51">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"TB"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"invite"</span>, <span class="st">"Invite"</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"notifications"</span>, <span class="st">"Notifications"</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"sessions"</span>, <span class="st">"Sessions"</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"invite"</span>, <span class="st">"notifications"</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"invite"</span>, <span class="st">"sessions"</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="51">
+<div>
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-4-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Invite is a common cause of both Notifications and Sessions."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>If we prompt users to enable notifications on day 1, more non-invited users enable notifications, but this doesn’t actually affect engagement.</p>
+</section>
+<section id="common-cause-with-annoying-notifications" class="level4">
+<h4 class="anchored" data-anchor-id="common-cause-with-annoying-notifications">4. Common cause with annoying notifications</h4>
+<p>Suppose we have the same common cause mechanism as before but now the notifications are actually slightly annoying to users, causing a small reduction in engagement.</p>
+<div id="cell-10" class="cell" data-execution_count="52">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"TB"</span>, nodesep<span class="op">=</span><span class="st">"0.8"</span>, ranksep<span class="op">=</span><span class="st">"0.6"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"invite"</span>, <span class="st">"Invite"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> dot.subgraph() <span class="im">as</span> s:</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    s.attr(rank<span class="op">=</span><span class="st">"same"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"notifications"</span>, <span class="st">"Notifications"</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"sessions"</span>, <span class="st">"Sessions"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"invite"</span>, <span class="st">"notifications"</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"invite"</span>, <span class="st">"sessions"</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"notifications"</span>, <span class="st">"sessions"</span>, label<span class="op">=</span><span class="st">" reduces sessions"</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="52">
+<div>
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-5-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Invite is a common cause of Notifications and Sessions, and Notifications reduces Sessions."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that because the tendency of invite to increase both notifications and engagement is stronger than the tendency of notifications to reduce sessions, we’ll still see that positive correlation between notifications and sessions in the data and predictive model. If we prompt users to enable notifications on day 1, we actually end up decreasing engagement.</p>
+<hr>
+<p>To recap, here’s the effect of prompting to enable notifications for each of the potential causal mechanisms:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Causal Mechanism</th>
+<th style="text-align: left;">Effect of Prompting Notifications</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">notifications → sessions</td>
+<td style="text-align: left;">sessions go up</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">reverse causation: sessions → notifications</td>
+<td style="text-align: left;">no impact on sessions</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">common cause: notifications ← invite → sessions</td>
+<td style="text-align: left;">no impact on sessions</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">common cause with annoying notifications</td>
+<td style="text-align: left;">sessions go down</td>
+</tr>
+</tbody>
+</table>
+<p>Under all four of the causal mechanisms for our notifications example, the data and predictive model would show a positive correlation between notifications and sessions, but choosing to prompt users to enable notifications on day 1 would only help under the first one. Under the second and third we’d produce no effect and under the fourth we’d actually achieve the exact opposite of what we intended.</p>
+<p>Failure mode 1 boils down to misreading the true causal mechanisms, thereby incorrectly measuring the true effect of the action on the outcome ; this produces a misleading “what if” function which then misguides our decision.</p>
+</section>
+</section>
+<section id="failure-mode-2-model-deployment-changes-the-environment" class="level3">
+<h3 class="anchored" data-anchor-id="failure-mode-2-model-deployment-changes-the-environment">Failure Mode 2: model deployment changes the environment</h3>
+<p>To make matters worse, even if we know the true direction of the causal effect of the action on the outcome, predictive models can still lead us astray when we deploy them to guide policy decisions. Admitedly it seems natural to use a predictive model as the “what if” function behind such a policy, e.g.&nbsp; irrigate crops when the model predicts low soil moisture, salt roads when the model predicts slippery conditions, admit the patient to intensive care when the model predicts high risk. But when we do this, model deployment can actually change the environment in ways that invalidate the statistical associations the model learned in training.</p>
+<section id="triaging-pneumonia-patients" class="level4">
+<h4 class="anchored" data-anchor-id="triaging-pneumonia-patients">Triaging pneumonia patients</h4>
+<p>In the mid 1990s, Cost-Effective HealthCare funded a study that sought to use machine learning models to predict pneumonia risk using patient attributes like age, blood pressure, and whether they had asthma (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0933365796003673">Cooper et al.&nbsp;1997</a>, <a href="https://dl.acm.org/doi/10.1145/2783258.2788613">Caruana et al.&nbsp;2015</a>). Here we’ll look at a stylized version of the story; check the paper for the real details. The goal was to reduce healthcare costs by using these predictions to triage patients, deciding whether they should be admitted to the intensive care unit (ICU) or treated in the general ward. While asthma is known to increase mortality in pneumonia patients, counterintuitively, these models learned that having asthma was predictive of increased patient survival probability. Why?</p>
+<p>Consider the causal mechanisms:</p>
+<div id="cell-13" class="cell" data-execution_count="53">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"TB"</span>, nodesep<span class="op">=</span><span class="st">"1.0"</span>, ranksep<span class="op">=</span><span class="st">"0.8"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"asthma"</span>, <span class="st">"Asthma"</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> dot.subgraph() <span class="im">as</span> s:</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    s.attr(rank<span class="op">=</span><span class="st">"same"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"icu"</span>, <span class="st">"ICU"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"survival"</span>, <span class="st">"Survival"</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"asthma"</span>, <span class="st">"icu"</span>, label<span class="op">=</span><span class="st">" policy:</span><span class="ch">\n</span><span class="st"> asthma increases ICU"</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"asthma"</span>, <span class="st">"survival"</span>, label<span class="op">=</span><span class="st">" reduces survival"</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"icu"</span>, <span class="st">"survival"</span>, label<span class="op">=</span><span class="st">" strongly</span><span class="ch">\n</span><span class="st"> increases survival"</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<div>
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-6-output-1.svg" class="img-fluid figure-img" alt="A causal DAG showing Asthma increasing ICU admission policy, Asthma reducing survival, and ICU strongly increasing survival."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In the instances from the training data, providers had correctly identified the asthma patients as high-risk pneumonia cases and sent them to the ICU. Intensive care then greatly increased their survival probability. This induces a positive correlation between asthma and survival in the dataset. Since the dataset contained patient attributes but not details about their care, ICU remained unobserved, and the predictive models learned the positive association between asthma and survival.</p>
+<p>Imagine what would happen if we actually deployed this model, replacing the previous policy of provider triage with a policy based on the model’s risk prediction.</p>
+<div id="cell-15" class="cell" data-execution_count="61">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> graphviz</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>dot <span class="op">=</span> graphviz.Digraph()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>dot.attr(rankdir<span class="op">=</span><span class="st">"TB"</span>, nodesep<span class="op">=</span><span class="st">"1.0"</span>, ranksep<span class="op">=</span><span class="st">"0.8"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"node"</span>, shape<span class="op">=</span><span class="st">"box"</span>, style<span class="op">=</span><span class="st">"rounded,filled"</span>, fillcolor<span class="op">=</span><span class="st">"#f8f9fa"</span>, color<span class="op">=</span><span class="st">"#ced4da"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"10"</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>dot.attr(<span class="st">"edge"</span>, color<span class="op">=</span><span class="st">"#495057"</span>, fontname<span class="op">=</span><span class="st">"sans-serif"</span>, fontsize<span class="op">=</span><span class="st">"9"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>dot.node(<span class="st">"asthma"</span>, <span class="st">"Asthma"</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> dot.subgraph() <span class="im">as</span> s:</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    s.attr(rank<span class="op">=</span><span class="st">"same"</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"icu"</span>, <span class="st">"ICU"</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    s.node(<span class="st">"survival"</span>, <span class="st">"Survival"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"asthma"</span>, <span class="st">"icu"</span>, label<span class="op">=</span><span class="st">" new policy:</span><span class="ch">\n</span><span class="st">asthma reduces predicted risk</span><span class="ch">\n</span><span class="st">which reduces ICU "</span>, fontcolor<span class="op">=</span><span class="st">"#d9534f"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"asthma"</span>, <span class="st">"survival"</span>, label<span class="op">=</span><span class="st">" reduces survival"</span>, fontcolor<span class="op">=</span><span class="st">"#d3d3d3"</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>dot.edge(<span class="st">"icu"</span>, <span class="st">"survival"</span>, label<span class="op">=</span><span class="st">" strongly</span><span class="ch">\n</span><span class="st">increases survival"</span>, fontcolor<span class="op">=</span><span class="st">"#d3d3d3"</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>dot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<div>
+<figure class="figure">
+<p><img src="part_1_files/figure-html/cell-7-output-1.svg" class="img-fluid figure-img" alt="A causal DAG showing a new model policy where Asthma reduces predicted risk and ICU admission, Asthma reduces survival, and ICU strongly increases survival."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The model would indicate asthma patients are low risk and should therefore not be sent to the ICU — a potentially catastrophic mistake.</p>
+<hr>
+<p>In this failure mode, we may actually know the correct causal mechanisms and treatment effect (ICU increases survival). Yet because the model is trained under a certain policy (asthma patients are sent to the ICU), the relationships it learns between the contextual variables (asthma) and the outcome (survival) are only valid under that policy. When we change this policy by using the model predictions to guide it instead, we can break the relationships the model relied on for prediction, and this can lead us to make misguided, suboptimal, or even catastrophic decisions.</p>
+</section>
+</section>
+</section>
+<section id="the-case-for-causality" class="level2">
+<h2 class="anchored" data-anchor-id="the-case-for-causality">The case for causality</h2>
+<p>We’ve seen that decision making is inherently causal — we take action so that the efffect serves the desired outcome. Determining the right action involves asking a “what if” question that looks a lot like a prediction problem, but predictive models are not necessarily causal; they are based on statistical associations and correlations among variables in their training data. We’ve seen two types of failure modes where use of predictive models for decision making can go wrong, both of them lead to models that incorrectly answer their “what if” questions because of causal errors. In the first mode, we misjudge what the action does by misreading the actual underlying causal mechanisms. In the second mode, we know the action helps, but the model learns the relationship between context and outcome with the old policy silently baked in; deploying the model changes the policy, which invalidates what the model learned in training.</p>
+<p>Don’t succumb to these and other pitfalls. Become a savvy causal inference practitioner instead.</p>
+<p>Join me through the rest of this series on causal modeling in data science. In the series we’ll cover: what exactly is causality, the potential outcomes tradition, the graphical models tradition, why there are two causality traditions, where causal modeling fits in the data science stack, and how to efficiently learn all this causality stuff. This series has been a long time in the making, mostly because causal inference is hard, and it’s taken me a long time to wrap my head around it enough to explain it cogently. So, dear reader, I’m very excited to finally bring this series to you. See you there!</p>
+</section>
+<section id="resources" class="level2">
+<h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<p>Here are a couple of excellent references on the gap between prediction and causality. Check them out.</p>
+<ul>
+<li><a href="https://matheusfacure.github.io/python-causality-handbook/When-Prediction-Fails.html">Why Prediction Fails</a> from <a href="https://matheusfacure.github.io/python-causality-handbook/landing-page.html">Causal Inference for the Brave and True</a></li>
+<li><a href="https://shap.readthedocs.io/en/latest/example_notebooks/overviews/Be%20careful%20when%20interpreting%20predictive%20models%20in%20search%20of%20causal%20insights.html">Be careful when interpreting predictive models in search of causal insights</a> from the <a href="https://shap.readthedocs.io/en/latest/index.html">SHAP documentation</a></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<hr>
+
+<!-- <div style="max-width: 80%;"> -->
+<h3>Comments</h3>
+<script data-isso="https://isso.randomrealizations.com/" src="https://isso.randomrealizations.com/js/embed.min.js">
+</script>
+<section id="isso-thread"></section>
+<!-- </div> -->
+
+<hr>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/randomrealizations\.com\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

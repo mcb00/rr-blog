@@ -6,18 +6,840 @@
       version="2.0">
 <channel>
 <title>Random Realizations</title>
-<link>https://randomrealizations.com/archive.html</link>
-<atom:link href="https://randomrealizations.com/archive.xml" rel="self" type="application/rss+xml"/>
+<link>https://randomrealizations.com/</link>
+<atom:link href="https://randomrealizations.com/index.xml" rel="self" type="application/rss+xml"/>
 <description>A blog about data science, statistics, machine learning, and the scientific method</description>
 <image>
 <url>https://randomrealizations.com/opengraph.png</url>
 <title>Random Realizations</title>
-<link>https://randomrealizations.com/archive.html</link>
+<link>https://randomrealizations.com/</link>
 <height>76</height>
 <width>144</width>
 </image>
-<generator>quarto-1.6.40</generator>
-<lastBuildDate>Mon, 19 Jan 2026 08:00:00 GMT</lastBuildDate>
+<generator>quarto-1.10.19</generator>
+<lastBuildDate>Wed, 11 Nov 2026 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Causality Part I — the Prediction-Decision Gap</title>
+  <dc:creator>Matt Bowers</dc:creator>
+  <link>https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="the-purpose-of-data-science" class="level2">
+<h2 class="anchored" data-anchor-id="the-purpose-of-data-science">The Purpose of Data Science</h2>
+<p>Every once in a while my mom asks me if I can re-explain to her what data scientists do. It’s a great question really—we in the field should ask ourselves more often. In a single sentence I’d say: the purpose of data science is to create value from data. And what’s valuable to the organizations we serve? Well an organization has goals, and in order to achieve those goals it needs to make decisions about which actions to take. At its most effective, data science is about decision intelligence—informing a decision making process to help achieve desired outcomes. These decisions come in many forms, from executive deliberation on strategic bets to streaming automations occuring millions of times per day.</p>
+<p>Examples include: * What price to charge for this ride share trip? * Which product to recommend to this user? * What treatment to give this pneumonia patient?</p>
+<p>Behind each of these decisions is a set of “what if” questions of the form: What would happen if I did this? What would happen if I did that? To inform the decision we could predict answers to these what if questions.</p>
+<p>For data scientists of my generation who spent the early part of their careers getting good at machine learning, this probably sounds an awful lot like a supervised learning problem. We could follow the typical ML playbook and train a model that minimizes out of sample prediction error. That means it would be the best predictor of outcomes from actions and an ideal “what if” function to use in our decisions, right?</p>
+<p>Well, maybe; maybe not.</p>
+<p>There is a key difference between a predictive model and the kind of “what if” function we want for decision making that I call the <em>prediction-decision gap</em>.</p>
+<p><strong>Predictive models tell us the expected outcome given what we observe, while decisions require knowing the expected outcome given that we take a certain action</strong>.</p>
+<p>Using well-fitting statistical models or accuracy-maxing ML models for decision making can fail, not just slightly, but catastrophically. Many of these failure modes arise from errors in reasoning about what causes what and how. In this post we’ll look at two types of prediction-decision failure modes that can occur because of mishandling causality. The first is about the consequences of misreading the causal mechanisms behind the correlations we exploit for prediction, and the second is about how a model can undermine itself by changing the process that generated its own training data. The key idea is that using statistical or ML models for decision making requires careful causal reasoning, and lucky for you, this is the first post in a forthcoming series on Causal Inference.</p>
+<p>So let’s kick this series off by seeing some of the scary things that can happen when we naively use predictive models for decision making.</p>
+</section>
+<section id="prediction-decision-failure-modes" class="level2">
+<h2 class="anchored" data-anchor-id="prediction-decision-failure-modes">Prediction-Decision Failure Modes</h2>
+<section id="correlation-does-not-imply-causation-except-when-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-does-not-imply-causation-except-when-it-does">Correlation does not imply causation — except when it does</h3>
+<p>We’ve all had it drilled into our heads — <em><a href="https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation">correlation does not imply causation</a></em> — meaning it isn’t possible to deduce a cause-and-effect relationship between two events solely on the basis of an observed correlation or other statistical association between them. This does not mean there isn’t a cause effect relationship between the correlated variables; it just means we can’t tell what kind of relationship it is. To put a finer point on this, consider <a href="https://plato.stanford.edu/entries/physics-Rpcc/">Reichenbach’s Common Cause Principle</a>, which states that if two events are correlated, there must either be a causal relationship between them or a third event that causes both. That means that a true correlation between two variables tells us that one causes the other, the other causes the one, or another variable causes both. Note that Tyler-Vigen-style “<a href="https://tylervigen.com/spurious-correlations">spurious correlations</a>” (found by chance when dredging for high sample correlations between small samples of unrelated variables) don’t count as “true” correlations here, since they arise from sampling noise or shared time trends.</p>
+<p>So in a sense, correlation <em>does</em> imply causation, but alone it cannot tell us <em>which</em> causal relationship exists between the variables. Let that sink in, this means that no matter how much observed data we collect, without bringing in additional assumptions, it’s not possible from the data alone to determine which variables are causes and which are effects. Furthermore, since predictive models simply leverage correlations and associations among variables from a sample of training data, a predictive model cannot tell us what causes what. This isn’t a problem for prediction, but in decision making, what causes what is absolutely critical. Operating with the wrong causal mechanism in mind can lead us to make misguided, suboptimal, or even terrible decisions.</p>
+</section>
+<section id="failure-mode-1-misreading-the-mechanism" class="level3">
+<h3 class="anchored" data-anchor-id="failure-mode-1-misreading-the-mechanism">Failure Mode 1: misreading the mechanism</h3>
+<p>Suppose we’re looking at some app usage data, and we want to figure out whether notifications can help to increase user engagement.</p>
+<ul>
+<li><strong>notifications</strong>: user enables push notifications during their first two weeks.</li>
+<li><strong>sessions</strong>: engagement, measured by the number of sessions in the first two weeks.</li>
+</ul>
+<p>The data shows a strong positive correlation between notifications and sessions. We build a predictive model that predicts higher engagement when users have notifications enabled. Our goal is to increase engagement, and we need to make a decision about how to do that — specifically, <em>should we prompt every new user on day 1 to turn notifications on</em>? Well the model predicts that more users with notifications enabled gives more engagement, so naively using the predictive model as our “what if” function, we’d decide to go ahead and prompt every user to enable on day 1. There are many different causal mechanisms that could produce the observed correlation between notifications and sessions; let’s look at a few of them and what it would mean for our prediction-based decision to prompt users on day 1.</p>
+<section id="notifications-cause-sessions" class="level4">
+<h4 class="anchored" data-anchor-id="notifications-cause-sessions">1. Notifications cause sessions</h4>
+<p>Suppose notifications remind people to come back, so each enabled user opens the app more often.</p>
+<div id="cell-4" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb1-2"></span>
+<span id="cb1-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb1-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"LR"</span>)</span>
+<span id="cb1-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb1-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb1-7"></span>
+<span id="cb1-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Notifications"</span>)</span>
+<span id="cb1-9">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sessions"</span>)</span>
+<span id="cb1-10"></span>
+<span id="cb1-11">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>)</span>
+<span id="cb1-12"></span>
+<span id="cb1-13">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="49">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-2-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Notifications causes Sessions."></p>
+<figcaption>A causal diagram showing that notifications causes sessions. If you’re unfamiliar with causal diagrams, just read arrows as pointing from cause to effect</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>If we prompt users on day 1, sessions go up — we made the right decision!</p>
+</section>
+<section id="reverse-causation-sessions-cause-notifications" class="level4">
+<h4 class="anchored" data-anchor-id="reverse-causation-sessions-cause-notifications">2. Reverse causation: sessions cause notifications</h4>
+<p>Suppose the default OS notification permission prompt automatically fires after a user’s 5th session. Engaged users with many sessions see the prompt and many of them accept, while users who only open the app a few times never see it and thus few of them enable notifications. Suppose further the notifications themselves have no effect on sessions.</p>
+<div id="cell-6" class="cell" data-execution_count="50">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb2-2"></span>
+<span id="cb2-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb2-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"LR"</span>)</span>
+<span id="cb2-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb2-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb2-7"></span>
+<span id="cb2-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sessions"</span>)</span>
+<span id="cb2-9">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prompt"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Prompt"</span>)</span>
+<span id="cb2-10">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Notifications on"</span>)</span>
+<span id="cb2-11"></span>
+<span id="cb2-12">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prompt"</span>)</span>
+<span id="cb2-13">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prompt"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>)</span>
+<span id="cb2-14"></span>
+<span id="cb2-15">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<div>
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-3-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Sessions causes Seeing the Prompt, which causes Notifications to be enabled."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Under this mechanism, sessions cause the prompt to fire, which causes notifications. If we prompt users to enable notifications on day 1, sessions won’t actually increase.</p>
+</section>
+<section id="common-cause-invites-cause-notifications-and-sessions" class="level4">
+<h4 class="anchored" data-anchor-id="common-cause-invites-cause-notifications-and-sessions">3. Common cause: invites cause notifications and sessions</h4>
+<p>Suppose many users discover the app through an invite link sent by a friend. They enable notifications to get updated on what their friends are doing, and they also use the app more than non-invite users because of that social pull. Again, notifications don’t actually increase engagement.</p>
+<div id="cell-8" class="cell" data-execution_count="51">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb3-2"></span>
+<span id="cb3-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb3-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"TB"</span>)</span>
+<span id="cb3-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb3-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb3-7"></span>
+<span id="cb3-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Invite"</span>)</span>
+<span id="cb3-9">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Notifications"</span>)</span>
+<span id="cb3-10">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sessions"</span>)</span>
+<span id="cb3-11"></span>
+<span id="cb3-12">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>)</span>
+<span id="cb3-13">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>)</span>
+<span id="cb3-14"></span>
+<span id="cb3-15">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="51">
+<div>
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-4-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Invite is a common cause of both Notifications and Sessions."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>If we prompt users to enable notifications on day 1, more non-invited users enable notifications, but this doesn’t actually affect engagement.</p>
+</section>
+<section id="common-cause-with-annoying-notifications" class="level4">
+<h4 class="anchored" data-anchor-id="common-cause-with-annoying-notifications">4. Common cause with annoying notifications</h4>
+<p>Suppose we have the same common cause mechanism as before but now the notifications are actually slightly annoying to users, causing a small reduction in engagement.</p>
+<div id="cell-10" class="cell" data-execution_count="52">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb4-2"></span>
+<span id="cb4-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb4-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"TB"</span>, nodesep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.8"</span>, ranksep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.6"</span>)</span>
+<span id="cb4-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb4-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb4-7"></span>
+<span id="cb4-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Invite"</span>)</span>
+<span id="cb4-9"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> dot.subgraph() <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> s:</span>
+<span id="cb4-10">    s.attr(rank<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"same"</span>)</span>
+<span id="cb4-11">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Notifications"</span>)</span>
+<span id="cb4-12">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Sessions"</span>)</span>
+<span id="cb4-13"></span>
+<span id="cb4-14">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>)</span>
+<span id="cb4-15">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"invite"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>)</span>
+<span id="cb4-16">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"notifications"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sessions"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" reduces sessions"</span>)</span>
+<span id="cb4-17"></span>
+<span id="cb4-18">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="52">
+<div>
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-5-output-1.svg" class="img-fluid figure-img" alt="A causal DAG where Invite is a common cause of Notifications and Sessions, and Notifications reduces Sessions."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that because the tendency of invite to increase both notifications and engagement is stronger than the tendency of notifications to reduce sessions, we’ll still see that positive correlation between notifications and sessions in the data and predictive model. If we prompt users to enable notifications on day 1, we actually end up decreasing engagement.</p>
+<hr>
+<p>To recap, here’s the effect of prompting to enable notifications for each of the potential causal mechanisms:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Causal Mechanism</th>
+<th style="text-align: left;">Effect of Prompting Notifications</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">notifications → sessions</td>
+<td style="text-align: left;">sessions go up</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">reverse causation: sessions → notifications</td>
+<td style="text-align: left;">no impact on sessions</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">common cause: notifications ← invite → sessions</td>
+<td style="text-align: left;">no impact on sessions</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">common cause with annoying notifications</td>
+<td style="text-align: left;">sessions go down</td>
+</tr>
+</tbody>
+</table>
+<p>Under all four of the causal mechanisms for our notifications example, the data and predictive model would show a positive correlation between notifications and sessions, but choosing to prompt users to enable notifications on day 1 would only help under the first one. Under the second and third we’d produce no effect and under the fourth we’d actually achieve the exact opposite of what we intended.</p>
+<p>Failure mode 1 boils down to misreading the true causal mechanisms, thereby incorrectly measuring the true effect of the action on the outcome ; this produces a misleading “what if” function which then misguides our decision.</p>
+</section>
+</section>
+<section id="failure-mode-2-model-deployment-changes-the-environment" class="level3">
+<h3 class="anchored" data-anchor-id="failure-mode-2-model-deployment-changes-the-environment">Failure Mode 2: model deployment changes the environment</h3>
+<p>To make matters worse, even if we know the true direction of the causal effect of the action on the outcome, predictive models can still lead us astray when we deploy them to guide policy decisions. Admitedly it seems natural to use a predictive model as the “what if” function behind such a policy, e.g.&nbsp; irrigate crops when the model predicts low soil moisture, salt roads when the model predicts slippery conditions, admit the patient to intensive care when the model predicts high risk. But when we do this, model deployment can actually change the environment in ways that invalidate the statistical associations the model learned in training.</p>
+<section id="triaging-pneumonia-patients" class="level4">
+<h4 class="anchored" data-anchor-id="triaging-pneumonia-patients">Triaging pneumonia patients</h4>
+<p>In the mid 1990s, Cost-Effective HealthCare funded a study that sought to use machine learning models to predict pneumonia risk using patient attributes like age, blood pressure, and whether they had asthma (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0933365796003673">Cooper et al.&nbsp;1997</a>, <a href="https://dl.acm.org/doi/10.1145/2783258.2788613">Caruana et al.&nbsp;2015</a>). Here we’ll look at a stylized version of the story; check the paper for the real details. The goal was to reduce healthcare costs by using these predictions to triage patients, deciding whether they should be admitted to the intensive care unit (ICU) or treated in the general ward. While asthma is known to increase mortality in pneumonia patients, counterintuitively, these models learned that having asthma was predictive of increased patient survival probability. Why?</p>
+<p>Consider the causal mechanisms:</p>
+<div id="cell-13" class="cell" data-execution_count="53">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb5-2"></span>
+<span id="cb5-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb5-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"TB"</span>, nodesep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1.0"</span>, ranksep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.8"</span>)</span>
+<span id="cb5-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb5-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb5-7"></span>
+<span id="cb5-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Asthma"</span>)</span>
+<span id="cb5-9"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> dot.subgraph() <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> s:</span>
+<span id="cb5-10">    s.attr(rank<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"same"</span>)</span>
+<span id="cb5-11">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ICU"</span>)</span>
+<span id="cb5-12">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Survival"</span>)</span>
+<span id="cb5-13"></span>
+<span id="cb5-14">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" policy:</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> asthma increases ICU"</span>)</span>
+<span id="cb5-15">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" reduces survival"</span>)</span>
+<span id="cb5-16">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" strongly</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> increases survival"</span>)</span>
+<span id="cb5-17"></span>
+<span id="cb5-18">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<div>
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-6-output-1.svg" class="img-fluid figure-img" alt="A causal DAG showing Asthma increasing ICU admission policy, Asthma reducing survival, and ICU strongly increasing survival."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In the instances from the training data, providers had correctly identified the asthma patients as high-risk pneumonia cases and sent them to the ICU. Intensive care then greatly increased their survival probability. This induces a positive correlation between asthma and survival in the dataset. Since the dataset contained patient attributes but not details about their care, ICU remained unobserved, and the predictive models learned the positive association between asthma and survival.</p>
+<p>Imagine what would happen if we actually deployed this model, replacing the previous policy of provider triage with a policy based on the model’s risk prediction.</p>
+<div id="cell-15" class="cell" data-execution_count="61">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> graphviz</span>
+<span id="cb6-2"></span>
+<span id="cb6-3">dot <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> graphviz.Digraph()</span>
+<span id="cb6-4">dot.attr(rankdir<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"TB"</span>, nodesep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1.0"</span>, ranksep<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.8"</span>)</span>
+<span id="cb6-5">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"node"</span>, shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"box"</span>, style<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rounded,filled"</span>, fillcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#f8f9fa"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#ced4da"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10"</span>)</span>
+<span id="cb6-6">dot.attr(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"edge"</span>, color<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#495057"</span>, fontname<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sans-serif"</span>, fontsize<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9"</span>)</span>
+<span id="cb6-7"></span>
+<span id="cb6-8">dot.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Asthma"</span>)</span>
+<span id="cb6-9"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> dot.subgraph() <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> s:</span>
+<span id="cb6-10">    s.attr(rank<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"same"</span>)</span>
+<span id="cb6-11">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ICU"</span>)</span>
+<span id="cb6-12">    s.node(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Survival"</span>)</span>
+<span id="cb6-13"></span>
+<span id="cb6-14">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" new policy:</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">asthma reduces predicted risk</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">which reduces ICU "</span>, fontcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#d9534f"</span>)</span>
+<span id="cb6-15">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"asthma"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" reduces survival"</span>, fontcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#d3d3d3"</span>)</span>
+<span id="cb6-16">dot.edge(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"icu"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"survival"</span>, label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" strongly</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">increases survival"</span>, fontcolor<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#d3d3d3"</span>)</span>
+<span id="cb6-17"></span>
+<span id="cb6-18">dot</span></code></pre></div></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<div>
+<figure class="figure">
+<p><img src="https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/part_1_files/figure-html/cell-7-output-1.svg" class="img-fluid figure-img" alt="A causal DAG showing a new model policy where Asthma reduces predicted risk and ICU admission, Asthma reduces survival, and ICU strongly increases survival."></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The model would indicate asthma patients are low risk and should therefore not be sent to the ICU — a potentially catastrophic mistake.</p>
+<hr>
+<p>In this failure mode, we may actually know the correct causal mechanisms and treatment effect (ICU increases survival). Yet because the model is trained under a certain policy (asthma patients are sent to the ICU), the relationships it learns between the contextual variables (asthma) and the outcome (survival) are only valid under that policy. When we change this policy by using the model predictions to guide it instead, we can break the relationships the model relied on for prediction, and this can lead us to make misguided, suboptimal, or even catastrophic decisions.</p>
+</section>
+</section>
+</section>
+<section id="the-case-for-causality" class="level2">
+<h2 class="anchored" data-anchor-id="the-case-for-causality">The case for causality</h2>
+<p>We’ve seen that decision making is inherently causal — we take action so that the efffect serves the desired outcome. Determining the right action involves asking a “what if” question that looks a lot like a prediction problem, but predictive models are not necessarily causal; they are based on statistical associations and correlations among variables in their training data. We’ve seen two types of failure modes where use of predictive models for decision making can go wrong, both of them lead to models that incorrectly answer their “what if” questions because of causal errors. In the first mode, we misjudge what the action does by misreading the actual underlying causal mechanisms. In the second mode, we know the action helps, but the model learns the relationship between context and outcome with the old policy silently baked in; deploying the model changes the policy, which invalidates what the model learned in training.</p>
+<p>Don’t succumb to these and other pitfalls. Become a savvy causal inference practitioner instead.</p>
+<p>Join me through the rest of this series on causal modeling in data science. In the series we’ll cover: what exactly is causality, the potential outcomes tradition, the graphical models tradition, why there are two causality traditions, where causal modeling fits in the data science stack, and how to efficiently learn all this causality stuff. This series has been a long time in the making, mostly because causal inference is hard, and it’s taken me a long time to wrap my head around it enough to explain it cogently. So, dear reader, I’m very excited to finally bring this series to you. See you there!</p>
+</section>
+<section id="resources" class="level2">
+<h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<p>Here are a couple of excellent references on the gap between prediction and causality. Check them out.</p>
+<ul>
+<li><a href="https://matheusfacure.github.io/python-causality-handbook/When-Prediction-Fails.html">Why Prediction Fails</a> from <a href="https://matheusfacure.github.io/python-causality-handbook/landing-page.html">Causal Inference for the Brave and True</a></li>
+<li><a href="https://shap.readthedocs.io/en/latest/example_notebooks/overviews/Be%20careful%20when%20interpreting%20predictive%20models%20in%20search%20of%20causal%20insights.html">Be careful when interpreting predictive models in search of causal insights</a> from the <a href="https://shap.readthedocs.io/en/latest/index.html">SHAP documentation</a></li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>causal inference</category>
+  <guid>https://randomrealizations.com/posts/causality-part-1-the-prediction-decision-gap/</guid>
+  <pubDate>Wed, 11 Nov 2026 08:00:00 GMT</pubDate>
+  <media:content url="https://randomrealizations.com/enso-thumbnail.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>The t-test is a Special Case of OLS (aka my attempt to write a quick post)</title>
   <dc:creator>Matt Bowers</dc:creator>
@@ -107,7 +929,7 @@
 <h3 class="anchored" data-anchor-id="implementation">Implementation</h3>
 <p>Let’s simulate some data and implement both testing approaches.</p>
 <div id="4230263f" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
 background-color: null;
@@ -241,7 +1063,7 @@ font-style: inherit;">1</span>]<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">:.6f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"</span>)</span></code></pre></div>
+font-style: inherit;">"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>t-test statistic: 3.258749
 Regression t-stat for β₁: 3.258749
@@ -256,6 +1078,8 @@ Regression p-value: 0.002190</code></pre>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>Ok, I mostly just wanted to prove to myself that I could write a short post that didn’t take an embarrassing amount of time to research and write. Let’s consider this experiment a success! See you next time.</p>
+
+
 </section>
 
  ]]></description>
@@ -307,7 +1131,7 @@ So today we'll give it a try, and you can let me know how it's working for you. 
 <h2 class="anchored" data-anchor-id="mnist-data">MNIST Data</h2>
 <p>We’ll train our logistic regression models to classify the handwritten digits in the classic <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST dataset</a>. Adapting this <a href="https://scikit-learn.org/stable/auto_examples/linear_model/plot_sparse_logistic_regression_mnist.html">scikit-learn example</a>, we’ll load up the data, plot some of the digits, normalize the input images, and then fit a classical logistic regression model.</p>
 <div id="50537e0a" class="cell">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
 background-color: null;
@@ -428,10 +1252,10 @@ background-color: null;
 font-style: inherit;">=</span> scaler.fit_transform(X_train)</span>
 <span id="cb1-30">X_test <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> scaler.transform(X_test)</span></code></pre></div>
+font-style: inherit;">=</span> scaler.transform(X_test)</span></code></pre></div></div>
 </div>
 <div id="bde8a220" class="cell" data-execution_count="152">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -456,7 +1280,7 @@ font-style: inherit;">.</span>shape<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"</span>)</span></code></pre></div>
+font-style: inherit;">"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of classes: 10
 Shape of X: (70000, 784)</code></pre>
@@ -466,7 +1290,7 @@ Shape of X: (70000, 784)</code></pre>
 <div id="9c38bb45" class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> plot_digits(X, n_rows, n_cols):</span>
@@ -557,7 +1381,7 @@ background-color: null;
 font-style: inherit;">;</span> <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># post image</span></span>
-<span id="cb4-19"></span></code></pre></div>
+<span id="cb4-19"></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -573,7 +1397,7 @@ font-style: inherit;"># post image</span></span>
 <h2 class="anchored" data-anchor-id="logistic-regression-with-scikit-learn">Logistic Regression with scikit-learn</h2>
 <p>We’ll start with the traditional logistic regression model implementation from scikit-learn.</p>
 <div id="25a08d16" class="cell">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Classical Logistic Regression</span></span>
 <span id="cb5-2"></span>
@@ -609,14 +1433,14 @@ font-style: inherit;">.</span>score(X_test, y_test)<span class="sc" style="color
 background-color: null;
 font-style: inherit;">:.2f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">%"</span>)</span></code></pre></div>
+font-style: inherit;">%"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test Accuracy: 89.39%</code></pre>
 </div>
 </div>
 <p>Now to visualize what this model is doing, let’s have a look at its coefficients.</p>
 <div id="38d06056" class="cell" data-execution_count="95">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">clf.coef_.shape</span></code></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">clf.coef_.shape</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="95">
 <pre><code>(10, 784)</code></pre>
 </div>
@@ -625,7 +1449,7 @@ font-style: inherit;">%"</span>)</span></code></pre></div>
 <div id="513712bd" class="cell" data-execution_count="96">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> plot_class_weights(weights: np.ndarray, title: <span class="bu" style="color: null;
@@ -797,15 +1621,15 @@ font-style: inherit;">"value"</span>)</span>
 <span id="cb9-39">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># plt.tight_layout(rect=[0, 0.05, 1, 0.95])  # Make space for suptitle</span></span>
-<span id="cb9-40">    plt.show()</span></code></pre></div>
+<span id="cb9-40">    plt.show()</span></code></pre></div></div>
 </details>
 </div>
 <div id="d801fd5e" class="cell">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">plot_class_weights(clf.coef_, title<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1">plot_class_weights(clf.coef_, title<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Scikit-learn Logistic Regression Coefficients"</span>)</span></code></pre></div>
+font-style: inherit;">"Scikit-learn Logistic Regression Coefficients"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -828,7 +1652,7 @@ font-style: inherit;">"Scikit-learn Logistic Regression Coefficients"</span>)</s
 <section id="create-pytorch-dataset-and-dataloader-objects" class="level3">
 <h3 class="anchored" data-anchor-id="create-pytorch-dataset-and-dataloader-objects">Create PyTorch <code>Dataset</code> and <code>DataLoader</code> Objects</h3>
 <div id="b50a8d9a" class="cell" data-execution_count="98">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> torch</span>
 <span id="cb11-2"><span class="im" style="color: #00769E;
@@ -910,13 +1734,13 @@ font-style: inherit;">=</span>batch_size, shuffle<span class="op" style="color: 
 background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">False</span>)</span></code></pre></div>
+font-style: inherit;">False</span>)</span></code></pre></div></div>
 </div>
 </section>
 <section id="build-the-model" class="level3">
 <h3 class="anchored" data-anchor-id="build-the-model">Build the Model</h3>
 <div id="98b1afca" class="cell" data-execution_count="128">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Logistic Regression Model</span></span>
 <span id="cb12-2"><span class="kw" style="color: #003B4F;
@@ -980,13 +1804,13 @@ font-style: inherit;">return</span> p</span>
 <span id="cb12-12"></span>
 <span id="cb12-13">model <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> LogReg()</span></code></pre></div>
+font-style: inherit;">=</span> LogReg()</span></code></pre></div></div>
 </div>
 </section>
 <section id="train-the-model" class="level3">
 <h3 class="anchored" data-anchor-id="train-the-model">Train the Model</h3>
 <div id="4dc0164b" class="cell" data-execution_count="129">
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Hyperparameters</span></span>
 <span id="cb13-2">num_epochs <span class="op" style="color: #5E5E5E;
@@ -1091,7 +1915,7 @@ font-style: inherit;">.</span>item()<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">:.4f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"</span>)</span></code></pre></div>
+font-style: inherit;">"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Epoch [1/5], Training Loss: 0.4151
 Epoch [2/5], Training Loss: 0.1858
@@ -1104,7 +1928,7 @@ Epoch [5/5], Training Loss: 0.4414</code></pre>
 <section id="evaluate-the-model" class="level3">
 <h3 class="anchored" data-anchor-id="evaluate-the-model">Evaluate the Model</h3>
 <div id="5c79af15" class="cell" data-execution_count="130">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Evaluate model</span></span>
 <span id="cb15-2">model.<span class="bu" style="color: null;
@@ -1183,7 +2007,7 @@ font-style: inherit;">/</span> total<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">:.2f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">%"</span>)</span></code></pre></div>
+font-style: inherit;">%"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test Accuracy: 90.71%</code></pre>
 </div>
@@ -1193,20 +2017,20 @@ font-style: inherit;">%"</span>)</span></code></pre></div>
 <h3 class="anchored" data-anchor-id="pytorch-model-weights">PyTorch Model Weights</h3>
 <p>Let’s take a look at the weights.</p>
 <div id="2b787d80" class="cell" data-execution_count="131">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">weights <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1">weights <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> model.linear.weight.detach().numpy()</span>
-<span id="cb17-2">weights.shape</span></code></pre></div>
+<span id="cb17-2">weights.shape</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="131">
 <pre><code>(10, 784)</code></pre>
 </div>
 </div>
 <div id="79baf6df" class="cell" data-execution_count="132">
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">plot_class_weights(weights, title<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1">plot_class_weights(weights, title<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"PyTorch Logistic Regression Weights"</span>)</span></code></pre></div>
+font-style: inherit;">"PyTorch Logistic Regression Weights"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1229,7 +2053,7 @@ font-style: inherit;">"PyTorch Logistic Regression Weights"</span>)</span></code
 </ul>
 <p>When we add “hidden” layers between the input and output layers, the network earns the modifier “deep”, meaning that MLP’s are deep networks. We’ll build a model with two hidden layers that uses <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)">rectified linear unit activation functions</a> (ReLU). The ReLU just replaces negative inputs with zero and passes positive inputs through unchanged—a very simple form of non-linearity.</p>
 <div id="a6038b9e" class="cell" data-execution_count="153">
-<div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">class</span> MLP(nn.Module):</span>
@@ -1296,10 +2120,10 @@ font-style: inherit;">self</span>.net(x)</span>
 <span id="cb20-15"></span>
 <span id="cb20-16">mlp <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> MLP()</span></code></pre></div>
+font-style: inherit;">=</span> MLP()</span></code></pre></div></div>
 </div>
 <div id="1a69b7d4" class="cell" data-execution_count="154">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Hyperparameters</span></span>
 <span id="cb21-2">num_epochs <span class="op" style="color: #5E5E5E;
@@ -1398,7 +2222,7 @@ font-style: inherit;">.</span>item()<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">:.4f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"</span>)</span></code></pre></div>
+font-style: inherit;">"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Epoch [1/20], Training Loss: 0.4061
 Epoch [2/20], Training Loss: 0.0821
@@ -1423,7 +2247,7 @@ Epoch [20/20], Training Loss: 0.0000</code></pre>
 </div>
 </div>
 <div id="1bc26754" class="cell" data-execution_count="155">
-<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Evaluate model</span></span>
 <span id="cb23-2">mlp.<span class="bu" style="color: null;
@@ -1502,7 +2326,7 @@ font-style: inherit;">/</span> total<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">:.2f}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">%"</span>)</span></code></pre></div>
+font-style: inherit;">%"</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test Accuracy: 95.83%</code></pre>
 </div>
@@ -1511,6 +2335,8 @@ font-style: inherit;">%"</span>)</span></code></pre></div>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>Nice! In this post we’ve bridged the gap between classic ML and deep learning by showing that logistic regression is a special case of a neural network, building a logistic regression model in PyTorch, and then adding hidden layers to that model to obtain a multilayer perceptron.</p>
+
+
 </section>
 
  ]]></description>
@@ -1538,7 +2364,7 @@ font-style: inherit;">%"</span>)</span></code></pre></div>
 <p>Let’s fact check his claim. We’d like to know something about his actual RPS win rate, but that is unobservable. We can’t observe it directly, but we could observe some match outcomes and make an inference about what his actual win rate might plausibly be.</p>
 <p>Let’s say that after facing off with the 10 interns, Fritz racks up the following match outcomes.</p>
 <div id="cell-3" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">observed_outcomes <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1">observed_outcomes <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> [<span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1560,7 +2386,7 @@ font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">1</span>]</span></code></pre></div>
+font-style: inherit;">1</span>]</span></code></pre></div></div>
 </div>
 <p>He won 7 out of 10 matches—not bad. But is his performance the result of skill or simply a lucky round? We’re going to address this question using Bayesian statistical analysis.</p>
 </section>
@@ -1603,7 +2429,7 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 <div id="cell-7" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
 background-color: null;
@@ -1724,7 +2550,7 @@ font-style: inherit;">"Probability Density"</span>)</span>
 <span id="cb2-27">plt.title(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'Relative Plausibility of RPS Win Rate'</span>)</span>
-<span id="cb2-28">plt.legend()</span></code></pre></div>
+<span id="cb2-28">plt.legend()</span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -1738,7 +2564,7 @@ font-style: inherit;">'Relative Plausibility of RPS Win Rate'</span>)</span>
 <p>You can check the relative plausibility between two possible values of <img src="https://latex.codecogs.com/png.latex?%5Ctheta"> implied by a given pdf by taking the ratio of the height of the pdf at one value of <img src="https://latex.codecogs.com/png.latex?%5Ctheta"> versus the height at another value of <img src="https://latex.codecogs.com/png.latex?%5Ctheta">.</p>
 <p>For example, let’s compare <img src="https://latex.codecogs.com/png.latex?%5Ctheta=0.5"> to <img src="https://latex.codecogs.com/png.latex?%5Ctheta=0.7"> for a Beta(10, 10) prior.</p>
 <div id="cell-9" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">beta.pdf(<span class="fl" style="color: #AD0000;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">beta.pdf(<span class="fl" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0.5</span>, <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1752,7 +2578,7 @@ font-style: inherit;">0.7</span>, <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>, <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">10</span>)</span></code></pre></div>
+font-style: inherit;">10</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>np.float64(4.802710683776413)</code></pre>
 </div>
@@ -1769,7 +2595,7 @@ font-style: inherit;">10</span>)</span></code></pre></div>
 <h3 class="anchored" data-anchor-id="implementing-the-generative-model">Implementing the generative model</h3>
 <p>Let’s implement the DGP using random variables from <code>scipy</code>.</p>
 <div id="cell-11" class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Implementing the DGP as a generative model</span></span>
 <span id="cb5-2"></span>
@@ -1852,12 +2678,12 @@ background-color: null;
 font-style: inherit;">=</span> simulate_outcomes(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1_000</span>, alpha_param, beta_param, N)</span>
-<span id="cb5-22">outcome_df.head()</span></code></pre></div>
+<span id="cb5-22">outcome_df.head()</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="24">
 <div>
 
 
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
@@ -1868,31 +2694,31 @@ font-style: inherit;">1_000</span>, alpha_param, beta_param, N)</span>
 </thead>
 <tbody>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
+<th data-quarto-table-cell-role="th">0</th>
 <td>0.451620</td>
 <td>[0, 0, 1, 1, 1, 0, 0, 1, 0, 0]</td>
 <td>4</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
+<th data-quarto-table-cell-role="th">1</th>
 <td>0.460305</td>
 <td>[0, 1, 1, 0, 1, 1, 1, 0, 1, 1]</td>
 <td>7</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
+<th data-quarto-table-cell-role="th">2</th>
 <td>0.555594</td>
 <td>[0, 0, 1, 1, 1, 1, 0, 1, 0, 0]</td>
 <td>5</td>
 </tr>
 <tr class="even">
-<td data-quarto-table-cell-role="th">3</td>
+<th data-quarto-table-cell-role="th">3</th>
 <td>0.518724</td>
 <td>[1, 0, 0, 0, 1, 1, 1, 0, 1, 0]</td>
 <td>5</td>
 </tr>
 <tr class="odd">
-<td data-quarto-table-cell-role="th">4</td>
+<th data-quarto-table-cell-role="th">4</th>
 <td>0.569247</td>
 <td>[1, 0, 1, 1, 0, 1, 1, 1, 1, 1]</td>
 <td>8</td>
@@ -1911,7 +2737,7 @@ font-style: inherit;">1_000</span>, alpha_param, beta_param, N)</span>
 <div id="cell-13" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">outcome_df.hist(<span class="st" style="color: #20794D;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">outcome_df.hist(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"sum_y"</span>, bins<span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -1930,7 +2756,7 @@ font-style: inherit;">'count'</span>)</span>
 background-color: null;
 font-style: inherit;">'Prior Predictive Check'</span>)<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -1945,7 +2771,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <div id="cell-15" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">simulate_outcomes(<span class="dv" style="color: #AD0000;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">simulate_outcomes(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1_000</span>, alpha_param<span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -1978,7 +2804,7 @@ font-style: inherit;">'count'</span>)</span>
 background-color: null;
 font-style: inherit;">'Prior Predictive Check'</span>)<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2030,7 +2856,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <p><img src="https://latex.codecogs.com/png.latex?%20p(y_%7B%5Ctext%7Bobs%7D%7D%7C%5Ctheta)%20=%20p(y_1,%5Cdots,y_N%7C%5Ctheta)%20=%20%20%5Cprod_%7Bi=1%7D%5EN%20p(y_i%7C%5Ctheta)%20"></p>
 <p>Let’s implement the prior, the likelihood, the joint distribution, and the posterior in python and plot out the prior and the posterior distribution of the parameter <img src="https://latex.codecogs.com/png.latex?%5Ctheta">.</p>
 <div id="cell-18" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># 0. Defining the observed data</span></span>
 <span id="cb8-2"></span>
@@ -2153,10 +2979,10 @@ font-style: inherit;">/</span> marginal_likelihood_approx</span>
 <span id="cb8-38">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> normalized_posterior_values</span></code></pre></div>
+font-style: inherit;">return</span> normalized_posterior_values</span></code></pre></div></div>
 </div>
 <div id="cell-19" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Define a grid of theta values</span></span>
 <span id="cb9-2">theta_grid <span class="op" style="color: #5E5E5E;
@@ -2200,12 +3026,12 @@ background-color: null;
 font-style: inherit;"># Calculate the posterior over the grid of theta values and fixed y_obs</span></span>
 <span id="cb9-11">posterior_values <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> posterior_from_joint_slice(theta_grid, y_obs)</span></code></pre></div>
+font-style: inherit;">=</span> posterior_from_joint_slice(theta_grid, y_obs)</span></code></pre></div></div>
 </div>
 <div id="cell-20" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Plotting</span></span>
 <span id="cb10-2">plt.plot(theta_grid, prior_values, label<span class="op" style="color: #5E5E5E;
@@ -2247,7 +3073,27 @@ background-color: null;
 font-style: inherit;">'Bayesian Inference: Prior, Likelihood, and Posterior'</span>)</span>
 <span id="cb10-5">plt.xlabel(<span class="vs" style="color: #20794D;
 background-color: null;
-font-style: inherit;">r'$\theta$ (Probability of Match Win)'</span>)</span>
+font-style: inherit;">r'</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">$</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\t</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">heta</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">$</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">(</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Probability of Match Win</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">)</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span>)</span>
 <span id="cb10-6">plt.ylabel(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'Density'</span>)</span>
@@ -2273,7 +3119,7 @@ background-color: null;
 font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>)</span>
-<span id="cb10-11">plt.tight_layout()</span></code></pre></div>
+<span id="cb10-11">plt.tight_layout()</span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2301,7 +3147,7 @@ font-style: inherit;">0</span>)</span>
 <div id="cell-22" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">fig, ax <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1">fig, ax <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> plt.subplots()</span>
 <span id="cb11-2">outcome_df.query(<span class="st" style="color: #20794D;
@@ -2414,7 +3260,7 @@ font-style: inherit;">'--'</span>)</span>
 background-color: null;
 font-style: inherit;">"Samples from the Generative Model"</span>)<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2426,7 +3272,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 </div>
 <p>Boom! By isolating the outcomes where <img src="https://latex.codecogs.com/png.latex?y=y_%7B%5Ctext%7Bobs%7D%7D">, we effectively have samples from the posterior. Let’s draw a larger number of samples so we get an adequate sample from the posterior.</p>
 <div id="cell-24" class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># drawing a large number of samples and isolating outcomes where y = y_obs</span></span>
 <span id="cb12-2">rejection_sampling_outcome_df <span class="op" style="color: #5E5E5E;
@@ -2444,12 +3290,12 @@ font-style: inherit;"># posterior samples from rejection sampling</span></span>
 background-color: null;
 font-style: inherit;">=</span> rejection_sampling_outcome_df[<span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"theta"</span>]</span></code></pre></div>
+font-style: inherit;">"theta"</span>]</span></code></pre></div></div>
 </div>
 <div id="cell-25" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">posterior_samples.hist(bins<span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1">posterior_samples.hist(bins<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2463,7 +3309,7 @@ font-style: inherit;">"theta"</span>)</span>
 background-color: null;
 font-style: inherit;">"Samples from the Posterior"</span>)<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2477,7 +3323,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <div id="cell-27" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">fig, ax <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">fig, ax <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> plt.subplots()</span>
 <span id="cb14-2">prior_samples <span class="op" style="color: #5E5E5E;
@@ -2566,7 +3412,27 @@ background-color: null;
 font-style: inherit;">'Bayesian Inference: Prior and Posterior'</span>)</span>
 <span id="cb14-8">plt.xlabel(<span class="vs" style="color: #20794D;
 background-color: null;
-font-style: inherit;">r'$\theta$ (Probability of Match Win)'</span>)</span>
+font-style: inherit;">r'</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">$</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\t</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">heta</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">$</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">(</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Probability of Match Win</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">)</span><span class="vs" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span>)</span>
 <span id="cb14-9">plt.ylabel(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'Density'</span>)</span>
@@ -2594,7 +3460,7 @@ background-color: null;
 font-style: inherit;">0</span>)</span>
 <span id="cb14-14">plt.tight_layout()<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2620,7 +3486,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <p>So how do we get insight into our analysis questions from this <code>posterior_samples</code> array? Well we’ve got samples from the posterior distribution of <img src="https://latex.codecogs.com/png.latex?%5Ctheta"> which represents our updated beliefs about the relative plausibility of different values of Fritz’s actual underlying RPS win rate. We can use them just like any other dataset to answer questions about his win rate.</p>
 <p>Let’s start with getting a point estimate of his true win rate. We can simply take the mean of the samples.</p>
 <div id="cell-31" class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -2632,14 +3498,14 @@ font-style: inherit;">.</span>mean(posterior_samples)<span class="sc" style="col
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
+font-style: inherit;">'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>point estimate of theta: 0.5655783348185507</code></pre>
 </div>
 </div>
 <p>To get a confidence interval, often called a <em>credible interval</em> in the Bayesian context, we can just pull the quantiles of the posterior distribution. Note there are fancier ways to do this, e.g.&nbsp;computing highest posterior density intervals (HPDIs), but conceptually we’re basically just looking at the quantiles of the sample.</p>
 <div id="cell-33" class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -2655,14 +3521,14 @@ font-style: inherit;">0.945</span>])<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
+font-style: inherit;">'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>89% credible interval of theta:: [0.42005907 0.70367915]</code></pre>
 </div>
 </div>
 <p>What’s the probability that Fritz’s win rate is actually really good, say greater than 75%? We can just check the samples directly for the proportion greater than 0.75.</p>
 <div id="cell-35" class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -2678,7 +3544,7 @@ font-style: inherit;">0.75</span>)<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
+font-style: inherit;">'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>P[theta &gt; 0.75]: 0.011933174224343675</code></pre>
 </div>
@@ -2704,7 +3570,7 @@ font-style: inherit;">'</span>)</span></code></pre></div>
 </ol>
 <p>Let’s implement this in python.</p>
 <div id="cell-37" class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> simulate_posterior_predictive(posterior_samples, N):</span>
@@ -2728,13 +3594,13 @@ font-style: inherit;">in</span> posterior_samples</span>
 <span id="cb21-6"></span>
 <span id="cb21-7">posterior_predictive_df <span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">=</span> simulate_posterior_predictive(posterior_samples, N)</span></code></pre></div>
+font-style: inherit;">=</span> simulate_posterior_predictive(posterior_samples, N)</span></code></pre></div></div>
 </div>
 <p>Here again, we can inspect the distribution using any familiar techniques for working with samples of data. Here’s a histogram of the posterior predictive.</p>
 <div id="cell-39" class="cell" data-execution_count="21">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">posterior_predictive_df[<span class="st" style="color: #20794D;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1">posterior_predictive_df[<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"sum_y"</span>].hist(density<span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -2757,7 +3623,7 @@ font-style: inherit;">"sum(y)"</span>)</span>
 background-color: null;
 font-style: inherit;">"probability mass"</span>)<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 </details>
 <div class="cell-output cell-output-display">
 <div>
@@ -2769,7 +3635,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 </div>
 <p>We can use this for forecasting, e.g.&nbsp;what’s the probability that Fritz wins at least 7 games in his next round?</p>
 <div id="cell-41" class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
 background-color: null;
@@ -2787,14 +3653,14 @@ font-style: inherit;">7</span>)<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
+font-style: inherit;">'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Probability of winning &gt;= 7 in next round: 0.32537788385043753</code></pre>
 </div>
 </div>
 <p>Here’s where things can get interesting. In addition to forecasting the outcome itself, we can also compute the probabilities of events that depend on the outcome. For example, let’s say Fritz has only $50 left in his wallet, and he wants to know the probability that he can cover his bill after the next round. Let’s assume each drink costs $12. We can compute that probability as follows.</p>
 <div id="cell-43" class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># probability that Fritz's next round bill is less than or equal to $50</span></span>
 <span id="cb25-2"></span>
@@ -2843,7 +3709,7 @@ font-style: inherit;">50</span>)<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">}</span><span class="ss" style="color: #20794D;
 background-color: null;
-font-style: inherit;">'</span>)</span></code></pre></div>
+font-style: inherit;">'</span>)</span></code></pre></div></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Probability next round bill &lt;= $50: 0.5369928400954654</code></pre>
 </div>
@@ -2888,6 +3754,8 @@ font-style: inherit;">'</span>)</span></code></pre></div>
 <li>compute the posterior predictive distribution <img src="https://latex.codecogs.com/png.latex?p(y_%7B%5Ctext%7Bnew%7D%7D%7Cy_%7B%5Ctext%7Bobs%7D%7D)"> for the RPS example using grid approximation.</li>
 <li>Suppose that each RPS match was played as best out of three. Rewrite the generative model to generate both sub-match and match outcomes. Do inference with rejection sampling. Use your model to find the probability that Fritz wins his next match by winning two submatches in a row.</li>
 </ul>
+
+
 </section>
 </section>
 
@@ -2921,7 +3789,7 @@ font-style: inherit;">'</span>)</span></code></pre></div>
 <p><strong>Traditional</strong>: I contribute <code>contribution = 23_000</code> now. For fair comparison with the Roth, I invest an additional amount <code>current_income_tax_rate * contribution</code> (the extra income tax I would have paid had I chosen the Roth) in a normal taxable investment account as well. Over the time from now to retirement, the 401(k) and the taxable account both grow at the average long term rate <code>investment_growth_rate</code>. However, in the taxable account, I’ll also need to pay income tax every year on any dividends that I earn; the S&amp;P500 has recently paid out 1.5-2% in dividends each year, let’s call it <code>dividend_rate</code>. At retirement, I liquidate both accounts, paying income tax on the proceeds from the 401(k) at the rate of <code>retirement_income_tax_rate</code> and paying capital gains tax on the proceeds from the taxable account at the rate of <code>retirement_capital_gains_tax_rate</code>.</p>
 <p>Let’s code up a function that takes in all our parameters and returns the total liquidation value after taxes of the Roth versus traditional 401(k)s as described above.</p>
 <div id="cell-4" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
 background-color: null;
@@ -2935,10 +3803,10 @@ font-style: inherit;">as</span> pd </span>
 background-color: null;
 font-style: inherit;">import</span> matplotlib.pyplot <span class="im" style="color: #00769E;
 background-color: null;
-font-style: inherit;">as</span> plt </span></code></pre></div>
+font-style: inherit;">as</span> plt </span></code></pre></div></div>
 </div>
 <div id="cell-5" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> get_401k_liquidation_value(</span>
@@ -3077,10 +3945,10 @@ background-color: null;
 font-style: inherit;">'roth'</span>: <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">round</span>(total_roth_401k_liquidation_value)</span>
-<span id="cb2-32">    }</span></code></pre></div>
+<span id="cb2-32">    }</span></code></pre></div></div>
 </div>
 <div id="cell-6" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">get_401k_liquidation_value()</span></code></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1">get_401k_liquidation_value()</span></code></pre></div></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>{'traditional': 106882, 'roth': 105405}</code></pre>
 </div>
@@ -3088,7 +3956,7 @@ font-style: inherit;">round</span>(total_roth_401k_liquidation_value)</span>
 <p>Somehow it’s not surprising that these two options seem to yield very similar after-tax performance—no arbitrage right?</p>
 <p>Let’s write a function to perturb some of our parameter values to see under what conditions one option dominates the other.</p>
 <div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">def</span> plot_liquidation_value_by_parameter_values(param, grid_values, func<span class="op" style="color: #5E5E5E;
@@ -3133,13 +4001,13 @@ font-style: inherit;">'</span>)</span>
 <span id="cb5-8">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">return</span> fig, ax</span></code></pre></div>
+font-style: inherit;">return</span> fig, ax</span></code></pre></div></div>
 </div>
 <section id="income-tax-rate-at-retirement" class="level3">
 <h3 class="anchored" data-anchor-id="income-tax-rate-at-retirement">Income Tax Rate at Retirement</h3>
 <p>It seems that income tax rate at retirement is by far the most important determining factor in whether traditional or Roth 401(k) is a better option.</p>
 <div id="cell-10" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'retirement_income_tax_rate'</span>, np.linspace(<span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3151,7 +4019,7 @@ font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -3165,7 +4033,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <section id="capital-gains-tax-rate-at-retirement" class="level3">
 <h3 class="anchored" data-anchor-id="capital-gains-tax-rate-at-retirement">Capital Gains Tax Rate at Retirement</h3>
 <div id="cell-13" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'retirement_capital_gains_tax_rate'</span>, np.linspace(<span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3177,7 +4045,7 @@ font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -3191,7 +4059,7 @@ font-style: inherit;">;</span></span></code></pre></div>
 <section id="retirement-age" class="level3">
 <h3 class="anchored" data-anchor-id="retirement-age">Retirement Age</h3>
 <div id="cell-16" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1">plot_liquidation_value_by_parameter_values(<span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'retirement_age'</span>, np.linspace(<span class="fl" style="color: #AD0000;
 background-color: null;
@@ -3203,7 +4071,7 @@ font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">20</span>))<span class="op" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
+font-style: inherit;">;</span></span></code></pre></div></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -3219,6 +4087,8 @@ font-style: inherit;">;</span></span></code></pre></div>
 <h2 class="anchored" data-anchor-id="bottom-line">Bottom Line</h2>
 <p>When I plugged in my actual parameters, I found that because I was only employed for 6 months last year, my current income tax rate pushed me into the regime where Roth performs better than traditional. However for this next year, I expect to be in a higher income tax bracket where traditional will be a better deal than Roth.</p>
 <p>That said, the most important factor is your income tax rate at the time of withdrawal during retirement, which is based on your taxable income at that time. But how, I hear you asking, am I supposed to know what to plug in for my post-retirement income? That quantity is unknown. This illuminates the fundamental limitation of this kind of analysis—what to do about uncertain inputs to the calculation? That’s a question that we might take on in a future post, so stay tuned!</p>
+
+
 </section>
 
  ]]></description>
@@ -3226,1009 +4096,6 @@ font-style: inherit;">;</span></span></code></pre></div>
   <guid>https://randomrealizations.com/posts/traditional-vs-roth-401k/</guid>
   <pubDate>Sat, 14 Dec 2024 08:00:00 GMT</pubDate>
   <media:content url="https://randomrealizations.com/enso-thumbnail.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>SHAP from Scratch</title>
-  <dc:creator>Matt Bowers</dc:creator>
-  <link>https://randomrealizations.com/posts/shap-from-scratch/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>Ahh, SHAP. As you know it’s become one of the leading frameworks for explaining ML model predictions. I’d guess it’s popularity is due to its appealing theoretical basis, its universal applicability to any type of ML model, and its easy-to-use python package. SHAP promises to turn your black box ML model into a nice friendly interpretable model. The hilarious irony is that, when I first started using it in my work, SHAP itself was a complete black box to me. In this post, we’ll change all that by diving into the SHAP paper, illuminating the key theoretical ideas behind its development step by step, and implementing it from scratch in python. If you aren’t already familiar with how to compute and interpret SHAP values in practice, I’d recommend that you go check out the <a href="https://shap.readthedocs.io/en/latest/index.html">documentation for the shap python package</a> before diving into this post.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="https://randomrealizations.com/posts/shap-from-scratch/shap_from_scratch_main.jpg" class="img-fluid figure-img"></p>
-<figcaption>Snow, trees, and mountains overlook Lake Tahoe.</figcaption>
-</figure>
-</div>
-<section id="what-is-shap" class="level2">
-<h2 class="anchored" data-anchor-id="what-is-shap">What is SHAP?</h2>
-<p>SHAP (SHapley Additive exPlanations) is a conceptual framework for creating explanations of ML model predictions. The term also refers to a set of computational methods for generating these explanations and a python library which implements them. The “SHAP” <a href="https://en.wikipedia.org/wiki/Backronym">backronym</a> was introduced in <a href="https://arxiv.org/abs/1705.07874">Lundberg and Lee 2017</a>, which I call the <em>SHAP paper</em>, that expanded on several previously existing ideas which we’ll build up in the following sections. The key concepts are:</p>
-<ul>
-<li><em>Shapley values</em>, a concept from cooperative game theory which originally had nothing to do with machine learning</li>
-<li><em>Shapley regression values</em>, which showed how to use Shapley values to generate explanations of model predictions</li>
-<li><em>Shapley sampling values</em>, which offered a computationally tractable way to compute Shapley regression values for any type of model.</li>
-</ul>
-<p>The SHAP paper tied Shapley regression values and several other existing model explanation methods together by showing they are all members of a class called “additive feature attribution methods.” Under the right conditions, these additive feature attribution methods can generate Shapley values, and when they do we can call them SHAP values.</p>
-<p>After establishing this theoretical framework, the authors go on to discuss various computational methods for computing SHAP values; some are model-agnostic, meaning they work with any type of model, and others are model-specific, meaning they work for specific types of models. It turns out that the previously existing Shapley sampling values method is a model-agnostic approach, but while it’s the most intuitive, computationally speaking it’s relatively inefficient. Thus the authors propose a novel model-agnostic approach called Kernel SHAP, which is really just <a href="https://lime-ml.readthedocs.io/en/latest/">LIME</a> parameterized to yield SHAP values.</p>
-<p>Model-specific approaches can be potentially much more efficient than model-agnostic ones by taking advantage of model idiosyncrasies. For example, there is an analytical solution for the SHAP values of linear models, so Linear SHAP is extremely efficient. Similarly, Deep SHAP (proposed in the SHAP paper) and Tree SHAP (proposed later in <a href="https://www.sciencedirect.com/science/article/pii/S2666827022000500#b20">Lundberg et al 2020</a>) take advantage of idiosyncrasies of deep learning and tree-based models to compute SHAP values efficiently.</p>
-<p>The important thing about these different methods is that they provide computationally tractable ways to compute SHAP values, but ultimately, they are all based on the Shapley sampling values method—the original method to compute what we now call SHAP values. Thus, for the remainder of this post, we’ll focus on this method, building it up from Shapley values to Shapley regression values to Shapley sampling values and ultimately implementing it from scratch in python.</p>
-</section>
-<section id="shapley-values" class="level2">
-<h2 class="anchored" data-anchor-id="shapley-values">Shapley Values</h2>
-<p>The <a href="https://en.wikipedia.org/wiki/Shapley_value">Shapley value</a> is named in honor of Nobel prize winning economist Loyd Shapley who introduced the idea in the field of coalitional game theory in the 1950’s. Shapley proposed a way to determine how a coalition of players can fairly share the payout they receive from a cooperative game. We’ll introduce the mathematical formalism in the next section, so for now let’s just touch on the intuition for the approach. Essentially, the method distributes the payout among the players according to the expected contribution of each player across all possible combinations of the players. The thought experiment works as follows:</p>
-<ol type="1">
-<li>Draw a random permutation (ordering) of the players.</li>
-<li>Have the first player play alone, generating some payout. Then have the first two players play together, generating some payout. Then the first three, and so on.</li>
-<li>As each new player is added, attribute the change in the payout to this new player.</li>
-<li>Repeat this experiment for all permutations of the players. A player’s Shapley value is the average change in payout (across all permutations) when that player is added to the game.</li>
-</ol>
-<p>Next we’ll see how this idea can be applied to model explanations.</p>
-</section>
-<section id="shapley-regression-values" class="level2">
-<h2 class="anchored" data-anchor-id="shapley-regression-values">Shapley Regression Values</h2>
-<p>The next idea came from <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/asmb.446">Lipovetsky and Conklin 2001</a>, who proposed a way to use Shapley values to explain the predictions of a linear regression model. <em>Shapley regression values</em> assign an importance value to each feature that represents the effect on the model prediction of including that feature. The basic idea is to train a second model without the feature of interest, and then to compare the predictions from the model with the feature and the model without the feature. This procedure of training two models and comparing their predictions is repeated for all possible subsets of the other features; the average difference in predictions is the Shapley value for the feature of interest.</p>
-<p>The Shapley value for feature <img src="https://latex.codecogs.com/png.latex?i"> on instance <img src="https://latex.codecogs.com/png.latex?x"> is given by equation 4 in the SHAP paper:</p>
-<p><img src="https://latex.codecogs.com/png.latex?%0A%5Cphi_i%20=%20%5Csum_%7BS%20%5Csubseteq%20F%20%5Csetminus%20%5C%7Bi%5C%7D%7D%0A%5Cfrac%7B%7CS%7C!(%7CF%7C%20-%20%7CS%7C%20-%201)!%7D%7B%7CF%7C!%7D%0A%5Bf_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D(x_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D)%20-%20f_S(x_S)%20%5D%0A"></p>
-<p>where</p>
-<ul>
-<li><img src="https://latex.codecogs.com/png.latex?%5Cphi_i"> is the Shapley value for feature of interest <img src="https://latex.codecogs.com/png.latex?i">,</li>
-<li>the <img src="https://latex.codecogs.com/png.latex?%5Csubseteq"> symbol indicates the item on its left is a subset of the object on its right,</li>
-<li><img src="https://latex.codecogs.com/png.latex?F"> is the set of all features,</li>
-<li>the vertical bars indicate the number of elements in a set, e.g.&nbsp;<img src="https://latex.codecogs.com/png.latex?%7CF%7C"> is the total number of features,</li>
-<li><img src="https://latex.codecogs.com/png.latex?F%20%5Csetminus%20%5C%7Bi%5C%7D"> is the set of all features except the feature of interest,</li>
-<li><img src="https://latex.codecogs.com/png.latex?S"> is a particular subset of features not including the feature of interest,</li>
-<li><img src="https://latex.codecogs.com/png.latex?f_%7BS%7D"> is a “subset model”—a model that uses only the features in <img src="https://latex.codecogs.com/png.latex?S"> for both training and prediction,</li>
-<li>and <img src="https://latex.codecogs.com/png.latex?f_%7BS%20%5Ccup%20%5C%7Bi%5C%7D%7D"> is asubset model using features in <img src="https://latex.codecogs.com/png.latex?S"> and the feature of interest.</li>
-</ul>
-<p>To reiterate, this is the most important equation when it comes to understanding SHAP, as it defines the Shapley value; let’s make sure we understand what’s going on by implementing it in python.</p>
-<p>We start with the feature subsets. Notice that the sum is indexed over all subsets of <img src="https://latex.codecogs.com/png.latex?F%20%5Csetminus%20%5C%7Bi%5C%7D">, which is the set of all features except the <img src="https://latex.codecogs.com/png.latex?i">th feature, the one we’re calculating the Shapley value for. Let’s write a function that takes a list of items and returns an iterable that yields all possible subsets of those items.</p>
-<div id="cell-7" class="cell" data-execution_count="43">
-<div class="sourceCode cell-code" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> itertools <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> chain, combinations </span>
-<span id="cb1-2"></span>
-<span id="cb1-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> get_all_subsets(items):</span>
-<span id="cb1-4">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> chain.from_iterable(combinations(items, r) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> r <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(items)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>))</span>
-<span id="cb1-5"></span>
-<span id="cb1-6"><span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> s <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span>  get_all_subsets([<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>]):</span>
-<span id="cb1-7">    <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(s)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>()
-(0,)
-(1,)
-(2,)
-(0, 1)
-(0, 2)
-(1, 2)
-(0, 1, 2)</code></pre>
-</div>
-</div>
-<p>To get all subsets of features, other than the feature of interest, we could do something like this.</p>
-<div id="cell-9" class="cell" data-execution_count="56">
-<div class="sourceCode cell-code" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> get_all_other_feature_subsets(n_features, feature_of_interest):</span>
-<span id="cb3-2">    all_other_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [j <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(n_features) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> j <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">!=</span> feature_of_interest]</span>
-<span id="cb3-3">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> get_all_subsets(all_other_features)</span>
-<span id="cb3-4"></span>
-<span id="cb3-5"><span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> s <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> get_all_other_feature_subsets(n_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span>, feature_of_interest<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>):</span>
-<span id="cb3-6">    <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(s)</span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>()
-(0,)
-(1,)
-(3,)
-(0, 1)
-(0, 3)
-(1, 3)
-(0, 1, 3)</code></pre>
-</div>
-</div>
-<p>So for each of the feature subsets, we’ll need to calculate the summand, which is the product of a quotient with a bunch of factorials and the difference in predicted values between two subset models. Let’s start with those subset models. Subset model <img src="https://latex.codecogs.com/png.latex?f_%7BS%7D"> is a model trained only on the features in subset <img src="https://latex.codecogs.com/png.latex?S">. We can write a function that takes an untrained model, a training dataset, a feature subset to use, and a single instance to predict on; the function will then train a model using only features in the subset, and it will issue a prediction for the single instance we gave it.</p>
-<div id="cell-11" class="cell" data-execution_count="44">
-<div class="sourceCode cell-code" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> subset_model(model, X_train, y_train, feature_subset, instance):</span>
-<span id="cb5-2">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">assert</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(instance.shape) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'Instance must be a 1D array'</span></span>
-<span id="cb5-3">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(feature_subset) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>:</span>
-<span id="cb5-4">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> y.mean() <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># a model with no features predicts E[y]</span></span>
-<span id="cb5-5">    X_subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> X_train.take(feature_subset, axis<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span>
-<span id="cb5-6">    model.fit(X_subset, y_train)</span>
-<span id="cb5-7">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> model.predict(instance.take(feature_subset).reshape(<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>, <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>))[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]</span></code></pre></div>
-</div>
-<p>Next let’s have a look at <img src="https://latex.codecogs.com/png.latex?%7CS%7C!(%7CF%7C-%7CS%7C-1)!/%7CF%7C!">. The keen reader will notice this factor kind of looks like the answers to those combinatorics questions like how many unique ways can you order the letters in the word MISSISSIPPI. The combinatorics connection is that Shapley values are defined in terms of all permutations of the players , where the included players come first, then the player of interest, followed by the excluded players. In ML models, the order of features doesn’t matter, so we can work with unordered subsets of features, scaling the prediction difference terms by the number of permutations that involve the same sets of included and excluded features. With that in mind, we can see that including the factor in each term of the sum gives us a weighted average over all feature combinations, where the numerator gives the number of permutations in which the included features come first, followed by the feature of interest, followed by the excluded features, and the denominator is the total number of feature permutations.</p>
-<div id="cell-13" class="cell" data-execution_count="37">
-<div class="sourceCode cell-code" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> math <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> factorial</span>
-<span id="cb6-2"></span>
-<span id="cb6-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> permutation_factor(n_features, n_subset):</span>
-<span id="cb6-4">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> factorial(n_subset) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> factorial(n_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> n_subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> factorial(n_features)</span></code></pre></div>
-</div>
-<p>Now we can put these pieces together to compute equation 4—a single Shapley regression value for a single instance and feature of interest.</p>
-<div id="cell-15" class="cell" data-execution_count="59">
-<div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> compute_single_shap_value(untrained_model,</span>
-<span id="cb7-2">                              X_train,</span>
-<span id="cb7-3">                              y_train,</span>
-<span id="cb7-4">                              feature_of_interest,</span>
-<span id="cb7-5">                              instance):</span>
-<span id="cb7-6">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">"Compute a single SHAP value (equation 4)"</span></span>
-<span id="cb7-7">    n_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> X_train.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span>
-<span id="cb7-8">    shap_value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span></span>
-<span id="cb7-9">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> subset <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> get_all_other_feature_subsets(n_features, feature_of_interest):</span>
-<span id="cb7-10">        n_subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(subset)</span>
-<span id="cb7-11">        prediction_without_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> subset_model(</span>
-<span id="cb7-12">            untrained_model,</span>
-<span id="cb7-13">            X_train, y_train,</span>
-<span id="cb7-14">            subset,</span>
-<span id="cb7-15">            instance</span>
-<span id="cb7-16">        )</span>
-<span id="cb7-17">        prediction_with_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> subset_model(</span>
-<span id="cb7-18">            untrained_model,</span>
-<span id="cb7-19">            X_train, y_train,</span>
-<span id="cb7-20">            subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> (feature_of_interest,),</span>
-<span id="cb7-21">            instance</span>
-<span id="cb7-22">        )</span>
-<span id="cb7-23">        factor <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> permutation_factor(n_features, n_subset)</span>
-<span id="cb7-24">        shap_value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> factor <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> (prediction_with_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> prediction_without_feature)</span>
-<span id="cb7-25">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> shap_value</span></code></pre></div>
-</div>
-<p>Let’s use this function to compute a single Shapley regression value for a linear model and a small training dataset with 3 features.</p>
-<div id="cell-17" class="cell" data-execution_count="60">
-<div class="sourceCode cell-code" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> make_regression </span>
-<span id="cb8-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.linear_model <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> LinearRegression </span>
-<span id="cb8-3"></span>
-<span id="cb8-4">X, y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> make_regression(n_samples<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">50</span>, n_features<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span>)</span>
-<span id="cb8-5"></span>
-<span id="cb8-6">compute_single_shap_value(untrained_model<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>LinearRegression(),</span>
-<span id="cb8-7">                          X_train<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X, y_train<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>y,</span>
-<span id="cb8-8">                          feature_of_interest<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span>,</span>
-<span id="cb8-9">                          instance<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, :])</span></code></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="60">
-<pre><code>-0.07477140629329351</code></pre>
-</div>
-</div>
-<p>That gives us a single Shapley value corresponding to a single feature value in a single instance. To get useful model explanations, we’d need to compute Shapley values for each feature of each instance in some dataset of instances. You might notice there’s a big problem with the formulation above. Namely, we are going to have to train a whole bunch of new subset models—one for each subset of the features. If our model has <img src="https://latex.codecogs.com/png.latex?M"> features, we’ll have to train <img src="https://latex.codecogs.com/png.latex?2%5EM"> models, so this will get impractical in a hurry, especially if we’re trying to train anything other than linear models.</p>
-</section>
-<section id="shapley-sampling-values" class="level2">
-<h2 class="anchored" data-anchor-id="shapley-sampling-values">Shapley Sampling Values</h2>
-<p>Next, <a href="https://link.springer.com/article/10.1007/s10115-013-0679-x">Štrumbelj and Kononenko 2014</a> proposed <em>Shapley sampling values</em>, a method which provides a much more efficient way to approximate the subset models used to calculate Shapley regression values. In this approach, the effect of removing some features from the model is approximated by the conditional expectation of the model given the known features.</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20f_S(x_S)%20%20:=%20E%5Bf(x)%20%7C%20x_S%5D%20%20"></p>
-<p>This means we’re approximating the output of a subset model by averaging over outputs of the full model. That’s great because now we don’t have to train all those new subset models, we can just query our full model over some set of inputs and average over the outputs to compute these conditional expectation subset models.</p>
-<p>Now how exactly do we compute that conditional expectation? First we rewrite the above conditional expectation (equation 10 in the SHAP paper)</p>
-<p><img src="https://latex.codecogs.com/png.latex?%20E%5Bf(x)%20%7C%20x_S%5D%20%20=%20E_%7Bx_%7B%5Cbar%7BS%7D%7D%7Cx_S%7D%20%5Bf(x)%5D"></p>
-<p>where <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BS%7D"> is the set of excluded or missing features. Beside this equation in the paper they give the note “expectation over <img src="https://latex.codecogs.com/png.latex?x_%7B%5Cbar%7BS%7D%7D%20%7C%20x_S">, which means we’re taking the expectation over the missing features given the known features. Then we get another step (equation 11)</p>
-<p><img src="https://latex.codecogs.com/png.latex?E_%7Bx_%7B%5Cbar%7BS%7D%7D%7Cx_S%7D%20%5Bf(x)%5D%20%5Capprox%20E_%7Bx_%7B%5Cbar%7BS%7D%7D%7D%20%5Bf(x)%5D"></p>
-<p>Now it’s not an equality but an approximation. The authors give the note “assume feature independence”. The intuition here is that if the missing features are correlated with the known features, then their distribution depends on the particular values taken by the known features. But here the authors make the simplifying assumption that known and missing features are independent, which allows us to replace the conditional expectation with an unconditional expectation over the missing features.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>So is this assumption that features in <img src="https://latex.codecogs.com/png.latex?S"> are independent from features in <img src="https://latex.codecogs.com/png.latex?%5Cbar%7BS%7D"> a problem? The short answer is… maybe 🤷‍♀️? It’s potentially problematic enough that people have worked out some ways to relax this assumption, e.g.&nbsp;<a href="https://shap-lrjball.readthedocs.io/en/latest/generated/shap.PartitionExplainer.html">partition masking</a>, but that makes <em>Owen values</em> instead of Shapley values, so we’ll save it for another post.</p>
-</div>
-</div>
-<p>Anyway, how do we compute this unconditional expectation over the missing features in practice? We’ll need to use a so-called <em>background dataset</em>, which is just some set of observations of our feature variables that represents their distribution. A good candidate is the training data we used to train our model. Štrumbelj and Kononenko 2014 propose a way to estimate this conditional expectation using resampling of the background dataset.</p>
-<p>The idea is to notice that the instance of interest <img src="https://latex.codecogs.com/png.latex?x"> is a feature vector comprised of the set of “known” features <img src="https://latex.codecogs.com/png.latex?x_S"> and the set of excluded features <img src="https://latex.codecogs.com/png.latex?x_%7B%5Cbar%7BS%7D%7D"> such that <img src="https://latex.codecogs.com/png.latex?x=%5C%7Bx_S,x_%7B%5Cbar%7BS%7D%7D%20%5C%7D">. Our resampling scheme will be based on constructing “masked” samples <img src="https://latex.codecogs.com/png.latex?x%5E*=%5C%7Bx_S,z_%7B%5Cbar%7BS%7D%7D%20%5C%7D"> where <img src="https://latex.codecogs.com/png.latex?z_%7B%5Cbar%7BS%7D%7D"> are values of the missing features drawn from some random observation in the background dataset. We can then compute an estimate <img src="https://latex.codecogs.com/png.latex?%5Chat%7Bf%7D_S(x)"> of the conditional expectation <img src="https://latex.codecogs.com/png.latex?E_%7Bx_%7B%5Cbar%7BS%7D%7D%7D%5Bf(x)%5D"> as</p>
-<p><img src="https://latex.codecogs.com/png.latex?%5Chat%7Bf%7D_S(x)%20=%20%5Cfrac%7B1%7D%7Bn%7D%20%5Csum_%7Bk=1%7D%5En%20f(%5C%7Bx_S,%20z_%7B%5Cbar%7BS%7D%7D%5E%7B(k)%7D%20%5C%7D)%20"></p>
-<p>where <img src="https://latex.codecogs.com/png.latex?z_%7B%5Cbar%7BS%7D%7D%5E%7B(k)%7D"> is the vector of values of the excluded features from the <img src="https://latex.codecogs.com/png.latex?k">-th row of the background dataset. Algorithmically, we can view this as first drawing a sample of observations from the background dataset, second “masking” features in <img src="https://latex.codecogs.com/png.latex?S"> in the sampled background dataset by replacing the observed values <img src="https://latex.codecogs.com/png.latex?z_S"> on each row with the values in the instance <img src="https://latex.codecogs.com/png.latex?x_S">, third using the full model <img src="https://latex.codecogs.com/png.latex?f"> to predict on each of these masked samples in the background dataset, and finally averaging over these predictions. We can implement a new subset model function that takes a fully trained model, a background dataset,a feature subset, and an instance for explanation and returns an approximation of the subset model prediction.</p>
-<div id="cell-21" class="cell" data-execution_count="62">
-<div class="sourceCode cell-code" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np</span>
-<span id="cb10-2"></span>
-<span id="cb10-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> subset_model_approximation(trained_model, </span>
-<span id="cb10-4">                               background_dataset,</span>
-<span id="cb10-5">                               feature_subset,  </span>
-<span id="cb10-6">                               instance):</span>
-<span id="cb10-7">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">""" </span></span>
-<span id="cb10-8"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    Approximate subset model prediction  (Equation 11)</span></span>
-<span id="cb10-9"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    \hat{f}_S(x) = E_{x_{\hat{S</span><span class="re">}}}</span><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[f_S(x)]</span></span>
-<span id="cb10-10"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    for feature subset S on single instance x</span></span>
-<span id="cb10-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    """</span></span>
-<span id="cb10-12">    masked_background_dataset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> background_dataset.copy()</span>
-<span id="cb10-13">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(masked_background_dataset.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]):</span>
-<span id="cb10-14">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> feature_subset:</span>
-<span id="cb10-15">            masked_background_dataset[:, j] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> instance[j]</span>
-<span id="cb10-16">    conditional_expectation_of_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.mean(</span>
-<span id="cb10-17">        trained_model.predict(masked_background_dataset)</span>
-<span id="cb10-18">    )</span>
-<span id="cb10-19">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> conditional_expectation_of_model          </span></code></pre></div>
-</div>
-<p>If we replace our <code>subset_model</code> function with this new <code>subset_model_approximation</code> function in our <code>compute_single_shap_value</code> function from earlier, then we’ll be computing Shapley sampling values. And according to the SHAP paper: “if we assume feature independence when approximating conditional expectations (using Equation 11 to estimate subset model output) … then SHAP values can be estimated directly using the Shapley sampling values method.” That means we’ll be computing SHAP values!</p>
-</section>
-<section id="how-to-implement-shap-from-scratch" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-implement-shap-from-scratch">How to Implement SHAP from Scratch</h2>
-<p>Let’s put the pieces together and implement a class for a model explainer that computes SHAP values via the Shapley sampling values method. We’ll talk through a couple of points after the code.</p>
-<div id="cell-24" class="cell" data-execution_count="80">
-<div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> numpy <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">as</span> np </span>
-<span id="cb11-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> typing <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> Any, Callable, Iterable</span>
-<span id="cb11-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> math <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> factorial</span>
-<span id="cb11-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> itertools <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> chain, combinations</span>
-<span id="cb11-5"></span>
-<span id="cb11-6"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">class</span> ShapFromScratchExplainer():</span>
-<span id="cb11-7">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>,</span>
-<span id="cb11-8">                 model: Callable[[np.ndarray], <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">float</span>], </span>
-<span id="cb11-9">                 background_dataset: np.ndarray,</span>
-<span id="cb11-10">                 max_samples: <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">int</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">None</span>):</span>
-<span id="cb11-11">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> model</span>
-<span id="cb11-12">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> max_samples:</span>
-<span id="cb11-13">            max_samples <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">min</span>(max_samples, background_dataset.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]) </span>
-<span id="cb11-14">            rng <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.random.default_rng()</span>
-<span id="cb11-15">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.background_dataset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> rng.choice(background_dataset, </span>
-<span id="cb11-16">                                                 size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>max_samples, </span>
-<span id="cb11-17">                                                 replace<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>, axis<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>)</span>
-<span id="cb11-18">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">else</span>:</span>
-<span id="cb11-19">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.background_dataset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> background_dataset</span>
-<span id="cb11-20"></span>
-<span id="cb11-21">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> shap_values(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, X: np.ndarray) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-&gt;</span> np.ndarray:</span>
-<span id="cb11-22">        <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">"SHAP Values for instances in DataFrame or 2D array"</span></span>
-<span id="cb11-23">        shap_values <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.empty(X.shape)</span>
-<span id="cb11-24">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> i <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(X.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>]):</span>
-<span id="cb11-25">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(X.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]):</span>
-<span id="cb11-26">                shap_values[i, j] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._compute_single_shap_value(j, X[i, :])</span>
-<span id="cb11-27">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> shap_values</span>
-<span id="cb11-28">       </span>
-<span id="cb11-29">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> _compute_single_shap_value(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, </span>
-<span id="cb11-30">                                   feature: <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">int</span>,</span>
-<span id="cb11-31">                                   instance: np.array) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">float</span>:</span>
-<span id="cb11-32">        <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">"Compute a single SHAP value (equation 4)"</span></span>
-<span id="cb11-33">        n_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(instance)</span>
-<span id="cb11-34">        shap_value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span></span>
-<span id="cb11-35">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> subset <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._get_all_other_feature_subsets(n_features, feature):</span>
-<span id="cb11-36">            n_subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(subset)</span>
-<span id="cb11-37">            prediction_without_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._subset_model_approximation(</span>
-<span id="cb11-38">                subset, </span>
-<span id="cb11-39">                instance</span>
-<span id="cb11-40">            )</span>
-<span id="cb11-41">            prediction_with_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._subset_model_approximation(</span>
-<span id="cb11-42">                subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span> (feature,), </span>
-<span id="cb11-43">                instance</span>
-<span id="cb11-44">            )</span>
-<span id="cb11-45">            factor <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._permutation_factor(n_features, n_subset)</span>
-<span id="cb11-46">            shap_value <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+=</span> factor <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> (prediction_with_feature <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> prediction_without_feature)</span>
-<span id="cb11-47">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> shap_value</span>
-<span id="cb11-48">    </span>
-<span id="cb11-49">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> _get_all_subsets(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, items: <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">list</span>) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-&gt;</span> Iterable:</span>
-<span id="cb11-50">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> chain.from_iterable(combinations(items, r) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> r <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">len</span>(items)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>))</span>
-<span id="cb11-51">    </span>
-<span id="cb11-52">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> _get_all_other_feature_subsets(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, n_features, feature_of_interest):</span>
-<span id="cb11-53">        all_other_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [j <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(n_features) <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> j <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">!=</span> feature_of_interest]</span>
-<span id="cb11-54">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>._get_all_subsets(all_other_features)</span>
-<span id="cb11-55"></span>
-<span id="cb11-56">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> _permutation_factor(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, n_features, n_subset):</span>
-<span id="cb11-57">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> (</span>
-<span id="cb11-58">            factorial(n_subset) </span>
-<span id="cb11-59">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">*</span> factorial(n_features <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> n_subset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>) </span>
-<span id="cb11-60">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">/</span> factorial(n_features) </span>
-<span id="cb11-61">        )</span>
-<span id="cb11-62">    </span>
-<span id="cb11-63">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> _subset_model_approximation(<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>, </span>
-<span id="cb11-64">                                    feature_subset: <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">tuple</span>[<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">int</span>, ...], </span>
-<span id="cb11-65">                                    instance: np.array) <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-&gt;</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">float</span>:</span>
-<span id="cb11-66">        masked_background_dataset <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.background_dataset.copy()</span>
-<span id="cb11-67">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(masked_background_dataset.shape[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]):</span>
-<span id="cb11-68">            <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">if</span> j <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> feature_subset:</span>
-<span id="cb11-69">                masked_background_dataset[:, j] <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> instance[j]</span>
-<span id="cb11-70">        conditional_expectation_of_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> np.mean(</span>
-<span id="cb11-71">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span>.model(masked_background_dataset)</span>
-<span id="cb11-72">        )</span>
-<span id="cb11-73">        <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> conditional_expectation_of_model          </span></code></pre></div>
-</div>
-<p>The <code>SHAPExplainerFromScratch</code> API is similar to that of the <a href="https://shap-lrjball.readthedocs.io/en/latest/generated/shap.KernelExplainer.html"><code>KernelExplainer</code></a> from the python library, taking two required arguments during instantiation:</p>
-<ul>
-<li><code>model</code>: “User supplied function that takes a matrix of samples (# samples x # features) and computes the output of the model for those samples.” That means if our model is a scikit-learn model, we’ll need to pass in its predict method, not the model object itself.</li>
-<li><code>background_dataset</code>: “The background dataset to use for integrating out features.” We know about this idea from the Shapley sampling values section above; a good choice for this data could be the training dataset we used to fit the model. By default, we’ll use all the rows of this background dataset, but we’ll also implement the ability to sample down to the desired number of rows with an argument called <code>max_samples</code>.</li>
-</ul>
-<p>Like the <code>KernelExplainer</code>, this class has a method called <code>shap_values</code> which estimates the SHAP values for a set of instances. It takes an argument <code>X</code> which is “a matrix of samples (# samples x # features) on which to explain the model’s output.” This <code>shap_values</code> method just loops through each feature value of each instance of the input samples <code>X</code> and calls an internal method named <code>_compute_single_shap_value</code> to compute each SHAP value. The <code>_compute_single_shap_value</code> method is the real workhorse of the class. It implements equation 4 from the SHAP paper as described in the Shapley regression values section above by calling a few other internal helper methods corresponding to functions that we’ve already written.</p>
-</section>
-<section id="testing-the-implementation" class="level2">
-<h2 class="anchored" data-anchor-id="testing-the-implementation">Testing the Implementation</h2>
-<p>Let’s check our work by comparing SHAP values computed by our implementation with those from the SHAP python library. We’ll use our old friend the diabetes dataset, training a linear model, a random forest, and a gradient boosting machine.</p>
-<div id="cell-27" class="cell" data-execution_count="73">
-<div class="sourceCode cell-code" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.datasets <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> load_diabetes</span>
-<span id="cb12-2"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.model_selection <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> train_test_split</span>
-<span id="cb12-3"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.linear_model <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> LinearRegression</span>
-<span id="cb12-4"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">from</span> sklearn.ensemble <span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> GradientBoostingRegressor, RandomForestRegressor</span>
-<span id="cb12-5"></span>
-<span id="cb12-6">X, y <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> load_diabetes(as_frame<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">False</span>, return_X_y<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">True</span>)</span>
-<span id="cb12-7">X_train, X_test, y_train, y_test <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> train_test_split(X, y, test_size<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0.3</span>, </span>
-<span id="cb12-8">                                                    random_state<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">42</span>)</span>
-<span id="cb12-9"></span>
-<span id="cb12-10">lin_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> LinearRegression().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb12-11">rfr_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> RandomForestRegressor().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb12-12">gbt_model <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> GradientBoostingRegressor().fit(X_train, y_train)<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div>
-</div>
-<p>Here’s a little function to compare the SHAP values generated by our implementation and those from the library <code>KernelExplainer</code>.</p>
-<div id="cell-29" class="cell" data-execution_count="81">
-<div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="im" style="color: #00769E;
-background-color: null;
-font-style: inherit;">import</span> shap</span>
-<span id="cb13-2"></span>
-<span id="cb13-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> compare_methods(model, X_background, X_instances):</span>
-<span id="cb13-4">        </span>
-<span id="cb13-5">    library_explainer <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> shap.KernelExplainer(model.predict, X_background)</span>
-<span id="cb13-6">    library_shap_values <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> library_explainer.shap_values(X_instances)</span>
-<span id="cb13-7"></span>
-<span id="cb13-8">    from_scratch_explainer <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> ShapFromScratchExplainer(model.predict, X_background)</span>
-<span id="cb13-9">    from_scratch_shap_values <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> from_scratch_explainer.shap_values(X_instances)</span>
-<span id="cb13-10"></span>
-<span id="cb13-11">    <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">return</span> np.allclose(library_shap_values, from_scratch_shap_values)</span></code></pre></div>
-</div>
-<div id="cell-30" class="cell" data-execution_count="82">
-<div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1">compare_methods(lin_model, </span>
-<span id="cb14-2">                X_background<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span>, :], </span>
-<span id="cb14-3">                X_instances<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, :])</span></code></pre></div>
-<div class="cell-output cell-output-display">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"995f763174824efebecb5c2522c3f6f5","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
-</script>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="82">
-<pre><code>True</code></pre>
-</div>
-</div>
-<div id="cell-31" class="cell" data-execution_count="77">
-<div class="sourceCode cell-code" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1">compare_methods(rfr_model, </span>
-<span id="cb16-2">                X_background<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span>, :], </span>
-<span id="cb16-3">                X_instances<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, :])</span></code></pre></div>
-<div class="cell-output cell-output-display">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"f9468451774b4c758a7696ff10fabc74","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
-</script>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="77">
-<pre><code>True</code></pre>
-</div>
-</div>
-<div id="cell-32" class="cell" data-execution_count="83">
-<div class="sourceCode cell-code" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1">compare_methods(gbt_model, </span>
-<span id="cb18-2">                X_background<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_train[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span>, :], </span>
-<span id="cb18-3">                X_instances<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span>X_test[:<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>, :])</span></code></pre></div>
-<div class="cell-output cell-output-display">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"8bdea22fab86440db68c4a669beaf7df","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
-</script>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="83">
-<pre><code>True</code></pre>
-</div>
-</div>
-<p>Beautiful! Our Implementation is consistent with the SHAP library explainer!</p>
-</section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>Well I hope this one was helpful to you. The research phase actually took me a lot longer than I expected; it just took me a while to figure out what SHAP really is and how those different ideas and papers fit together. I thought the implementation itself was pretty fun and relatively easy. What do you think?</p>
-</section>
-<section id="references" class="level2">
-<h2 class="anchored" data-anchor-id="references">References</h2>
-<ul>
-<li><a href="https://arxiv.org/abs/1705.07874">The SHAP Paper (Lundberg and Lee, 2017)</a></li>
-<li><a href="https://christophm.github.io/interpretable-ml-book/">Interpretable Machine Learning by Christoph Molnar</a></li>
-</ul>
-</section>
-
- ]]></description>
-  <category>python</category>
-  <category>from scratch</category>
-  <guid>https://randomrealizations.com/posts/shap-from-scratch/</guid>
-  <pubDate>Sun, 04 Aug 2024 07:00:00 GMT</pubDate>
-  <media:content url="https://randomrealizations.com/posts/shap-from-scratch/shap_from_scratch_thumb.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>

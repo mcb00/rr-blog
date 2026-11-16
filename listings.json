@@ -12,39 +12,14 @@
       "/posts/xgboost-from-scratch/index.html",
       "/posts/xgboost-for-regression-in-python/index.html",
       "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html",
-      "/posts/xgboost-for-classification-in-python/index.html"
+      "/posts/xgboost-for-classification-in-python/index.html",
+      "/posts/xgboost-parameter-tuning-with-optuna/index.html"
     ]
   },
   {
     "listing": "/index.html",
     "items": [
-      "/posts/t-test-is-ols/index.html",
-      "/posts/logistic-regression-with-pytorch/index.html",
-      "/posts/bayesian-modeling-primer/index.html",
-      "/posts/traditional-vs-roth-401k/index.html",
-      "/posts/shap-from-scratch/index.html",
-      "/posts/xgboost-parameter-tuning-with-optuna/index.html",
-      "/posts/xgboost-for-classification-in-python/index.html",
-      "/posts/gradient-boosting-multi-class-classification-from-scratch/index.html",
-      "/posts/xgboost-for-regression-in-python/index.html",
-      "/posts/blogging-with-quarto-and-jupyter/index.html",
-      "/posts/random-realizations-resurrected/index.html",
-      "/posts/xgboost-from-scratch/index.html",
-      "/posts/xgboost-explained/index.html",
-      "/posts/decision-tree-from-scratch/index.html",
-      "/posts/consider-the-decision-tree/index.html",
-      "/posts/gradient-boosting-machine-with-any-loss-function/index.html",
-      "/posts/hello-pyspark/index.html",
-      "/posts/how-gradient-boosting-does-gradient-descent/index.html",
-      "/posts/get-down-with-gradient-descent/index.html",
-      "/posts/gradient-boosting-machine-from-scratch/index.html",
-      "/posts/8020-pandas-tutorial/index.html",
-      "/posts/hello-world/index.html"
-    ]
-  },
-  {
-    "listing": "/archive.html",
-    "items": [
+      "/posts/causality-part-1-the-prediction-decision-gap/index.html",
       "/posts/t-test-is-ols/index.html",
       "/posts/logistic-regression-with-pytorch/index.html",
       "/posts/bayesian-modeling-primer/index.html",
